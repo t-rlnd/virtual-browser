@@ -1,5 +1,9 @@
 node_modules/
 
+# Configuration locale de l'outillage : declare comment lancer le serveur
+# de developpement, ce que package.json dit deja. Propre a la machine.
+.claude/
+
 # Sortie du mode watch. La sortie de production, elle, vit dans dist/
 # et est versionnee : jsDelivr la lit depuis le depot.
 dev/
