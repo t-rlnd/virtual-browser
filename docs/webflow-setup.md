@@ -36,9 +36,23 @@ Un unique bloc `div` place **tout en haut du body**, avec l'attribut
 style, donc son emplacement dans la hierarchie n'a pas d'importance visuelle,
 mais le garder en premier evite les surprises d'empilement.
 
-A l'interieur, un element **Video** natif de Webflow par use-case (pas un embed
-Vimeo ou YouTube, qui empechent tout controle du `currentTime`). Chaque balise
-porte son identifiant **et** son decoupage :
+A l'interieur, les balises `<video>` se posent par un **HTML Embed**, pas par
+l'element Video du Designer : ce dernier produit un embed Vimeo/YouTube, dans
+lequel `currentTime` est inaccessible. L'element **Background video** est tout
+aussi inadapte, Webflow lui imposant sa propre source et son autoplay.
+
+Un seul HTML Embed suffit pour les deux balises :
+
+```html
+<video data-vb-video="v1" data-vb-file="video1"
+       data-vb-transition="166" data-vb-end="398"
+       muted playsinline preload="auto"></video>
+<video data-vb-video="v2" data-vb-file="video2"
+       data-vb-transition="116" data-vb-end="247"
+       muted playsinline preload="auto"></video>
+```
+
+Chaque balise porte son identifiant **et** son decoupage :
 
 | Attribut | Exemple | Role |
 | --- | --- | --- |
@@ -54,16 +68,16 @@ video v1    data-vb-transition="166"    data-vb-end="398"
 video v2    data-vb-transition="116"    data-vb-end="247"
 ```
 
-Ne renseigner **aucune source** dans le Designer : le script choisit lui-meme le
-fichier selon la largeur du viewport et l'ecrit dans `src`. Les attributs
-`muted`, `playsinline` et `preload` sont egalement poses par le script, un oubli
-dans le Designer est donc sans consequence.
+Ne renseigner **aucun `src`** : le script choisit lui-meme le fichier selon la
+largeur du viewport et l'ecrit dans `src`. Les attributs `muted`, `playsinline`
+et `preload` sont egalement poses par le script, un oubli est donc sans
+consequence — ils figurent ci-dessus par simple precaution.
 
 ### Ajouter un 3e use-case
 
 Rien a modifier dans le JavaScript. Dans le Designer :
 
-1. Dupliquer une balise Video dans `data-vb-stage`.
+1. Ajouter une balise `<video>` dans le meme HTML Embed.
 2. Lui donner par exemple `data-vb-video="v3"`, `data-vb-file="video3"`,
    `data-vb-transition="140"` (et `data-vb-end` si la boucle ne va pas jusqu'a
    la fin du fichier).
