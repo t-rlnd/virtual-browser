@@ -27,10 +27,6 @@ class FakeLayer extends VideoLayer {
     this.looping = null;
   }
 
-  get ready() {
-    return true;
-  }
-
   preload() {
     this.calls.push(['preload']);
     return Promise.resolve(this);
@@ -224,4 +220,29 @@ test('une bascule annulee en vol ne laisse pas la couche sortante allumee', asyn
   assert.equal(stage.activeId, 'v1');
   assert.equal(v1.visible, true);
   assert.equal(v2.visible, false);
+});
+
+test('refresh remet chaque couche dans l etat de la machine', async () => {
+  const { stage, v1, v2 } = makeStage();
+  stage.mount();
+  await stage.setMode(MODES.LOOP);
+
+  // Le deblocage iOS lance brievement la lecture de toutes les couches :
+  // refresh doit rendre la boucle a l active et le silence aux autres.
+  v2.looping = { start: 0, end: 1 };
+  stage.refresh();
+
+  assert.deepEqual(v1.named('playLoop').at(-1), ['playLoop', 3, 6]);
+  assert.equal(v2.looping, null);
+});
+
+test('refresh en mode scrub repose la couche active sur son image', async () => {
+  const { stage, v1 } = makeStage();
+  stage.mount();
+  await stage.setMode(MODES.SCRUB);
+  stage.setProgress(0.5);
+
+  stage.refresh();
+
+  assert.deepEqual(v1.named('hardSeek').at(-1), ['hardSeek', 1.5]);
 });

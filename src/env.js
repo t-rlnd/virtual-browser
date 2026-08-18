@@ -8,10 +8,6 @@ export function prefersReducedMotion() {
   return matches('(prefers-reduced-motion: reduce)');
 }
 
-export function isCoarsePointer() {
-  return matches('(pointer: coarse)');
-}
-
 export function saveDataEnabled() {
   return Boolean(navigator.connection && navigator.connection.saveData);
 }

@@ -25,12 +25,56 @@
         color: #fff;
         background: #05070c;
       }
-      [data-vb-scrub-inner],
+      /* Montage superpose : une piste, un conteneur colle, trois calques. */
+      [data-vb-scrub] {
+        position: relative;
+        z-index: 1;
+        height: 300vh;
+      }
+      [data-vb-scrub-inner] {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow: hidden;
+      }
+      [data-vb-stage] {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background-color: rgb(0 0 0 / calc(1 - var(--vb-dock)));
+      }
+      .intro {
+        z-index: 1;
+        opacity: calc(1 - var(--vb-scrub, 0) / 0.2);
+      }
       [data-vb-loop] {
+        z-index: 2;
+        opacity: calc((var(--vb-scrub, 0) - 0.3) / 0.3);
+        pointer-events: none;
+      }
+      :root[data-vb-mode='loop'] [data-vb-loop] {
+        pointer-events: auto;
+      }
+      .intro,
+      [data-vb-loop] {
+        position: absolute;
+        inset: 0;
         display: grid;
         place-content: center;
         gap: 1rem;
         text-align: center;
+      }
+      .pins {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        opacity: calc((var(--vb-scrub, 0) - 0.8) / 0.2);
+      }
+      /* Reperage de la position que prend le fond video pendant la boucle. */
+      [data-vb-frame] {
+        width: min(720px, 80vw);
+        aspect-ratio: 16 / 9;
+        border: 2px dashed rgba(255, 45, 45, 0.9);
       }
       .after {
         position: relative;
@@ -51,20 +95,25 @@
   <body>
     <div data-vb-loader>chargement…</div>
 
-    <div data-vb-stage>
-      <video data-vb-video="v1" data-vb-file="video1" data-vb-transition="166" data-vb-end="398"></video>
-      <video data-vb-video="v2" data-vb-file="video2" data-vb-transition="116" data-vb-end="247"></video>
-    </div>
-
     <section data-vb-scrub>
-      <div data-vb-scrub-inner><h1>Section 1</h1></div>
-    </section>
+      <div data-vb-scrub-inner>
+        <div data-vb-stage>
+          <video data-vb-video="v1" data-vb-file="video1" data-vb-transition="166" data-vb-end="398"></video>
+          <video data-vb-video="v2" data-vb-file="video2" data-vb-transition="116" data-vb-end="247"></video>
+        </div>
 
-    <section data-vb-loop>
-      <h1>Section 2</h1>
-      <div>
-        <button type="button" data-vb-usecase="v1">Use case 1</button>
-        <button type="button" data-vb-usecase="v2">Use case 2</button>
+        <div class="intro"><h1>Section 1</h1></div>
+
+        <div data-vb-loop>
+          <h1>Section 2</h1>
+          <div>
+            <button type="button" data-vb-usecase="v1">Use case 1</button>
+            <button type="button" data-vb-usecase="v2">Use case 2</button>
+          </div>
+          <div data-vb-frame>
+            <div class="pins"><span>1</span><span>2</span><span>3</span></div>
+          </div>
+        </div>
       </div>
     </section>
 

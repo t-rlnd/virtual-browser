@@ -10,76 +10,67 @@
 
 /* --- Le fond video persistant ------------------------------------------- */
 
-/* Ce qui vaut quel que soit le positionnement retenu. */
+/**
+ * Le stage n'est pas positionne ici : c'est a la page de le faire, `fixed`
+ * plein ecran ou `sticky` borne a un conteneur, selon l'effet voulu. La
+ * feuille de style ne pose que ce qui tient au fonctionnement du fond.
+ *
+ * Deux obligations pour la page, les couches etant en `position: absolute` :
+ *  - le stage doit etre un ancetre positionne (`relative`, `absolute`,
+ *    `fixed` ou `sticky`) — le script previent dans la console s'il est
+ *    reste `static` ;
+ *  - c'est a elle de poser le fond, aucune couleur n'etant appliquee.
+ */
 [data-vb-stage] {
+  /**
+   * Boite occupee par les couches, publiee par le JS (voir src/frame.js).
+   * Les valeurs par defaut decrivent le plein cadre : sans `[data-vb-frame]`
+   * dans la page, rien n'est jamais ecrit et le fond reste plein ecran.
+   *
+   * `--vb-dock` vaut 0 en plein cadre, 1 une fois cale sur la cible, et prend
+   * les valeurs intermediaires pendant le mouvement : de quoi accrocher
+   * n'importe quel autre style a la transition.
+   */
+  --vb-dock: 0;
+  --vb-frame-x: 0px;
+  --vb-frame-y: 0px;
+  --vb-frame-w: 100%;
+  --vb-frame-h: 100%;
+
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
 }
 
 /**
- * Positionnement par defaut : un fond fixe couvrant toute la page.
- *
- * `data-vb-stage="custom"` desactive ce bloc et rend la main au designer. Le
- * cas d'usage est un fond sticky borne a un conteneur, qui s'arrete a la fin
- * de celui-ci au lieu de rester colle indefiniment. Le JS ne lit jamais cette
- * valeur : il ne se sert de l'attribut que pour trouver les balises video.
- *
- * L'opt-out est ecrit en negatif a dessein : une valeur ecrite de travers
- * retombe sur le comportement par defaut plutot que sur un fond non positionne.
- *
- * Un stage `custom` doit rester un ancetre positionne (`relative`, `absolute`
- * ou `sticky`), les couches video etant en `position: absolute` a l'interieur.
+ * Les couches lisent leur boite dans les variables du stage. Le recadrage
+ * change donc `left/top/width/height`, jamais un `transform` : la cible n'a
+ * pas le format du viewport, un `scale` deformerait l'image la ou
+ * `object-fit: cover` recadre.
  */
-[data-vb-stage]:not([data-vb-stage='custom']) {
-  position: fixed;
-  inset: 0;
-  background-color: #000;
-}
-
 [data-vb-stage] [data-vb-video] {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  left: var(--vb-frame-x);
+  top: var(--vb-frame-y);
+  width: var(--vb-frame-w);
+  height: var(--vb-frame-h);
   object-fit: cover;
   opacity: 0;
   visibility: hidden;
+}
+
+[data-vb-stage] [data-vb-video] {
   will-change: opacity;
   /* Empeche l'overlay de lecture natif d'iOS d'apparaitre. */
   pointer-events: none;
 }
 
-[data-vb-stage] [data-vb-poster] {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0;
-  visibility: hidden;
-}
+/**
+ * `[data-vb-frame]` n'est qu'un reperage de position : aucune regle ne lui est
+ * imposee ici. Le fond venant se caler DERRIERE elle, elle doit rester
+ * transparente, comme la section qui la contient.
+ */
 
-/* --- Les sections -------------------------------------------------------- */
-
-/* Sans hauteur supplementaire, il n'y a aucune course de scroll a mapper. */
-[data-vb-scrub] {
-  position: relative;
-  z-index: 1;
-  min-height: 250vh;
-}
-
-[data-vb-scrub-inner] {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-}
-
-[data-vb-loop] {
-  position: relative;
-  z-index: 1;
-  min-height: 100vh;
-}
 
 /* --- Etat de chargement -------------------------------------------------- */
 
@@ -111,22 +102,19 @@
   cursor: pointer;
 }
 
-/* Le designer peut surcharger : `is-active` est le seul contrat impose. */
-[data-vb-usecase][aria-pressed='true'] {
+/* Le designer peut surcharger : `data-vb-active` est le seul contrat impose. */
+[data-vb-usecase][data-vb-active='true'] {
   opacity: 1;
 }
 
-[data-vb-usecase][aria-pressed='false'] {
+[data-vb-usecase][data-vb-active='false'] {
   opacity: 0.55;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  [data-vb-stage] [data-vb-video],
-  [data-vb-usecase] {
-    transition: none !important;
-  }
-
-  [data-vb-scrub] {
-    min-height: 100vh;
-  }
+/* La largeur est ecrite en inline par le JS a chaque image de la boucle.
+   Rien ici ne doit la contraindre : seul le point de depart est pose, pour
+   qu'une barre soit deja a zero avant que le script ne tourne. */
+[data-vb-progress] {
+  width: 0%;
 }
+

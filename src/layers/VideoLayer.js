@@ -32,9 +32,9 @@ export class VideoLayer {
     return start + (end - start) * progress;
   }
 
-  /** Vrai quand la couche a assez de donnees pour afficher n'importe quelle image. */
-  get ready() {
-    return false;
+  /** Instant affiche, en secondes. L'UI s'en sert pour suivre la boucle. */
+  get currentTime() {
+    return 0;
   }
 
   /** Charge les donnees necessaires. Idempotent, renvoie toujours la meme promesse. */

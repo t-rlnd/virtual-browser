@@ -30,7 +30,6 @@ export class Mp4VideoLayer extends VideoLayer {
     // Un ecart inferieur a une demi-image ne produirait aucun changement visible.
     this._frameEpsilon = 1 / (fps * 2);
 
-    this._ready = false;
     this._readyPromise = null;
     this._unlocked = false;
 
@@ -53,10 +52,6 @@ export class Mp4VideoLayer extends VideoLayer {
     element.addEventListener('ended', this._onEnded);
 
     this._applyAttributes();
-  }
-
-  get ready() {
-    return this._ready;
   }
 
   get currentTime() {
@@ -104,7 +99,6 @@ export class Mp4VideoLayer extends VideoLayer {
         if (settled) return;
         settled = true;
         cleanup();
-        this._ready = true;
         resolve(this);
       };
 
@@ -137,20 +131,18 @@ export class Mp4VideoLayer extends VideoLayer {
     return this._readyPromise;
   }
 
+  /**
+   * Une lecture, et rien de plus : c'est `Stage.refresh()` qui remet ensuite
+   * chaque couche dans l'etat que decrit la machine a etats. Restaurer la
+   * position ici la mettrait en concurrence avec une bascule de use-case
+   * declenchee par le meme clic, et la couche entrante resterait figee.
+   */
   async unlock() {
     if (this._unlocked) return true;
 
-    const video = this.element;
-    const wasPaused = video.paused;
-    const time = video.currentTime;
-
     try {
-      const started = video.play();
+      const started = this.element.play();
       if (started) await started;
-      if (wasPaused) {
-        video.pause();
-        this.hardSeek(time);
-      }
       this._unlocked = true;
     } catch (error) {
       // Geste trop precoce, ou source pas encore chargee : l'appelant garde

@@ -2,6 +2,8 @@ import { resolveConfig, sourceFor, posterFor, collectVideos } from './config.js'
 import { Mp4VideoLayer } from './layers/Mp4VideoLayer.js';
 import { Stage } from './Stage.js';
 import { initScroll } from './scroll.js';
+import { initFrame } from './frame.js';
+import { initProgress } from './progress.js';
 import { initUseCases } from './usecases.js';
 import { pickWidth, prefersReducedMotion } from './env.js';
 
@@ -13,14 +15,17 @@ function setState(state) {
 
 export async function init(config = resolveConfig(window.SCROLL_VIDEO_CONFIG)) {
   const stageElement = document.querySelector('[data-vb-stage]');
-  const scrubElement = document.querySelector('[data-vb-scrub]');
-  const loopElement = document.querySelector('[data-vb-loop]');
+  const track = document.querySelector('[data-vb-scrub]');
 
-  if (!stageElement || !scrubElement || !loopElement) {
-    console.warn('[scroll-video] structure DOM incomplete, animation desactivee');
+  if (!stageElement || !track) {
+    console.warn(
+      '[scroll-video] [data-vb-stage] ou [data-vb-scrub] introuvable, animation desactivee'
+    );
     setState('error');
     return null;
   }
+
+  warnIfStatic(stageElement);
 
   setState('loading');
   const width = pickWidth(config.widths);
@@ -59,18 +64,19 @@ export async function init(config = resolveConfig(window.SCROLL_VIDEO_CONFIG)) {
 
   stage.mount();
 
-  const scroll = initScroll({
-    stage,
-    config,
-    elements: { scrub: scrubElement, loop: loopElement },
-  });
+  // Avant initScroll : c'est lui qui pose la progression initiale, et le
+  // cadrage comme la variable CSS doivent etre en place pour l'entendre.
+  const progress = initProgress({ stage });
+  const frame = initFrame({ stage, config, stageElement });
+
+  const scroll = initScroll({ stage, config, track });
   const useCases = initUseCases({ stage });
 
   setState('ready');
 
   preloadOnApproach(
     Object.values(layers).filter((layer) => layer.id !== config.defaultActive),
-    loopElement
+    track
   );
 
   const api = {
@@ -78,12 +84,26 @@ export async function init(config = resolveConfig(window.SCROLL_VIDEO_CONFIG)) {
     destroy() {
       scroll.destroy();
       useCases.destroy();
+      frame.destroy();
+      progress.destroy();
       stage.destroy();
     },
   };
 
   window.scrollVideo = api;
   return api;
+}
+
+/**
+ * Les couches sont en `position: absolute` : un stage reste `static` les
+ * laisserait se caler sur le premier ancetre positionne, souvent le body. La
+ * panne est visuelle et silencieuse, autant la nommer.
+ */
+function warnIfStatic(stageElement) {
+  if (getComputedStyle(stageElement).position !== 'static') return;
+  console.warn(
+    '[scroll-video] [data-vb-stage] est en position: static — lui donner fixed, sticky, absolute ou relative, sinon les couches video se caleront ailleurs'
+  );
 }
 
 function buildLayers(stageElement, config, width) {
@@ -145,11 +165,12 @@ function installUnlock(stage, layers) {
 
 /**
  * La seconde video pese autant que la premiere, et un visiteur qui n'atteint
- * jamais la section 2 n'en a aucun usage. On ne la charge donc qu'a
- * l'approche de cette section, ou des qu'un use-case est survole — ce qui
- * arrive toujours avant le clic.
+ * jamais la section 2 n'en a aucun usage. On ne la charge donc qu'a l'approche
+ * de la piste, ou des qu'un use-case est survole — ce qui arrive toujours avant
+ * le clic. La section 2 etant superposee, c'est bien la piste qu'on observe :
+ * la viser elle ferait partir le telechargement au premier pixel de scrub.
  */
-function preloadOnApproach(layers, loopElement) {
+function preloadOnApproach(layers, track) {
   if (layers.length === 0) return;
 
   let started = false;
@@ -172,7 +193,7 @@ function preloadOnApproach(layers, loopElement) {
     },
     { rootMargin: '100% 0px' }
   );
-  observer.observe(loopElement);
+  observer.observe(track);
 
   for (const button of document.querySelectorAll('[data-vb-usecase]')) {
     button.addEventListener('pointerenter', run, { passive: true });

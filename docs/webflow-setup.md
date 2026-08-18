@@ -8,56 +8,97 @@ Les attributs se posent dans le panneau **Settings (D) > Custom attributes**.
 
 ## Vue d'ensemble
 
+Les deux sections ne se succedent pas : elles s'**empilent** dans un unique
+conteneur colle, et ce sont leurs opacites qui font passer de l'une a l'autre.
+
 ```
 body
 ├── div                       data-vb-loader          (optionnel)
-├── div                       data-vb-stage           position: fixed, plein ecran
-│   ├── video                 data-vb-video="v1"
-│   │                         data-vb-file="video1"
-│   │                         data-vb-transition="166"
-│   │                         data-vb-end="398"
-│   └── video                 data-vb-video="v2"
-│                             data-vb-file="video2"
-│                             data-vb-transition="116"
-│                             data-vb-end="247"
-├── section  "Intro"          data-vb-scrub           min-height: 250vh
-│   └── div                   data-vb-scrub-inner     position: sticky
-│       └── (titre, texte...)
-├── section  "Use cases"      data-vb-loop
-│   ├── div / button          data-vb-usecase="v1"
-│   └── div / button          data-vb-usecase="v2"
+├── div  "Protocol"           data-vb-scrub           la piste · height: 300vh
+│   └── div                   data-vb-scrub-inner     sticky · top 0 · 100vh · overflow hidden
+│       ├── div               data-vb-stage           absolute · inset 0 · z-index 0
+│       │   ├── video         data-vb-video="v1"
+│       │   │                 data-vb-file="video1"
+│       │   │                 data-vb-transition="166"
+│       │   │                 data-vb-end="398"
+│       │   └── video         data-vb-video="v2"
+│       │                     data-vb-file="video2"
+│       │                     data-vb-transition="116"
+│       │                     data-vb-end="247"
+│       │
+│       ├── div  "Intro"                              absolute · inset 0 · z-index 1
+│       │   └── (titre, texte...)                     opacite pilotee par --vb-scrub
+│       │
+│       └── div  "Use cases"  data-vb-loop            absolute · inset 0 · z-index 2
+│           ├── div / button  data-vb-usecase="v1"     fond transparent
+│           │   └── div       data-vb-progress         largeur 0 → 100 % sur la boucle
+│           ├── div / button  data-vb-usecase="v2"
+│           │   └── div       data-vb-progress
+│           └── div           data-vb-frame            ou le fond vient se caler
 └── (suite du site)
+```
+
+La hauteur de la piste est le seul reglage de rythme. Le conteneur colle
+consommant la derniere hauteur d'ecran, la course d'epinglage vaut
+`hauteur de piste - 100vh`, et `loopReserve` en reserve la fin a la boucle :
+
+```
+piste 300vh
+└── course 200vh
+    ├── scrub    100vh   le titre s'efface, la video va de 00:00 a 00:03
+    └── reserve  100vh   la video boucle dans son cadre  (loopReserve: 1)
 ```
 
 ## 1. Le fond video
 
-Un unique bloc `div` avec l'attribut `data-vb-stage`. Laisse **sans valeur**,
-il est mis en `position: fixed` plein ecran par la feuille de style : son
-emplacement dans la hierarchie n'a alors aucune importance visuelle, mais le
-placer tout en haut du body evite les surprises d'empilement.
+Un unique bloc `div` avec l'attribut `data-vb-stage`, laisse **sans valeur**.
 
-### Positionner le stage soi-meme
+### Le positionner : c'est au Designer de le faire
 
-`data-vb-stage="custom"` desactive ce positionnement et rend la main au
-Designer. C'est ce qu'il faut pour un fond **sticky borne a un conteneur**,
-qui s'arrete a la fin de celui-ci au lieu de rester colle indefiniment :
+La feuille de style du script **ne positionne rien** : ni le stage, ni les
+sections. Elle ne pose que ce qui tient au fonctionnement du fond video
+(empilement interne des couches, recadrage, etats de chargement). Le Designer
+garde donc la main sans avoir a lutter contre elle.
+
+Deux mises en place courantes.
+
+**Fond fixe, plein ecran** — il reste colle a l'ecran sur toute la page :
 
 ```
-div  .protocol_background       position: absolute, derriere les sections
-└── div  .protocol_videos-wrapper    position: sticky, 100vw x 100vh
-        data-vb-stage="custom"
-    └── HTML Embed                   les balises <video>
+div  .video_background        position: fixed, inset 0
+     data-vb-stage
+└── HTML Embed                les balises <video>
 ```
 
-Deux contraintes dans ce mode :
+**Fond sticky borne a un conteneur** — il s'arrete a la fin de celui-ci :
 
-- le stage doit rester un **ancetre positionne** (`relative`, `absolute` ou
-  `sticky`), les couches video etant en `position: absolute` a l'interieur ;
-- c'est a toi de poser le fond, `background-color` n'etant plus applique.
+```
+div  .protocol_background          position: absolute, derriere les sections
+└── div  .protocol_videos-wrapper  position: sticky, 100vw x 100vh
+         data-vb-stage
+    └── HTML Embed                 les balises <video>
+```
 
-Sans cet attribut, le `position: fixed` de la feuille de style ecraserait le
-`sticky` du Designer : a specificite egale, c'est `scroll-video.css` qui gagne,
-etant chargee apres le CSS de Webflow.
+Deux obligations, dans les deux cas :
+
+- le stage doit etre un **ancetre positionne** (`relative`, `absolute`,
+  `fixed` ou `sticky`), les couches video etant en `position: absolute` a
+  l'interieur. Reste-t-il `static`, le script le signale dans la console ;
+- c'est a toi de poser le fond, aucune `background-color` n'etant appliquee.
+
+Pour un fond noir qui s'efface quand la video vient se caler dans son cadre
+(section 4), passer par un Embed plutot que par le Designer, `calc()` et les
+variables CSS n'y etant pas saisissables :
+
+```html
+<style>
+  .video_background { background-color: rgb(0 0 0 / calc(1 - var(--vb-dock))); }
+</style>
+```
+
+L'ancienne valeur `data-vb-stage="custom"`, qui servait a desactiver un
+positionnement impose par la feuille de style, n'a plus d'objet : elle est sans
+effet, et peut etre retiree.
 
 A l'interieur, les balises `<video>` se posent par un **HTML Embed**, pas par
 l'element Video du Designer : ce dernier produit un embed Vimeo/YouTube, dans
@@ -111,64 +152,216 @@ Rien a modifier dans le JavaScript. Dans le Designer :
 Le script decouvre les balises au chargement : la nouvelle video est scrubee
 sur **sa** intro, boucle sur **son** segment, et reste sticky comme les autres.
 
-## 2. La section scrubee
+## 2. La piste et le conteneur colle
 
-La section 1 porte `data-vb-scrub`. Sa hauteur doit depasser le viewport, sinon
-il n'y a aucune course de scroll a mapper sur la video : la feuille de style
-impose `min-height: 250vh`.
+La piste porte `data-vb-scrub` et une hauteur fixe — `300vh` pour le rythme
+actuel. Son unique enfant porte `data-vb-scrub-inner` et se met en
+`position: sticky; top: 0; height: 100vh; overflow: hidden`. C'est lui qui
+reste colle a l'ecran, et c'est dans lui que vivent les trois calques : le
+fond, le titre, les use-cases.
 
-Son contenu visible vit dans un enfant portant `data-vb-scrub-inner`, mis en
-`position: sticky; top: 0; height: 100vh`. C'est lui qui reste colle a l'ecran
-pendant que la video se scrube derriere.
+La feuille de style du script n'impose ni hauteur ni positionnement — c'est au
+Designer de les poser.
 
-Le scrub **ne s'arrete pas a la fin de la section 1**. Il commence quand le haut
-de la section 1 atteint le haut de l'ecran, et se poursuit pendant toute la
-montee de la section 2, pour n'atteindre son terme qu'au moment ou celle-ci
-occupe tout l'ecran. Concretement, la course de scroll utile vaut donc
-exactement la hauteur de la section 1.
+Le scrub commence quand le haut de la piste atteint le haut de l'ecran. Il ne
+va pas jusqu'au bout de la course : `loopReserve` dans
+[`src/config.js`](../src/config.js) en reserve la fin a la boucle, exprimee en
+hauteurs d'ecran.
 
-Le dernier tiers du scrub se joue ainsi pendant que le contenu colle de la
-section 1 se decolle et sort par le haut, remplace par la section 2 : la video
-finit son parcours 00:00 → 00:03 pile au moment ou la seconde section prend
-l'ecran.
+| `loopReserve` | Sur une piste de 300vh (course 200vh) |
+| --- | --- |
+| `1` | 100vh de scrub, puis 100vh de boucle — la valeur actuelle |
+| `0.5` | 150vh de scrub, puis 50vh de boucle |
+| `0` | 200vh de scrub, et la boucle n'est jamais vue |
 
-Pour allonger ou raccourcir la duree du scrub, il suffit de changer la hauteur
-de la section 1 (une valeur plus grande ralentit la video par rapport au
-scroll).
+Sans reserve, la boucle prendrait la main au moment ou le conteneur se decolle,
+c'est-a-dire hors de vue. Pour allonger le scrub sans toucher a la boucle, il
+suffit de monter la hauteur de la piste : la reserve etant comptee en hauteurs
+d'ecran, tout le supplement va au scrub.
+
+### Le passage en boucle est definitif
+
+Remonter ne relance pas le scrub : la video reste a tourner dans son cadre, et
+se met en pause quand la piste quitte l'ecran. C'est `latchLoop: true` dans
+[`src/config.js`](../src/config.js).
+
+Consequence a garder en tete cote maquette, et elle est plus large qu'avant :
+le verrou fige aussi la progression, donc `--vb-scrub` avec elle. Remonter en
+haut de la piste n'y ramene pas le titre — la mise en scene reste ou elle en
+etait, section 2 affichee par-dessus une video calee dans son cadre.
+
+`latchLoop: false` restaure l'aller-retour : remonter rembobine la video,
+ramene le titre et rend le fond au plein ecran. C'est le comportement le plus
+proche d'une maquette entierement pilotee par le scroll.
 
 ## 3. La section des use-cases
 
-La section 2 porte `data-vb-loop`. C'est une section normale : le scroll la
-traverse et continue vers la suite du site.
+La section 2 porte `data-vb-loop`. Elle vit **dans** le conteneur colle, en
+`position: absolute; inset: 0`, par-dessus le fond et le titre. Sa position ne
+declenche donc plus rien : elle est a l'ecran du premier au dernier pixel de la
+piste, et c'est son opacite qui la revele.
+
+```css
+[data-vb-loop] {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  opacity: calc((var(--vb-scrub) - 0.3) / 0.3);
+  pointer-events: none;
+}
+
+:root[data-vb-mode='loop'] [data-vb-loop] {
+  pointer-events: auto;
+}
+```
+
+Le `pointer-events` n'est pas un detail : une opacite s'interpole, lui non. A
+opacite nulle les boutons resteraient cliquables, et un clic dans le vide
+changerait la video de fond. L'attribut `data-vb-mode` pose sur `<html>` tranche
+la question — voir la section 5.
 
 Les declencheurs portent `data-vb-usecase="v1"`, `data-vb-usecase="v2"`, etc. :
 Ils peuvent etre n'importe quel element : `Button`, `Link block`, `Div block`.
 Si ce n'est pas un vrai `<button>`, le script ajoute `role="button"` et
 `tabindex="0"` pour que le clavier fonctionne.
 
-L'etat selectionne est reflete de deux facons, au choix pour le styling :
+L'etat selectionne est reflete de trois facons, au choix pour le styling :
 
+- l'attribut `data-vb-active="true"` / `"false"`
 - l'attribut `aria-pressed="true"` / `"false"`
 - la classe `is-active`
 
-En Webflow, le plus simple est de creer une combo class `is-active` sur le
-premier bouton et d'y definir l'etat selectionne.
+En Webflow, le plus simple est de styliser sur l'attribut, qui n'oblige a rien
+cote classes :
 
-## 4. L'ecran de chargement (optionnel)
+```css
+[data-vb-active="true"] .prot-demo_timeblock { background: #fff; }
+```
+
+### La barre d'avancee de la boucle
+
+Un element portant `data-vb-progress` **a l'interieur** d'un bouton voit sa
+largeur ecrite a chaque image, de `0%` au debut de la boucle a `100%` a sa fin,
+puis repart a zero au rebouclage. C'est la position reelle de la video qui est
+lue, pas un minuteur : la barre reste donc juste meme si le decodage prend du
+retard.
+
+```
+div / button          data-vb-usecase="v1"
+└── div  .prot-demo_timeblock-rail     le rail, largeur fixe, overflow: hidden
+    └── div  .prot-demo_timeblock      data-vb-progress
+```
+
+L'attribut est laisse **sans valeur** : le use-case est deduit du bouton
+parent. Une barre placee ailleurs dans la page doit nommer le sien :
+`data-vb-progress="v1"`.
+
+A poser en Webflow sur `.prot-demo_timeblock` : `width: 0%`, et une hauteur et
+une couleur. Ne pas y mettre de `transition` sur `width` — le script ecrit la
+valeur a chaque image, une transition la ferait trainer derriere la video. Le
+parent tient le rail : largeur totale, `overflow: hidden`.
+
+Seule la barre du use-case affiche avance ; les autres sont remises a zero, de
+meme que toutes les barres des que la boucle s'arrete (retour en scrub ou
+section sortie de l'ecran).
+
+En plus de la largeur, la valeur brute est publiee en variable CSS
+`--vb-progress` (0 a 1) sur le meme element, de quoi piloter autre chose sans
+repasser par le JS.
+
+## 4. Le cadre d'accueil de la video (optionnel)
+
+Un element de la section 2 portant `data-vb-frame` devient la place du fond
+video : la video quitte progressivement le plein ecran pour venir s'y caler,
+puis suit ce cadre tant que la page defile.
+
+Le mouvement est **pilote par le scroll**, pas par une duree : il est une
+fonction de la progression, exactement comme le timecode de la video. A
+mi-parcours il est a mi-chemin, et remonter le defait. La plage se regle par
+`dockRange` dans [`src/config.js`](../src/config.js) :
+
+```js
+dockRange: { start: 0.05, end: 0.65 }
+```
+
+Soit : plein ecran jusqu'a 5 % de la course, entierement cale a 65 %, et le
+mouvement etale entre les deux. Une plage vide (`start === end`) rend la
+bascule seche au point donne.
+
+Le cadre n'est qu'un **reperage de position** : donne-lui la taille et le
+placement voulus, rien d'autre. Deux contraintes en decoulent.
+
+1. **Le cadre doit etre transparent.** Le fond etant un calque separe qui passe
+   *derriere* la section, un `background-color` sur le cadre masquerait la
+   video au lieu de la reveler.
+2. **La section 2 doit l'etre aussi**, pour la meme raison. Si elle a besoin
+   d'une couleur, la porter sur le `body` ou sur ses enfants — jamais sur la
+   section elle-meme.
+
+L'aplat noir du stage s'efface au rythme du recadrage : une fois la video calee
+dans son cadre, le reste de la page redevient visible.
+
+Le JS publie la geometrie en variables CSS sur le stage, utilisables pour
+accrocher d'autres styles a la transition :
+
+| Variable | Valeur |
+| --- | --- |
+| `--vb-dock` | `0` en plein ecran, `1` une fois calee, les valeurs intermediaires pendant le mouvement |
+| `--vb-frame-x` / `-y` | Position de la couche dans le stage, en pixels |
+| `--vb-frame-w` / `-h` | Taille de la couche, en pixels |
+
+Exemple : arrondir les angles de la video seulement une fois calee.
+
+```css
+[data-vb-stage] [data-vb-video] {
+  border-radius: calc(var(--vb-dock) * 16px);
+}
+```
+
+Sans `data-vb-frame` dans la page, le fond reste plein ecran d'un bout a
+l'autre : l'attribut est le seul interrupteur.
+
+## 5. Ce que le script publie pour la mise en scene
+
+Toute l'apparition et la disparition des calques se pilote en CSS, depuis deux
+valeurs posees sur la balise `<html>`.
+
+| Nom | Valeur | Sert a |
+| --- | --- | --- |
+| `--vb-scrub` | Progression du scrub, de 0 a 1 | Tout ce qui s'interpole : opacites, deplacements, echelles |
+| `data-vb-mode` | `scrub`, `loop` ou `idle` | Tout ce qui ne s'interpole pas : `pointer-events`, `visibility` |
+| `data-vb-state` | `loading`, `ready`, `error`, `reduced` | Les styles de chargement |
+
+Les seuils de la maquette actuelle, a poser dans un Embed puisque `calc()` n'est
+pas saisissable dans le Designer :
+
+```css
+/* Le titre s'efface sur le premier cinquieme de la course. */
+.protocol_intro { opacity: calc(1 - var(--vb-scrub) / 0.2); }
+
+/* La section 2 se revele de 30 % a 60 %. */
+[data-vb-loop] { opacity: calc((var(--vb-scrub) - 0.3) / 0.3); }
+
+/* Les pastilles n'arrivent que sur les 20 derniers pourcents. */
+.prot-demo_pin { opacity: calc((var(--vb-scrub) - 0.8) / 0.2); }
+```
+
+Les valeurs hors de 0–1 sont ramenees dans l'intervalle par le navigateur : une
+formule qui passe en negatif avant son seuil n'a pas besoin d'etre bornee.
+
+## 5 bis. L'ecran de chargement (optionnel)
 
 Un bloc portant `data-vb-loader` est masque automatiquement des que la premiere
-video est prete. Le script pose sur la balise `<html>` un attribut
-`data-vb-state` valant `loading`, `ready`, `error` ou `reduced`, utilisable pour
-des styles conditionnels.
+video est prete.
 
-## 5. Le reste du site
+## 6. Le reste du site
 
 Toutes les sections qui suivent doivent etre au-dessus du fond video. La
 feuille de style s'en charge pour les deux sections concernees ; pour les
 autres, leur donner un fond opaque suffit, sinon la video restera visible
 derriere.
 
-## 6. Le code personnalise
+## 7. Le code personnalise
 
 Coller [`webflow/head.html`](../webflow/head.html) dans **Page settings > Inside
 `<head>` tag** et [`webflow/footer.html`](../webflow/footer.html) dans **Before
@@ -186,7 +379,7 @@ Le second cas est le piege : changer le CDN video impose de republier le code.
 
 L'ordre du footer compte : `gsap`, puis `ScrollTrigger`, puis `scroll-video.js`.
 
-## 7. Developper contre le site, sans republier
+## 8. Developper contre le site, sans republier
 
 Pendant la mise au point, remplacer les deux URL jsDelivr par celles du serveur
 local (`pnpm dev` les affiche au demarrage) :
@@ -214,7 +407,18 @@ Une fois publie, ouvrir la console :
 
 - `window.scrollVideo.stage.mode` renvoie `scrub`, `loop` ou `idle`
 - `window.scrollVideo.stage.activeId` renvoie `v1` ou `v2`
-- `window.scrollVideo.stage.progress` suit la position dans la section 1
+- `window.scrollVideo.stage.progress` suit la position dans la course de scrub
+- `document.documentElement.style.getPropertyValue('--vb-scrub')` doit suivre
+  la meme valeur : c'est elle qui pilote la mise en scene
+- `[...document.querySelectorAll('[data-vb-video]')].map((e) => e.tagName)` doit
+  renvoyer `['VIDEO', 'VIDEO']`. Un `DIV` signale que l'element Video du
+  Designer a ete utilise a la place d'un HTML Embed, et le scrub ne peut pas
+  fonctionner
 
-Si `window.scrollVideo` est indefini, l'un des trois elements racines manque :
-le detail est logue au chargement.
+Si `window.scrollVideo` est indefini, `[data-vb-stage]` ou `[data-vb-scrub]`
+manque : ce sont les deux seuls elements dont le script a besoin pour demarrer,
+et le detail est logue au chargement.
+
+`data-vb-loop` n'en fait pas partie : c'est un repere pour la feuille de style,
+pas pour le script. L'oublier n'empeche rien de tourner — la section 2 ne se
+revelera simplement jamais, faute de regle CSS accrochee a `--vb-scrub`.

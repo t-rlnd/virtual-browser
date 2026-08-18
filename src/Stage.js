@@ -66,8 +66,15 @@ export class Stage extends Emitter {
     return layer.timeForProgress(clamp01(progress));
   }
 
+  /**
+   * La progression est aussi emise, et pas seulement stockee : le recadrage et
+   * la publication de `--vb-scrub` s'y accrochent. Elle est emise meme hors
+   * mode scrub, un verrou de boucle devant figer l'habillage la ou il en est
+   * plutot que de le laisser sur une valeur perimee.
+   */
   setProgress(progress) {
     this.progress = clamp01(progress);
+    this.emit('progress', this.progress);
     if (this.mode !== MODES.SCRUB) return;
     this.active.seek(this.timeForProgress(this.progress));
   }
@@ -128,14 +135,24 @@ export class Stage extends Emitter {
     from.pause();
   }
 
-  /** Reapplique l'etat courant, par exemple apres le deblocage iOS. */
+  /**
+   * Reapplique l'etat courant a toutes les couches. Sert apres le deblocage
+   * iOS, qui lance brievement la lecture de chacune d'elles : c'est ici, et
+   * nulle part ailleurs, qu'on les remet dans l'etat decrit par la machine.
+   */
   refresh() {
+    for (const [id, layer] of Object.entries(this.layers)) {
+      if (id !== this.activeId) layer.pause();
+    }
+
     const layer = this.active;
     if (this.mode === MODES.LOOP) {
       layer.playLoop(layer.segments.loop.start, layer.segments.loop.end);
     } else if (this.mode === MODES.SCRUB) {
       layer.pause();
       layer.hardSeek(this.timeForProgress(this.progress));
+    } else {
+      layer.pause();
     }
   }
 
