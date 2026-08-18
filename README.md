@@ -1,27 +1,105 @@
 # Fond video pilote au scroll (Webflow)
 
-Un unique fond video plein ecran traverse deux sections : il est **scrube par
-le scroll** sur la premiere, puis **boucle en autonomie** sur la seconde, ou
-deux use-cases permettent d'echanger la video a chaud.
+Un unique fond video traverse deux sections **superposees** dans un meme
+conteneur colle : il est **scrube par le scroll** sur la premiere, puis
+**boucle en autonomie** sur la seconde, ou deux use-cases permettent d'echanger
+la video a chaud.
 
-Le choix de use-case est **retroactif** : apres avoir bascule sur la video 2,
-remonter vers la section 1 rembobine la video 2, pas la video 1.
+Les deux sections ne se succedent pas, elles s'empilent : c'est la progression
+du scrub qui fait disparaitre le titre, apparaitre les use-cases et venir la
+video se caler dans son cadre. Le JavaScript n'ecrit qu'un nombre — la variable
+CSS `--vb-scrub` — et la page en tire toute sa mise en scene.
+
+Le scrub **ne joue qu'une fois** : la boucle atteinte, remonter ne rembobine
+plus rien, la video reste a tourner dans son cadre (`latchLoop`, ci-dessous).
 
 ## Le comportement en trois modes
 
 | Mode | Quand | Ce que fait la video active |
 | --- | --- | --- |
-| `scrub` | Jusqu'a ce que la section 2 remplisse l'ecran | En pause, son `currentTime` est ecrit par la position de scroll sur 00:00 → 00:03 |
-| `loop` | Section 2 pleine page, puis tant qu'elle reste visible | Lecture autonome, en boucle sur 00:03 → 00:06 |
-| `idle` | Section 2 entierement sortie | Tout en pause, rien ne se decode |
+| `scrub` | Jusqu'a la fin de la course de scrub | En pause, son `currentTime` est ecrit par la position de scroll sur 00:00 → 00:03 |
+| `loop` | Sur la reserve de fin de piste, puis tant que la piste reste visible | Lecture autonome en boucle sur 00:03 → 00:06, calee dans le cadre de la section 2 |
+| `idle` | Piste entierement sortie de l'ecran | Tout en pause, rien ne se decode |
 
-Le scrub se poursuit pendant la montee de la section 2 et ne s'acheve qu'une
-fois celle-ci a 100 % dans l'ecran : la course de scroll utile vaut donc la
-hauteur complete de la section 1.
+## La geometrie de la piste
 
-Cliquer sur un use-case change uniquement **quelle** video est active. Le mode
-et la progression de scroll ne bougent pas, ce qui produit la retroactivite
-sans code dedie.
+Le conteneur colle faisant une hauteur d'ecran, la course d'epinglage vaut
+`hauteur de piste - 100vh`. Le scrub n'en occupe pas la totalite : `loopReserve`
+dans [`src/config.js`](src/config.js) reserve la fin de course a la boucle,
+exprimee en hauteurs d'ecran.
+
+```
+piste 300vh
+└── course 200vh
+    ├── scrub    100vh   le titre s'efface, la video va de 00:00 a 00:03
+    └── reserve  100vh   la video boucle dans son cadre  (loopReserve: 1)
+```
+
+Sans reserve, la boucle prendrait la main au moment ou le conteneur se decolle,
+c'est-a-dire hors de vue. Pour allonger le scrub sans toucher a la boucle, il
+suffit de monter la hauteur de la piste.
+
+## Le verrou de boucle
+
+Une fois la boucle atteinte, le scrub ne reprend plus la main : remonter vers
+la section 1 laisse la video tourner dans son cadre, et la met simplement en
+pause quand la section 2 quitte l'ecran. Redescendre la relance ou elle en
+etait. C'est `latchLoop: true` dans [`src/config.js`](src/config.js).
+
+Cliquer sur un use-case change uniquement **quelle** video est active : ni le
+mode ni la progression ne bougent.
+
+`latchLoop: false` restaure l'aller-retour d'origine — remonter rembobine la
+video. C'est ce qui rendait le choix de use-case **retroactif** : apres avoir
+bascule sur la video 2, la section 1 rembobinait la video 2, pas la video 1.
+Le verrou rend cette retroactivite sans objet, la section 1 n'etant plus
+rejouee ; les deux comportements restent couverts par les tests.
+
+## La mise en scene, en CSS
+
+Deux choses sont publiees pour que la page anime ses propres calques :
+
+| Publie sur | Nom | Valeur |
+| --- | --- | --- |
+| `<html>` | `--vb-scrub` | Progression du scrub, de 0 a 1 |
+| `<html>` | `data-vb-mode` | `scrub`, `loop` ou `idle` |
+
+Une opacite s'interpole depuis la variable ; un `pointer-events` non, d'ou
+l'attribut. Un calque a opacite nulle reste cliquable : sans lui, les boutons
+de use-case capteraient les clics bien avant d'etre visibles.
+
+```css
+.protocol_intro { opacity: calc(1 - var(--vb-scrub) / 0.2); }
+[data-vb-loop]  { opacity: calc((var(--vb-scrub) - 0.3) / 0.3); pointer-events: none; }
+:root[data-vb-mode='loop'] [data-vb-loop] { pointer-events: auto; }
+```
+
+## Le recadrage, pilote par le scroll
+
+Le fond ne reste plein ecran que le debut de la course. Il vient ensuite se
+caler sur l'element de la section 2 portant `data-vb-frame`, et le suit tant
+que la page defile.
+
+Le mouvement est une **fonction de la progression**, pas une duree : a
+mi-parcours de `dockRange` il est a mi-chemin, et remonter le defait aussi
+surement qu'il l'a fait. C'est ce qui le garde solidaire du reste de la mise en
+scene, elle aussi accrochee a `--vb-scrub`. La plage se regle par `dockRange`
+dans [`src/config.js`](src/config.js) — `{ start: 0.05, end: 0.65 }` par defaut.
+
+Le mouvement passe par `left/top/width/height` et non par un `transform` : la
+cible n'ayant pas le format du viewport, un `scale` deformerait l'image la ou
+`object-fit: cover` recadre. La geometrie est publiee en variables CSS sur le
+stage (`--vb-frame-*`, plus `--vb-dock` de 0 a 1), donc toutes les couches se
+recadrent ensemble et n'importe quel autre style peut s'accrocher a la
+transition.
+
+Sans `[data-vb-frame]` dans la page, rien ne change : le fond reste plein ecran
+d'un bout a l'autre.
+
+La feuille de style ne positionne ni le stage ni les sections : c'est a la page
+— au Designer Webflow — de le faire. Voir
+[`docs/webflow-setup.md`](docs/webflow-setup.md) pour ce qu'elle doit poser, et
+pour les deux contraintes de mise en page qu'impose le cadrage.
 
 ## Demarrage
 
@@ -69,11 +147,15 @@ Les medias et le code sont heberges separement : les MP4 sur Bunny, le bundle
 sur GitHub via jsDelivr. Voir [`docs/hosting.md`](docs/hosting.md).
 
 ```bash
-# 0. Inspecter les masters
+# 0. Inspecter les masters, puis les confronter aux standards
 ./scripts/probe.sh masters/*.mp4
+./scripts/check-video.sh masters/video1.mp4:166:398 masters/video2.mp4:116:247
 
 # 1. Encoder les masters (all-intra sur la plage scrubee)
 ./scripts/encode.sh masters/video1.mp4:166:398 masters/video2.mp4:116:247
+
+# 1 bis. Controler ce qui sera televerse
+./scripts/check-video.sh public/assets
 
 # 2. Televerser les medias sur Bunny
 export BUNNY_STORAGE_ZONE=ma-zone BUNNY_STORAGE_KEY=xxxxxxxx
@@ -92,6 +174,94 @@ Il reste a coller [`webflow/head.html`](webflow/head.html) et
 [`webflow/footer.html`](webflow/footer.html) dans le code personnalise de la
 page, et a construire la structure decrite dans
 [`docs/webflow-setup.md`](docs/webflow-setup.md).
+
+## Preparer une nouvelle video
+
+Une commande, une video, un dossier pret a televerser :
+
+```bash
+./scripts/export.sh masters/video3.mp4
+```
+
+Elle sort `exports/video3/`, contenant chaque largeur et son poster :
+
+| Fichier | Definition | Sert |
+| --- | --- | --- |
+| `video3-1920.mp4` + `-poster.jpg` | 1920x1080, soit 1080p | desktop |
+| `video3-1280.mp4` + `-poster.jpg` | 1280x720, soit 720p | portables, tablettes |
+| `video3-750.mp4` + `-poster.jpg` | 750x422 | mobile |
+
+Il ne reste qu'a deposer le contenu de ce dossier, a plat, dans la Storage Zone
+Bunny sous `scroll-video/v1/`. Le script rappelle le chemin exact, la commande
+de verification du CDN, et les attributs a coller dans le Designer.
+
+Les largeurs viennent de `widths` dans [`src/config.js`](src/config.js), et les
+noms de fichiers sont un contrat : le lecteur construit ses URL a partir de la,
+renommer un fichier le rend introuvable.
+
+`export.sh` n'encode pas lui-meme, il enchaine : controle du master, puis
+`encode.sh`, puis controle de l'export. Un master hors standards arrete tout
+avant l'encodage.
+
+Ce que le client doit livrer et ce qu'il ne doit surtout pas faire tient dans
+[`docs/nouvelle-video.md`](docs/nouvelle-video.md), ecrit pour etre transmis
+tel quel.
+
+### Avec ou sans decoupage
+
+Sans decoupage, le fichier sort **entierement all-intra** : toutes les images
+sont des images cles, donc n'importe quel `data-vb-transition` fonctionne, et
+le changer plus tard ne demande aucun reencodage. C'est le mode confortable,
+paye en poids — trois fois le fichier decoupe, mesure sur `video2`.
+
+Une fois le point de bascule arrete devant la vraie page, relancer avec le
+decoupage pour revenir au poids normal :
+
+```bash
+./scripts/export.sh masters/video3.mp4:166:398
+```
+
+Le controle de poids sert de rappel : tant qu'il proteste, c'est qu'on paie
+encore l'all-intra sur toute la longueur.
+
+### Les standards, en detail
+
+Les deux videos actuelles ont ete encodees pour ce scrub precis ; les
+suivantes doivent tenir les memes contraintes. `check-video.sh` les verifie a
+la place de l'oeil, avant comme apres encodage, et sort en erreur des qu'une
+n'est pas tenue. `export.sh` l'appelle deux fois pour nous, mais il s'utilise
+seul :
+
+```bash
+./scripts/check-video.sh masters/video3.mp4:166:398   # le master est-il utilisable
+./scripts/check-video.sh public/assets                # l'encode est-il servable
+```
+
+Il ne recopie pas les standards : la cadence et les largeurs sont lues dans
+[`src/config.js`](src/config.js), donc changer la config change ce qu'il exige.
+
+| Ce qu'il exige d'un master | Pourquoi |
+| --- | --- |
+| Cadence constante | Le decoupage se declare en numeros d'image ; une cadence variable fait deriver la conversion en secondes |
+| Cadence egale a `config.fps` | Sinon la balise doit porter `data-vb-fps`, que le script rappelle |
+| Largeur >= la plus grande largeur encodee | Encoder en 1920 depuis un master plus petit serait un agrandissement |
+| Format >= 16/9 | Le plein ecran recadre en `cover` : un master plus etroit se fait rogner |
+| Aucune rotation en metadonnees | Le stage ne la lit pas, l'image sortirait couchee |
+| Plage scrubee assez longue | Au-dela de 20 px de scroll par image, le scrub se voit par a-coups |
+| Geometrie identique d'un master a l'autre | Les videos s'echangent a chaud, un saut de cadrage se verrait |
+
+| Ce qu'il exige d'un encode | Pourquoi |
+| --- | --- |
+| Plage all-intra en tete | C'est ce qui rend le seek instantane ; le script la mesure et en deduit le `data-vb-transition` maximal |
+| `moov` avant `mdat` | Sans faststart, le premier seek attend le fichier entier |
+| yuv420p 8 bits, level <= 4.1 | Ce que decodent Safari et les appareils anciens |
+| Aucune piste audio | Elle bloque l'autoplay et pese pour rien |
+| Jeu de largeurs complet, poster present | Le lecteur demande une largeur precise, et le poster est le repli `prefers-reduced-motion` |
+| Poids sous budget | 4 Mo par tranche de 1000 px de large, `MB_PER_1000PX` pour l'ajuster |
+
+Le script propose aussi, quand la densite le permet, un `SCRUB_DIVISOR=2` qui
+allege le fichier d'environ 40 %, et imprime la ligne `encode.sh` et les
+attributs `<video>` prets a coller.
 
 ## Reglages
 
@@ -126,7 +296,7 @@ src/
   config.js              reglages globaux ; le decoupage se lit sur les balises
   Stage.js               machine a etats (activeId / mode / progress)
   scroll.js              cablage GSAP ScrollTrigger
-  usecases.js            selecteur de use-case
+  usecases.js            selecteur de use-case et avancee de la boucle
   main.js                initialisation et garde-fous
   env.js                 detection reduced-motion, pointeur, largeur utile
   layers/
@@ -138,6 +308,8 @@ demo/
   demo.js, DebugLayer.js page de demonstration sans fichiers video
   bundle.html            verification du bundle de production
 scripts/
+  export.sh              d'une video a un dossier pret pour Bunny
+  check-video.sh         standards de la video, avant et apres encodage
   encode.sh              encodage ffmpeg all-intra
   upload-bunny.sh        televersement CDN
   check-cdn.sh           controle Range / CORS / MIME

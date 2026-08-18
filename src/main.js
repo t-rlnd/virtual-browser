@@ -2,6 +2,8 @@ import { resolveConfig, sourceFor, posterFor, collectVideos } from './config.js'
 import { Mp4VideoLayer } from './layers/Mp4VideoLayer.js';
 import { Stage } from './Stage.js';
 import { initScroll } from './scroll.js';
+import { initFrame } from './frame.js';
+import { initProgress } from './progress.js';
 import { initUseCases } from './usecases.js';
 import { pickWidth, prefersReducedMotion } from './env.js';
 
@@ -21,6 +23,8 @@ export async function init(config = resolveConfig(window.SCROLL_VIDEO_CONFIG)) {
     setState('error');
     return null;
   }
+
+  warnIfStatic(stageElement);
 
   setState('loading');
   const width = pickWidth(config.widths);
@@ -59,6 +63,11 @@ export async function init(config = resolveConfig(window.SCROLL_VIDEO_CONFIG)) {
 
   stage.mount();
 
+  // Avant initScroll : c'est lui qui pose la progression initiale, et le
+  // cadrage comme la variable CSS doivent etre en place pour l'entendre.
+  const progress = initProgress({ stage });
+  const frame = initFrame({ stage, config, stageElement });
+
   const scroll = initScroll({
     stage,
     config,
@@ -68,9 +77,12 @@ export async function init(config = resolveConfig(window.SCROLL_VIDEO_CONFIG)) {
 
   setState('ready');
 
+  // La section 2 etant superposee, elle est a l'ecran des l'entree dans la
+  // piste : c'est l'approche de la piste qui doit declencher le prechargement,
+  // sans quoi il partirait au tout premier pixel de scrub.
   preloadOnApproach(
     Object.values(layers).filter((layer) => layer.id !== config.defaultActive),
-    loopElement
+    scrubElement
   );
 
   const api = {
@@ -78,12 +90,26 @@ export async function init(config = resolveConfig(window.SCROLL_VIDEO_CONFIG)) {
     destroy() {
       scroll.destroy();
       useCases.destroy();
+      frame.destroy();
+      progress.destroy();
       stage.destroy();
     },
   };
 
   window.scrollVideo = api;
   return api;
+}
+
+/**
+ * Les couches sont en `position: absolute` : un stage reste `static` les
+ * laisserait se caler sur le premier ancetre positionne, souvent le body. La
+ * panne est visuelle et silencieuse, autant la nommer.
+ */
+function warnIfStatic(stageElement) {
+  if (getComputedStyle(stageElement).position !== 'static') return;
+  console.warn(
+    '[scroll-video] [data-vb-stage] est en position: static — lui donner fixed, sticky, absolute ou relative, sinon les couches video se caleront ailleurs'
+  );
 }
 
 function buildLayers(stageElement, config, width) {

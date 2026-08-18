@@ -37,6 +37,11 @@ export class VideoLayer {
     return false;
   }
 
+  /** Instant affiche, en secondes. L'UI s'en sert pour suivre la boucle. */
+  get currentTime() {
+    return 0;
+  }
+
   /** Charge les donnees necessaires. Idempotent, renvoie toujours la meme promesse. */
   preload() {
     return Promise.reject(new Error('preload() non implemente'));

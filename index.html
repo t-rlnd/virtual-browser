@@ -23,7 +23,46 @@
         background: #05070c;
       }
 
+      /**
+       * Montage superpose : les deux sections vivent l'une par-dessus l'autre
+       * dans un unique conteneur colle, et c'est la progression du scrub qui
+       * les fait apparaitre et disparaitre.
+       *
+       * La course d'epinglage vaut `hauteur de piste - 100vh`. A 300vh, elle
+       * fait donc 200vh : 100vh de scrub, puis les 100vh de reserve ou la
+       * video boucle dans son cadre (`loopReserve: 1`).
+       *
+       * Cette mise en page est du ressort de la page — dans le projet reel, du
+       * Designer Webflow. La feuille de style du script ne pose que le fond.
+       */
+      [data-vb-scrub] {
+        position: relative;
+        z-index: 1;
+        height: 300vh;
+      }
+
       [data-vb-scrub-inner] {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* L'aplat noir s'efface au rythme du recadrage, sans quoi il masquerait
+         la page une fois la video calee dans son cadre. */
+      [data-vb-stage] {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background-color: rgb(0 0 0 / calc(1 - var(--vb-dock)));
+      }
+
+      /* Section 1 : le titre, par-dessus la video. Il s'efface sur le premier
+         cinquieme de la course. */
+      .intro {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -31,6 +70,24 @@
         text-align: center;
         gap: 0.75rem;
         padding: 2rem;
+        opacity: calc(1 - var(--vb-scrub, 0) / 0.2);
+      }
+
+      /* Section 2 : superposee a la premiere, revelee de 0.30 a 0.60. Fond
+         transparent, la video passant derriere elle. */
+      [data-vb-loop] {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        opacity: calc((var(--vb-scrub, 0) - 0.3) / 0.3);
+        /* Une opacite s'interpole, un `pointer-events` non : a opacite nulle
+           les boutons capteraient quand meme les clics. Le mode publie sur
+           <html> tranche la question. */
+        pointer-events: none;
+      }
+
+      :root[data-vb-mode='loop'] [data-vb-loop] {
+        pointer-events: auto;
       }
 
       h1 {
@@ -55,11 +112,49 @@
         padding: 4rem 2rem;
       }
 
+      /* Les pastilles n'arrivent que sur les 20 derniers pourcents. */
+      .pins {
+        display: flex;
+        gap: 0.5rem;
+        opacity: calc((var(--vb-scrub, 0) - 0.8) / 0.2);
+      }
+
+      .pins span {
+        display: grid;
+        place-items: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 6px;
+        font: 12px ui-monospace, Menlo, monospace;
+      }
+
+      /* Section 2 : les use-cases a gauche, le cadre d'accueil de la video a droite. */
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr);
+        align-items: start;
+        gap: 2rem;
+        width: min(1200px, 92vw);
+      }
+
       .usecases {
         display: flex;
-        flex-wrap: wrap;
+        flex-direction: column;
         gap: 1rem;
-        justify-content: center;
+      }
+
+      /* Le cadre ne peint rien : la video vient se caler derriere lui. */
+      [data-vb-frame] {
+        aspect-ratio: 16 / 9;
+        border: 2px dashed rgba(255, 45, 45, 0.9);
+        border-radius: 12px;
+      }
+
+      @media (max-width: 780px) {
+        .layout {
+          grid-template-columns: minmax(0, 1fr);
+        }
       }
 
       [data-vb-usecase] {
@@ -72,7 +167,6 @@
         font: inherit;
         text-align: left;
         padding: 1.25rem 1.5rem;
-        width: min(320px, 90vw);
         transition: opacity 200ms ease, border-color 200ms ease, transform 200ms ease;
       }
 
@@ -80,7 +174,7 @@
         transform: translateY(-2px);
       }
 
-      [data-vb-usecase][aria-pressed='true'] {
+      [data-vb-usecase][data-vb-active='true'] {
         border-color: #ffffff;
         background: rgba(255, 255, 255, 0.14);
       }
@@ -94,6 +188,20 @@
       [data-vb-usecase] span {
         font-size: 0.9rem;
         opacity: 0.7;
+      }
+
+      /* Rail de la barre d'avancee : c'est l'enfant qui grandit. */
+      .timeblock-rail {
+        margin-top: 0.75rem;
+        height: 3px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.15);
+        overflow: hidden;
+      }
+
+      [data-vb-progress] {
+        height: 100%;
+        background: #ffffff;
       }
 
       .after {
@@ -138,74 +246,92 @@
   <body>
     <div data-vb-loader>chargement…</div>
 
-    <!-- Le fond persistant. Les <canvas> servent au mode debug, les <video> au mode ?real -->
-    <div data-vb-stage>
-      <canvas
-        data-vb-canvas="v1"
-        data-vb-video="v1"
-        data-vb-file="video1"
-        data-vb-transition="166"
-        data-vb-end="398"
-      ></canvas>
-      <canvas
-        data-vb-canvas="v2"
-        data-vb-video="v2"
-        data-vb-file="video2"
-        data-vb-transition="116"
-        data-vb-end="247"
-      ></canvas>
-      <video
-        data-vb-video="v1"
-        data-vb-file="video1"
-        data-vb-transition="166"
-        data-vb-end="398"
-        muted
-        playsinline
-        preload="auto"
-      ></video>
-      <video
-        data-vb-video="v2"
-        data-vb-file="video2"
-        data-vb-transition="116"
-        data-vb-end="247"
-        muted
-        playsinline
-        preload="auto"
-      ></video>
-    </div>
-
     <div data-hud>
       <div><b>mode</b><span data-hud-mode>—</span></div>
       <div><b>active</b><span data-hud-active>—</span></div>
       <div><b>progress</b><span data-hud-progress>—</span></div>
       <div><b>currentTime</b><span data-hud-time>—</span></div>
+      <div><b>dock</b><span data-hud-dock>—</span></div>
     </div>
 
+    <!--
+      Une seule piste de 300vh, un seul conteneur colle, et dedans trois
+      calques empiles : le fond video, le titre, puis la section des use-cases.
+      Ce sont les opacites qui font passer de l'un a l'autre, pas le flux.
+    -->
     <section data-vb-scrub>
       <div data-vb-scrub-inner>
-        <h1>Section 1</h1>
-        <p class="lede">
-          La video de fond est en pause : c'est la position de scroll qui ecrit son
-          timecode, de 00:00 a 00:03. Remonter la rembobine.
-        </p>
-      </div>
-    </section>
+        <!-- Le fond persistant. Les <canvas> servent au mode debug, les <video> au mode ?real -->
+        <div data-vb-stage>
+          <canvas
+            data-vb-canvas="v1"
+            data-vb-video="v1"
+            data-vb-file="video1"
+            data-vb-transition="166"
+            data-vb-end="398"
+          ></canvas>
+          <canvas
+            data-vb-canvas="v2"
+            data-vb-video="v2"
+            data-vb-file="video2"
+            data-vb-transition="116"
+            data-vb-end="247"
+          ></canvas>
+          <video
+            data-vb-video="v1"
+            data-vb-file="video1"
+            data-vb-transition="166"
+            data-vb-end="398"
+            muted
+            playsinline
+            preload="auto"
+          ></video>
+          <video
+            data-vb-video="v2"
+            data-vb-file="video2"
+            data-vb-transition="116"
+            data-vb-end="247"
+            muted
+            playsinline
+            preload="auto"
+          ></video>
+        </div>
 
-    <section data-vb-loop>
-      <h1>Section 2</h1>
-      <p class="lede">
-        La video s'est detachee du scroll et boucle de 00:03 a 00:06. Choisir un
-        use-case change la video de fond — y compris pour la section precedente.
-      </p>
-      <div class="usecases">
-        <button type="button" data-vb-usecase="v1">
-          <strong>Use case 1</strong>
-          <span>Illustre par la video 1</span>
-        </button>
-        <button type="button" data-vb-usecase="v2">
-          <strong>Use case 2</strong>
-          <span>Illustre par la video 2</span>
-        </button>
+        <div class="intro">
+          <h1>Section 1</h1>
+          <p class="lede">
+            La video de fond est en pause : c'est la position de scroll qui ecrit son
+            timecode, de 00:00 a 00:03. Remonter la rembobine.
+          </p>
+        </div>
+
+        <div data-vb-loop>
+          <h1>Section 2</h1>
+          <p class="lede">
+            La video s'est detachee du scroll, s'est calee dans le cadre en
+            pointilles et y boucle de 00:03 a 00:06. Choisir un use-case change la
+            video — y compris pour la section precedente.
+          </p>
+          <div class="layout">
+            <div class="usecases">
+              <button type="button" data-vb-usecase="v1">
+                <strong>Use case 1</strong>
+                <span>Illustre par la video 1</span>
+                <div class="timeblock-rail"><div data-vb-progress></div></div>
+              </button>
+              <button type="button" data-vb-usecase="v2">
+                <strong>Use case 2</strong>
+                <span>Illustre par la video 2</span>
+                <div class="timeblock-rail"><div data-vb-progress></div></div>
+              </button>
+            </div>
+
+            <!-- Le fond video vient se caler ici au fil du scrub. -->
+            <div data-vb-frame>
+              <div class="pins"><span>1</span><span>2</span><span>3</span></div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
