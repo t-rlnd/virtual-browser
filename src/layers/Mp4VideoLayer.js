@@ -137,20 +137,18 @@ export class Mp4VideoLayer extends VideoLayer {
     return this._readyPromise;
   }
 
+  /**
+   * Une lecture, et rien de plus : c'est `Stage.refresh()` qui remet ensuite
+   * chaque couche dans l'etat que decrit la machine a etats. Restaurer la
+   * position ici la mettrait en concurrence avec une bascule de use-case
+   * declenchee par le meme clic, et la couche entrante resterait figee.
+   */
   async unlock() {
     if (this._unlocked) return true;
 
-    const video = this.element;
-    const wasPaused = video.paused;
-    const time = video.currentTime;
-
     try {
-      const started = video.play();
+      const started = this.element.play();
       if (started) await started;
-      if (wasPaused) {
-        video.pause();
-        this.hardSeek(time);
-      }
       this._unlocked = true;
     } catch (error) {
       // Geste trop precoce, ou source pas encore chargee : l'appelant garde
