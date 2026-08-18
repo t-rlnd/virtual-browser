@@ -1,0 +1,12 @@
+node_modules/
+dist/
+masters/
+public/assets/
+.playwright/
+.artifacts/
+.DS_Store
+.env
+.env.local
+
+# Masters egares a la racine
+/*.mp4

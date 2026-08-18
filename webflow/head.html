@@ -1,0 +1,24 @@
+<!--
+  A coller dans Webflow : Page settings > Inside <head> tag
+  (ou Site settings > Custom code > Head si l'animation existe sur plusieurs pages)
+
+  Remplacer REPLACE-ME.b-cdn.net par le domaine de la Pull Zone.
+-->
+
+<link rel="preconnect" href="https://REPLACE-ME.b-cdn.net" crossorigin />
+<link rel="stylesheet" href="https://REPLACE-ME.b-cdn.net/scroll-video/v1/scroll-video.css" />
+
+<!--
+  Masque la page tant que la premiere image n'est pas decodee, pour eviter le
+  flash de fond noir. Le script retire cet etat en posant data-vb-state.
+-->
+<style>
+  [data-vb-loader] {
+    background-color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-family: inherit;
+  }
+</style>

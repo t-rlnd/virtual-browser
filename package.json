@@ -1,0 +1,20 @@
+{
+  "name": "scroll-video-webflow",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Fond video pilote au scroll pour Webflow : scrub sur la section 1, boucle sur la section 2, bascule a chaud entre deux use-cases.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && cp src/styles/scroll-video.css dist/",
+    "preview": "vite preview",
+    "test": "node --test 'test/*.test.mjs'",
+    "test:e2e": "node test/e2e.mjs",
+    "encode": "./scripts/encode.sh",
+    "upload": "./scripts/upload-bunny.sh"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1",
+    "vite": "^7.1.3"
+  }
+}

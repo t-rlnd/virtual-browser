@@ -1,0 +1,77 @@
+<!doctype html>
+<!--
+  Verification du bundle de production tel qu'il sera charge par Webflow.
+
+  Reproduit exactement la structure decrite dans docs/webflow-setup.md et
+  charge dist/scroll-video.js. Sans fichiers dans /assets, la page doit
+  basculer proprement en data-vb-state="error" plutot que de casser.
+
+  Lancer `npm run build` avant d'ouvrir /demo/bundle.html
+-->
+<html lang="fr" data-vb-state="loading">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bundle de production — verification</title>
+    <link rel="stylesheet" href="/dist/scroll-video.css" />
+    <style>
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        color: #fff;
+        background: #05070c;
+      }
+      [data-vb-scrub-inner],
+      [data-vb-loop] {
+        display: grid;
+        place-content: center;
+        gap: 1rem;
+        text-align: center;
+      }
+      .after {
+        position: relative;
+        z-index: 1;
+        min-height: 150vh;
+        background: #05070c;
+        display: grid;
+        place-content: center;
+      }
+      [data-vb-loader] {
+        background: #05070c;
+        display: grid;
+        place-content: center;
+      }
+    </style>
+    <script>
+      // Surcharge sans rebuild : le script lit cet objet au chargement.
+      window.SCROLL_VIDEO_CONFIG = { base: '/assets' };
+    </script>
+  </head>
+
+  <body>
+    <div data-vb-loader>chargement…</div>
+
+    <div data-vb-stage>
+      <video data-vb-video="v1" data-vb-file="video1" data-vb-transition="166" data-vb-end="398"></video>
+      <video data-vb-video="v2" data-vb-file="video2" data-vb-transition="116" data-vb-end="247"></video>
+    </div>
+
+    <section data-vb-scrub>
+      <div data-vb-scrub-inner><h1>Section 1</h1></div>
+    </section>
+
+    <section data-vb-loop>
+      <h1>Section 2</h1>
+      <div>
+        <button type="button" data-vb-usecase="v1">Use case 1</button>
+        <button type="button" data-vb-usecase="v2">Use case 2</button>
+      </div>
+    </section>
+
+    <section class="after"><h1>Suite du site</h1></section>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>
+    <script defer src="/dist/scroll-video.js"></script>
+  </body>
+</html>

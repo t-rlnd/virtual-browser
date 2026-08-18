@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="fr" data-vb-state="loading">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fond video pilote au scroll — demo</title>
+
+    <link rel="stylesheet" href="/src/styles/scroll-video.css" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: #f5f7fa;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        color: var(--ink);
+        background: #05070c;
+      }
+
+      [data-vb-scrub-inner] {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 0.75rem;
+        padding: 2rem;
+      }
+
+      h1 {
+        font-size: clamp(2rem, 6vw, 4.5rem);
+        margin: 0;
+        letter-spacing: -0.03em;
+      }
+
+      p.lede {
+        max-width: 42ch;
+        margin: 0;
+        opacity: 0.75;
+        line-height: 1.6;
+      }
+
+      [data-vb-loop] {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2rem;
+        padding: 4rem 2rem;
+      }
+
+      .usecases {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+      }
+
+      [data-vb-usecase] {
+        appearance: none;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 14px;
+        background: rgba(8, 12, 20, 0.55);
+        backdrop-filter: blur(12px);
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        padding: 1.25rem 1.5rem;
+        width: min(320px, 90vw);
+        transition: opacity 200ms ease, border-color 200ms ease, transform 200ms ease;
+      }
+
+      [data-vb-usecase]:hover {
+        transform: translateY(-2px);
+      }
+
+      [data-vb-usecase][aria-pressed='true'] {
+        border-color: #ffffff;
+        background: rgba(255, 255, 255, 0.14);
+      }
+
+      [data-vb-usecase] strong {
+        display: block;
+        font-size: 1.1rem;
+        margin-bottom: 0.35rem;
+      }
+
+      [data-vb-usecase] span {
+        font-size: 0.9rem;
+        opacity: 0.7;
+      }
+
+      .after {
+        position: relative;
+        z-index: 1;
+        min-height: 150vh;
+        background: #05070c;
+        padding: 6rem 2rem;
+        text-align: center;
+      }
+
+      [data-hud] {
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 100;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        font: 12px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace;
+        pointer-events: none;
+      }
+
+      [data-hud] b {
+        display: inline-block;
+        width: 5.5rem;
+        opacity: 0.55;
+        font-weight: 400;
+      }
+
+      [data-vb-loader] {
+        background: #05070c;
+        display: grid;
+        place-items: center;
+        font: 14px ui-monospace, Menlo, monospace;
+        opacity: 0.7;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div data-vb-loader>chargement…</div>
+
+    <!-- Le fond persistant. Les <canvas> servent au mode debug, les <video> au mode ?real -->
+    <div data-vb-stage>
+      <canvas
+        data-vb-canvas="v1"
+        data-vb-video="v1"
+        data-vb-file="video1"
+        data-vb-transition="166"
+        data-vb-end="398"
+      ></canvas>
+      <canvas
+        data-vb-canvas="v2"
+        data-vb-video="v2"
+        data-vb-file="video2"
+        data-vb-transition="116"
+        data-vb-end="247"
+      ></canvas>
+      <video
+        data-vb-video="v1"
+        data-vb-file="video1"
+        data-vb-transition="166"
+        data-vb-end="398"
+        muted
+        playsinline
+        preload="auto"
+      ></video>
+      <video
+        data-vb-video="v2"
+        data-vb-file="video2"
+        data-vb-transition="116"
+        data-vb-end="247"
+        muted
+        playsinline
+        preload="auto"
+      ></video>
+    </div>
+
+    <div data-hud>
+      <div><b>mode</b><span data-hud-mode>—</span></div>
+      <div><b>active</b><span data-hud-active>—</span></div>
+      <div><b>progress</b><span data-hud-progress>—</span></div>
+      <div><b>currentTime</b><span data-hud-time>—</span></div>
+    </div>
+
+    <section data-vb-scrub>
+      <div data-vb-scrub-inner>
+        <h1>Section 1</h1>
+        <p class="lede">
+          La video de fond est en pause : c'est la position de scroll qui ecrit son
+          timecode, de 00:00 a 00:03. Remonter la rembobine.
+        </p>
+      </div>
+    </section>
+
+    <section data-vb-loop>
+      <h1>Section 2</h1>
+      <p class="lede">
+        La video s'est detachee du scroll et boucle de 00:03 a 00:06. Choisir un
+        use-case change la video de fond — y compris pour la section precedente.
+      </p>
+      <div class="usecases">
+        <button type="button" data-vb-usecase="v1">
+          <strong>Use case 1</strong>
+          <span>Illustre par la video 1</span>
+        </button>
+        <button type="button" data-vb-usecase="v2">
+          <strong>Use case 2</strong>
+          <span>Illustre par la video 2</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="after">
+      <h1>Suite du site</h1>
+      <p class="lede" style="margin: 1rem auto">
+        La section 2 est sortie de l'ecran : la video est mise en pause. Remonter
+        la relance.
+      </p>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>
+    <script type="module" src="/demo/demo.js"></script>
+  </body>
+</html>

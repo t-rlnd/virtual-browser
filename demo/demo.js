@@ -1,0 +1,103 @@
+/**
+ * Page de demonstration locale.
+ *
+ * Par defaut elle tourne sur DebugLayer, donc sans aucun fichier video : c'est
+ * ce qui permet de valider le scroll, les modes et la bascule de use-case
+ * avant d'avoir encode quoi que ce soit.
+ *
+ * Ajouter `?real` a l'URL pour utiliser les vrais MP4 definis dans la config.
+ */
+import { resolveConfig, sourceFor, collectVideos } from '../src/config.js';
+import { Stage } from '../src/Stage.js';
+import { Mp4VideoLayer } from '../src/layers/Mp4VideoLayer.js';
+import { initScroll } from '../src/scroll.js';
+import { initUseCases } from '../src/usecases.js';
+import { DebugLayer } from './DebugLayer.js';
+
+const useRealVideos = new URLSearchParams(location.search).has('real');
+
+const config = resolveConfig({
+  base: useRealVideos ? '/assets' : undefined,
+  ...(window.SCROLL_VIDEO_CONFIG ?? {}),
+});
+
+const stageElement = document.querySelector('[data-vb-stage]');
+
+if (useRealVideos) {
+  for (const element of stageElement.querySelectorAll('canvas')) element.remove();
+} else {
+  for (const element of stageElement.querySelectorAll('video')) element.remove();
+}
+
+const layers = {};
+
+for (const video of collectVideos(stageElement, config)) {
+  const { id, element, segments, fps, openEnded } = video;
+  // Le CSS cible [data-vb-video] : les canvas de debug en ont besoin aussi.
+  element.setAttribute('data-vb-video', id);
+
+  layers[id] = useRealVideos
+    ? new Mp4VideoLayer({
+        id,
+        element,
+        segments,
+        src: sourceFor(video, 1280, config),
+        fps,
+        openEnded,
+      })
+    : new DebugLayer({
+        id,
+        element,
+        segments,
+        duration: Number.isFinite(segments.loop.end) ? segments.loop.end : segments.scrub.end + 3,
+      });
+}
+
+const defaultActive = layers[config.defaultActive]
+  ? config.defaultActive
+  : Object.keys(layers)[0];
+
+const stage = new Stage({ layers, config: { ...config, defaultActive } });
+
+Promise.all(Object.values(layers).map((layer) => layer.preload()))
+  .then(() => {
+    stage.mount();
+    initScroll({
+      stage,
+      config,
+      elements: {
+        scrub: document.querySelector('[data-vb-scrub]'),
+        loop: document.querySelector('[data-vb-loop]'),
+      },
+    });
+    initUseCases({ stage });
+    document.documentElement.setAttribute('data-vb-state', 'ready');
+    startHud(stage);
+  })
+  .catch((error) => {
+    console.error(error);
+    document.documentElement.setAttribute('data-vb-state', 'error');
+  });
+
+/** Affiche l'etat interne en direct, pour pouvoir le verifier a l'oeil. */
+function startHud(stage) {
+  const hud = document.querySelector('[data-hud]');
+  const fields = {
+    mode: hud.querySelector('[data-hud-mode]'),
+    active: hud.querySelector('[data-hud-active]'),
+    progress: hud.querySelector('[data-hud-progress]'),
+    time: hud.querySelector('[data-hud-time]'),
+  };
+
+  const render = () => {
+    fields.mode.textContent = stage.mode;
+    fields.active.textContent = stage.activeId;
+    fields.progress.textContent = stage.progress.toFixed(3);
+    fields.time.textContent = (stage.active.currentTime ?? 0).toFixed(3);
+    requestAnimationFrame(render);
+  };
+
+  render();
+}
+
+window.scrollVideo = { stage, layers };
