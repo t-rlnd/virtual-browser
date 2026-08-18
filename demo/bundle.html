@@ -6,12 +6,11 @@
   dist/scroll-video.js et laisse le bundle tirer les videos du vrai CDN : ce
   que fera la page Webflow, aux URL jsDelivr pres.
 
-  A servir par un serveur statique, jamais par vite : le serveur de
-  developpement transforme dist/ (le JS triple de taille, le CSS sort en
-  content-type JavaScript et le navigateur le refuse).
+  Le serveur de developpement sert dist/ sans le transformer, cette page
+  charge donc bien le bundle de production.
 
-      npm run build
-      npm run serve            # puis http://localhost:5181/demo/bundle.html
+      pnpm build
+      pnpm dev                 # puis http://localhost:3000/demo/bundle.html
 -->
 <html lang="fr" data-vb-state="loading">
   <head>

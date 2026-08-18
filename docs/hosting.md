@@ -43,7 +43,7 @@ Televersement :
 ```bash
 export BUNNY_STORAGE_ZONE=ma-zone
 export BUNNY_STORAGE_KEY=xxxxxxxx
-npm run encode -- masters/video1.mp4 masters/video2.mp4
+pnpm encode -- masters/video1.mp4 masters/video2.mp4
 ./scripts/upload-bunny.sh
 ```
 
@@ -86,7 +86,7 @@ Le depot doit etre public : jsDelivr n'a aucun moyen de lire un depot prive.
 Le tag est immuable, donc cache indefiniment. Publier une mise a jour du code :
 
 ```bash
-npm run build
+pnpm build
 git add dist && git commit -m "build: v1.1.0"
 git tag v1.1.0 && git push --tags
 ```

@@ -26,8 +26,8 @@ sans code dedie.
 ## Demarrage
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 esbuild passe en watch, et un serveur local sert sur
@@ -83,7 +83,7 @@ export BUNNY_STORAGE_ZONE=ma-zone BUNNY_STORAGE_KEY=xxxxxxxx
 ./scripts/check-cdn.sh https://ma-zone.b-cdn.net/scroll-video/v1/video1-1280.mp4
 
 # 4. Publier le code : dist/ est versionne, c'est ce que jsDelivr sert
-npm run build
+pnpm build
 git add dist && git commit -m "build: v1.0.0"
 git tag v1.0.0 && git push --tags
 ```
@@ -150,19 +150,19 @@ bin/
 ## Tests
 
 ```bash
-npm test                 # machine a etats du Stage, sans navigateur
-npm run test:e2e         # parcours complet sur les canvas de test
-REAL=1 npm run test:e2e  # meme parcours sur les vrais MP4 encodes
+pnpm test                 # machine a etats du Stage, sans navigateur
+pnpm test:e2e         # parcours complet sur les canvas de test
+REAL=1 pnpm test:e2e  # meme parcours sur les vrais MP4 encodes
 ```
 
-Tous exigent `npm run dev` dans un autre terminal.
+Tous exigent `pnpm dev` dans un autre terminal.
 
 Pour eprouver ce qui sera reellement en ligne — le bundle construit, les videos
 tirees du CDN — il reste `test:bundle`, dernier filet avant de publier un tag :
 
 ```bash
-npm run build
-npm run test:bundle
+pnpm build
+pnpm test:bundle
 ```
 
 La seule difference qui subsiste avec la page Webflow est l'URL du bundle.
@@ -172,8 +172,8 @@ La seule difference qui subsiste avec la page Webflow est l'URL du bundle.
 `BROWSER=` choisit le moteur de rendu, `webkit` etant celui de Safari :
 
 ```bash
-BROWSER=webkit REAL=1 npm run test:e2e
-BROWSER=firefox npm run test:e2e
+BROWSER=webkit REAL=1 pnpm test:e2e
+BROWSER=firefox pnpm test:e2e
 ```
 
 C'est la ou se joue le risque du rendu `<video>` : le scrub depend du decodeur,

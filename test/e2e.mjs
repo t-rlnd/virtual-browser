@@ -5,8 +5,8 @@
  * etats en isolation, celui-ci valide le cablage reel au scroll, que seul un
  * vrai moteur de rendu peut exercer.
  *
- * Prerequis : npm run dev -- --port 5180
- * Usage     : PLAYWRIGHT_BROWSERS_PATH=$PWD/.playwright node test/e2e.mjs
+ * Prerequis : pnpm dev
+ * Usage     : pnpm test:e2e  ·  BROWSER=webkit REAL=1 pnpm test:e2e
  */
 import { chromium, firefox, webkit } from 'playwright';
 import { mkdir, readdir } from 'node:fs/promises';
