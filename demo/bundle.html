@@ -2,11 +2,16 @@
 <!--
   Verification du bundle de production tel qu'il sera charge par Webflow.
 
-  Reproduit exactement la structure decrite dans docs/webflow-setup.md et
-  charge dist/scroll-video.js. Sans fichiers dans /assets, la page doit
-  basculer proprement en data-vb-state="error" plutot que de casser.
+  Reproduit la structure decrite dans docs/webflow-setup.md, charge
+  dist/scroll-video.js et laisse le bundle tirer les videos du vrai CDN : ce
+  que fera la page Webflow, aux URL jsDelivr pres.
 
-  Lancer `npm run build` avant d'ouvrir /demo/bundle.html
+  A servir par un serveur statique, jamais par vite : le serveur de
+  developpement transforme dist/ (le JS triple de taille, le CSS sort en
+  content-type JavaScript et le navigateur le refuse).
+
+      npm run build
+      npm run serve            # puis http://localhost:5181/demo/bundle.html
 -->
 <html lang="fr" data-vb-state="loading">
   <head>
@@ -42,10 +47,6 @@
         place-content: center;
       }
     </style>
-    <script>
-      // Surcharge sans rebuild : le script lit cet objet au chargement.
-      window.SCROLL_VIDEO_CONFIG = { base: '/assets' };
-    </script>
   </head>
 
   <body>

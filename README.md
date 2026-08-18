@@ -124,6 +124,23 @@ npm run test:e2e         # parcours complet sur les canvas de test
 REAL=1 npm run test:e2e  # meme parcours sur les vrais MP4 encodes
 ```
 
+Les trois tournent contre les sources, via le serveur de developpement. Pour
+eprouver ce qui sera reellement en ligne — le bundle construit, les videos
+tirees du CDN — il faut un serveur statique :
+
+```bash
+npm run build
+npm run serve            # dans un autre terminal
+npm run test:bundle
+```
+
+C'est le dernier filet avant de publier un tag : il exerce `dist/` tel quel et
+les MP4 du CDN, la seule difference avec la page Webflow etant l'URL du bundle.
+
+Ne jamais servir `dist/` par `npm run dev` : vite transforme ce qu'il sert, le
+JS y triple de volume et le CSS ressort en `content-type` JavaScript, que le
+navigateur refuse comme feuille de style.
+
 Le test end-to-end verifie les dix etapes du parcours, dont la retroactivite,
 et depose des captures dans `.artifacts/`.
 

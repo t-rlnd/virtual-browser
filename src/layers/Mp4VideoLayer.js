@@ -69,6 +69,12 @@ export class Mp4VideoLayer extends VideoLayer {
    */
   _applyAttributes() {
     const video = this.element;
+    // Le CDN sert les MP4 depuis une autre origine que la page. Sans cette
+    // ligne tout canvas lisant ces pixels est teinte : la verification de
+    // rendu du test e2e echoue, et la migration vers un rendu canvas serait
+    // impossible. Suppose un `Access-Control-Allow-Origin` sur le CDN, ce que
+    // scripts/check-cdn.sh verifie.
+    video.crossOrigin = 'anonymous';
     video.muted = true;
     video.defaultMuted = true;
     video.playsInline = true;

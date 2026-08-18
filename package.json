@@ -11,7 +11,9 @@
     "test": "node --test 'test/*.test.mjs'",
     "test:e2e": "node test/e2e.mjs",
     "encode": "./scripts/encode.sh",
-    "upload": "./scripts/upload-bunny.sh"
+    "upload": "./scripts/upload-bunny.sh",
+    "serve": "python3 -m http.server 5181",
+    "test:bundle": "DEMO_URL=http://localhost:5181/demo/bundle.html node test/e2e.mjs"
   },
   "devDependencies": {
     "playwright": "^1.62.1",
