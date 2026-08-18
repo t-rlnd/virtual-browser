@@ -39,10 +39,6 @@ export class DebugLayer extends VideoLayer {
     this._draw();
   }
 
-  get ready() {
-    return true;
-  }
-
   get currentTime() {
     return this._time;
   }

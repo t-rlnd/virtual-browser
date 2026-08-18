@@ -48,8 +48,7 @@
  * pas le format du viewport, un `scale` deformerait l'image la ou
  * `object-fit: cover` recadre.
  */
-[data-vb-stage] [data-vb-video],
-[data-vb-stage] [data-vb-poster] {
+[data-vb-stage] [data-vb-video] {
   position: absolute;
   left: var(--vb-frame-x);
   top: var(--vb-frame-y);

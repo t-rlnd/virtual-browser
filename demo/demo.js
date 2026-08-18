@@ -66,14 +66,7 @@ Promise.all(Object.values(layers).map((layer) => layer.preload()))
     stage.mount();
     initProgress({ stage });
     const frame = initFrame({ stage, config, stageElement });
-    initScroll({
-      stage,
-      config,
-      elements: {
-        scrub: document.querySelector('[data-vb-scrub]'),
-        loop: document.querySelector('[data-vb-loop]'),
-      },
-    });
+    initScroll({ stage, config, track: document.querySelector('[data-vb-scrub]') });
     initUseCases({ stage });
     document.documentElement.setAttribute('data-vb-state', 'ready');
     startHud(stage, frame);

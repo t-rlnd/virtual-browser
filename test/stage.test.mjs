@@ -27,10 +27,6 @@ class FakeLayer extends VideoLayer {
     this.looping = null;
   }
 
-  get ready() {
-    return true;
-  }
-
   preload() {
     this.calls.push(['preload']);
     return Promise.resolve(this);

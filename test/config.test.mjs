@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import { describeVideo, collectVideos, resolveConfig, sourceFor } from '../src/config.js';
 
+/** Faux element : `describeVideo` ne lit que des attributs. */
 function el(attrs) {
   return {
     getAttribute(name) {
@@ -27,7 +28,7 @@ test('data-vb-transition convertit le numero d image en bornes scrub / boucle', 
       'data-vb-transition': '166',
       'data-vb-end': '398',
     }),
-    resolveConfig({ videos: {} })
+    resolveConfig()
   );
 
   assert.equal(video.id, 'v1');
@@ -43,12 +44,8 @@ test('data-vb-transition convertit le numero d image en bornes scrub / boucle', 
 
 test('sans data-vb-end, la boucle reste ouverte jusqu a la duree du fichier', () => {
   const video = describeVideo(
-    el({
-      'data-vb-video': 'v3',
-      'data-vb-file': 'video3',
-      'data-vb-transition': '140',
-    }),
-    resolveConfig({ videos: {} })
+    el({ 'data-vb-video': 'v3', 'data-vb-file': 'video3', 'data-vb-transition': '140' }),
+    resolveConfig()
   );
 
   assert.equal(video.openEnded, true);
@@ -56,28 +53,34 @@ test('sans data-vb-end, la boucle reste ouverte jusqu a la duree du fichier', ()
   assert.equal(video.segments.loop.end, Number.POSITIVE_INFINITY);
 });
 
-test('une 3e video se declare uniquement par ses attributs', () => {
-  const config = resolveConfig({ videos: {} });
+test('sans data-vb-transition, le repli est signale et vaut fallbackScrubSeconds', () => {
+  const config = resolveConfig({ fallbackScrubSeconds: 4 });
+  const video = describeVideo(el({ 'data-vb-video': 'v4' }), config);
+
+  assert.equal(video.declared, false);
+  assert.equal(video.transition, 120); // 4 s x 30 fps
+  assert.equal(video.segments.scrub.end, 4);
+  // Sans data-vb-file, l identifiant sert de nom de fichier.
+  assert.equal(video.file, 'v4');
+});
+
+test('data-vb-fps l emporte sur la cadence globale', () => {
+  const video = describeVideo(
+    el({ 'data-vb-video': 'v5', 'data-vb-transition': '120', 'data-vb-fps': '60' }),
+    resolveConfig()
+  );
+
+  assert.equal(video.fps, 60);
+  assert.equal(video.segments.scrub.end, 2);
+});
+
+test('une video se declare uniquement par ses attributs', () => {
+  const config = resolveConfig();
   const videos = collectVideos(
     root([
-      el({
-        'data-vb-video': 'v1',
-        'data-vb-file': 'video1',
-        'data-vb-transition': '166',
-        'data-vb-end': '398',
-      }),
-      el({
-        'data-vb-video': 'v2',
-        'data-vb-file': 'video2',
-        'data-vb-transition': '116',
-        'data-vb-end': '247',
-      }),
-      el({
-        'data-vb-video': 'v3',
-        'data-vb-file': 'video3',
-        'data-vb-transition': '90',
-        'data-vb-end': '200',
-      }),
+      el({ 'data-vb-video': 'v1', 'data-vb-file': 'video1', 'data-vb-transition': '166', 'data-vb-end': '398' }),
+      el({ 'data-vb-video': 'v2', 'data-vb-file': 'video2', 'data-vb-transition': '116', 'data-vb-end': '247' }),
+      el({ 'data-vb-video': 'v3', 'data-vb-file': 'video3', 'data-vb-transition': '90', 'data-vb-end': '200' }),
     ]),
     config
   );
@@ -88,22 +91,4 @@ test('une 3e video se declare uniquement par ses attributs', () => {
   );
   assert.equal(videos[2].segments.scrub.end, 90 / 30);
   assert.equal(sourceFor(videos[2], 1280, config).endsWith('/video3-1280.mp4'), true);
-});
-
-test('les attributs l emportent sur la config', () => {
-  const config = resolveConfig({
-    videos: { v1: { file: 'video1', transition: 166, end: 398 } },
-  });
-  const video = describeVideo(
-    el({
-      'data-vb-video': 'v1',
-      'data-vb-transition': '200',
-      'data-vb-end': '400',
-    }),
-    config
-  );
-
-  assert.equal(video.transition, 200);
-  assert.equal(video.end, 400);
-  assert.equal(video.file, 'video1');
 });

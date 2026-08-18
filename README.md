@@ -13,6 +13,9 @@ CSS `--vb-scrub` — et la page en tire toute sa mise en scene.
 Le scrub **ne joue qu'une fois** : la boucle atteinte, remonter ne rembobine
 plus rien, la video reste a tourner dans son cadre (`latchLoop`, ci-dessous).
 
+> Pour reprendre le code : [`docs/architecture.md`](docs/architecture.md).
+> Pour construire la page : [`docs/webflow-setup.md`](docs/webflow-setup.md).
+
 ## Le comportement en trois modes
 
 | Mode | Quand | Ce que fait la video active |
@@ -291,14 +294,21 @@ devant etre all-intra (`./scripts/encode.sh masters/video1.mp4:166:398 ...`).
 
 ## Structure
 
+Le detail de qui fait quoi, et pourquoi, est dans
+[`docs/architecture.md`](docs/architecture.md) — la page a lire avant de
+toucher a `src/`.
+
 ```
 src/
   config.js              reglages globaux ; le decoupage se lit sur les balises
   Stage.js               machine a etats (activeId / mode / progress)
   scroll.js              cablage GSAP ScrollTrigger
+  frame.js               le fond quitte le plein ecran pour [data-vb-frame]
+  progress.js            publie --vb-scrub et data-vb-mode sur <html>
   usecases.js            selecteur de use-case et avancee de la boucle
   main.js                initialisation et garde-fous
-  env.js                 detection reduced-motion, pointeur, largeur utile
+  env.js                 detection reduced-motion, save-data, largeur utile
+  utils.js               clamp, wait, emetteur d'evenements
   layers/
     VideoLayer.js        le contrat d'une couche d'image
     Mp4VideoLayer.js     implementation <video> + MP4
@@ -307,6 +317,10 @@ src/
 demo/
   demo.js, DebugLayer.js page de demonstration sans fichiers video
   bundle.html            verification du bundle de production
+test/
+  config.test.mjs        lecture des attributs data-vb-*
+  stage.test.mjs         machine a etats, sans navigateur
+  e2e.mjs                parcours complet dans un vrai moteur de rendu
 scripts/
   export.sh              d'une video a un dossier pret pour Bunny
   check-video.sh         standards de la video, avant et apres encodage
@@ -317,14 +331,19 @@ bin/
   build.js               esbuild : watch + serveur local, ou build de production
   serve-media.js         service des medias avec Range, ce qu'esbuild ne fait pas
   live-reload.js         recharge la page a chaque rebuild, injecte en dev seul
+docs/
+  architecture.md        comment le code est organise
+  webflow-setup.md       la structure a construire dans le Designer
+  hosting.md             Bunny pour les medias, jsDelivr pour le bundle
+  nouvelle-video.md      a transmettre au client qui fournit un master
 ```
 
 ## Tests
 
 ```bash
-pnpm test                 # machine a etats du Stage, sans navigateur
-pnpm test:e2e         # parcours complet sur les canvas de test
-REAL=1 pnpm test:e2e  # meme parcours sur les vrais MP4 encodes
+pnpm test                 # attributs et machine a etats, sans navigateur
+pnpm test:e2e             # parcours complet sur les canvas de test
+REAL=1 pnpm test:e2e      # meme parcours sur les vrais MP4 encodes
 ```
 
 Tous exigent `pnpm dev` dans un autre terminal.
@@ -351,10 +370,11 @@ BROWSER=firefox pnpm test:e2e
 C'est la ou se joue le risque du rendu `<video>` : le scrub depend du decodeur,
 et Safari peut se figer sur des seeks rapides la ou Chromium ne bronche pas.
 
-Le test depose des captures dans `.artifacts/` et verifie les onze etapes du
-parcours, dont la retroactivite. En mode `REAL=1` il en ajoute une douzieme,
-qui mesure le cout d'un seek : au-dela de 33 ms de mediane le scrub ne peut
-pas tenir 30 images par seconde, et il faut envisager la sequence d'images.
+Le test depose des captures dans `.artifacts/` et verifie les seize etapes du
+parcours, dont la retroactivite et le recadrage. En mode `REAL=1` il en ajoute
+une dix-septieme, qui mesure le cout d'un seek : au-dela de 33 ms de mediane le
+scrub ne peut pas tenir 30 images par seconde, et il faut envisager la sequence
+d'images.
 
 Releve actuel, sur les MP4 encodes :
 

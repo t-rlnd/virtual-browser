@@ -415,5 +415,10 @@ Une fois publie, ouvrir la console :
   Designer a ete utilise a la place d'un HTML Embed, et le scrub ne peut pas
   fonctionner
 
-Si `window.scrollVideo` est indefini, l'un des trois elements racines manque :
-le detail est logue au chargement.
+Si `window.scrollVideo` est indefini, `[data-vb-stage]` ou `[data-vb-scrub]`
+manque : ce sont les deux seuls elements dont le script a besoin pour demarrer,
+et le detail est logue au chargement.
+
+`data-vb-loop` n'en fait pas partie : c'est un repere pour la feuille de style,
+pas pour le script. L'oublier n'empeche rien de tourner — la section 2 ne se
+revelera simplement jamais, faute de regle CSS accrochee a `--vb-scrub`.

@@ -30,7 +30,6 @@ export class Mp4VideoLayer extends VideoLayer {
     // Un ecart inferieur a une demi-image ne produirait aucun changement visible.
     this._frameEpsilon = 1 / (fps * 2);
 
-    this._ready = false;
     this._readyPromise = null;
     this._unlocked = false;
 
@@ -53,10 +52,6 @@ export class Mp4VideoLayer extends VideoLayer {
     element.addEventListener('ended', this._onEnded);
 
     this._applyAttributes();
-  }
-
-  get ready() {
-    return this._ready;
   }
 
   get currentTime() {
@@ -104,7 +99,6 @@ export class Mp4VideoLayer extends VideoLayer {
         if (settled) return;
         settled = true;
         cleanup();
-        this._ready = true;
         resolve(this);
       };
 

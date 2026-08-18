@@ -15,11 +15,12 @@ function setState(state) {
 
 export async function init(config = resolveConfig(window.SCROLL_VIDEO_CONFIG)) {
   const stageElement = document.querySelector('[data-vb-stage]');
-  const scrubElement = document.querySelector('[data-vb-scrub]');
-  const loopElement = document.querySelector('[data-vb-loop]');
+  const track = document.querySelector('[data-vb-scrub]');
 
-  if (!stageElement || !scrubElement || !loopElement) {
-    console.warn('[scroll-video] structure DOM incomplete, animation desactivee');
+  if (!stageElement || !track) {
+    console.warn(
+      '[scroll-video] [data-vb-stage] ou [data-vb-scrub] introuvable, animation desactivee'
+    );
     setState('error');
     return null;
   }
@@ -68,21 +69,14 @@ export async function init(config = resolveConfig(window.SCROLL_VIDEO_CONFIG)) {
   const progress = initProgress({ stage });
   const frame = initFrame({ stage, config, stageElement });
 
-  const scroll = initScroll({
-    stage,
-    config,
-    elements: { scrub: scrubElement, loop: loopElement },
-  });
+  const scroll = initScroll({ stage, config, track });
   const useCases = initUseCases({ stage });
 
   setState('ready');
 
-  // La section 2 etant superposee, elle est a l'ecran des l'entree dans la
-  // piste : c'est l'approche de la piste qui doit declencher le prechargement,
-  // sans quoi il partirait au tout premier pixel de scrub.
   preloadOnApproach(
     Object.values(layers).filter((layer) => layer.id !== config.defaultActive),
-    scrubElement
+    track
   );
 
   const api = {
@@ -171,11 +165,12 @@ function installUnlock(stage, layers) {
 
 /**
  * La seconde video pese autant que la premiere, et un visiteur qui n'atteint
- * jamais la section 2 n'en a aucun usage. On ne la charge donc qu'a
- * l'approche de cette section, ou des qu'un use-case est survole — ce qui
- * arrive toujours avant le clic.
+ * jamais la section 2 n'en a aucun usage. On ne la charge donc qu'a l'approche
+ * de la piste, ou des qu'un use-case est survole — ce qui arrive toujours avant
+ * le clic. La section 2 etant superposee, c'est bien la piste qu'on observe :
+ * la viser elle ferait partir le telechargement au premier pixel de scrub.
  */
-function preloadOnApproach(layers, loopElement) {
+function preloadOnApproach(layers, track) {
   if (layers.length === 0) return;
 
   let started = false;
@@ -198,7 +193,7 @@ function preloadOnApproach(layers, loopElement) {
     },
     { rootMargin: '100% 0px' }
   );
-  observer.observe(loopElement);
+  observer.observe(track);
 
   for (const button of document.querySelectorAll('[data-vb-usecase]')) {
     button.addEventListener('pointerenter', run, { passive: true });
