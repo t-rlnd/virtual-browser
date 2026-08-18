@@ -1,0 +1,5 @@
+# pnpm 10+ n'execute aucun script d'installation sans autorisation explicite,
+# et refuse de lancer le moindre script tant qu'un paquet reste en attente.
+# esbuild s'en sert pour mettre en place son binaire natif.
+allowBuilds:
+  esbuild: true

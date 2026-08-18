@@ -189,7 +189,7 @@ L'ordre du footer compte : `gsap`, puis `ScrollTrigger`, puis `scroll-video.js`.
 ## 7. Developper contre le site, sans republier
 
 Pendant la mise au point, remplacer les deux URL jsDelivr par celles du serveur
-local (`npm run dev` les affiche au demarrage) :
+local (`pnpm dev` les affiche au demarrage) :
 
 ```html
 <link href="http://localhost:3000/dev/scroll-video.css" rel="stylesheet" />

@@ -54,7 +54,7 @@ for file in "$SRC_DIR"/*.mp4 "$SRC_DIR"/*.jpg; do
 done
 
 if [ "$uploaded" -eq 0 ]; then
-  echo "Rien a televerser. Lancer d'abord : npm run encode" >&2
+  echo "Rien a televerser. Lancer d'abord : pnpm encode" >&2
   exit 1
 fi
 
