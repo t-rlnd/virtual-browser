@@ -31,10 +31,33 @@ body
 
 ## 1. Le fond video
 
-Un unique bloc `div` place **tout en haut du body**, avec l'attribut
-`data-vb-stage`. Il est mis en `position: fixed` plein ecran par la feuille de
-style, donc son emplacement dans la hierarchie n'a pas d'importance visuelle,
-mais le garder en premier evite les surprises d'empilement.
+Un unique bloc `div` avec l'attribut `data-vb-stage`. Laisse **sans valeur**,
+il est mis en `position: fixed` plein ecran par la feuille de style : son
+emplacement dans la hierarchie n'a alors aucune importance visuelle, mais le
+placer tout en haut du body evite les surprises d'empilement.
+
+### Positionner le stage soi-meme
+
+`data-vb-stage="custom"` desactive ce positionnement et rend la main au
+Designer. C'est ce qu'il faut pour un fond **sticky borne a un conteneur**,
+qui s'arrete a la fin de celui-ci au lieu de rester colle indefiniment :
+
+```
+div  .protocol_background       position: absolute, derriere les sections
+└── div  .protocol_videos-wrapper    position: sticky, 100vw x 100vh
+        data-vb-stage="custom"
+    └── HTML Embed                   les balises <video>
+```
+
+Deux contraintes dans ce mode :
+
+- le stage doit rester un **ancetre positionne** (`relative`, `absolute` ou
+  `sticky`), les couches video etant en `position: absolute` a l'interieur ;
+- c'est a toi de poser le fond, `background-color` n'etant plus applique.
+
+Sans cet attribut, le `position: fixed` de la feuille de style ecraserait le
+`sticky` du Designer : a specificite egale, c'est `scroll-video.css` qui gagne,
+etant chargee apres le CSS de Webflow.
 
 A l'interieur, les balises `<video>` se posent par un **HTML Embed**, pas par
 l'element Video du Designer : ce dernier produit un embed Vimeo/YouTube, dans
