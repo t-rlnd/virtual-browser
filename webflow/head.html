@@ -2,11 +2,22 @@
   A coller dans Webflow : Page settings > Inside <head> tag
   (ou Site settings > Custom code > Head si l'animation existe sur plusieurs pages)
 
-  Remplacer REPLACE-ME.b-cdn.net par le domaine de la Pull Zone.
+  Deux origines, deux roles :
+    cdn.jsdelivr.net              le bundle JS/CSS, servi depuis le depot GitHub
+    temp-virtual-browser.b-cdn.net  les MP4 et les posters, servis depuis Bunny
+
+  Le numero de version (@v1.0.0) est un tag git. Publier une mise a jour du
+  code = pousser un nouveau tag, puis changer ce numero ici ET dans
+  footer.html. Tant qu'il ne change pas, jsDelivr sert le fichier depuis son
+  cache permanent.
 -->
 
-<link rel="preconnect" href="https://REPLACE-ME.b-cdn.net" crossorigin />
-<link rel="stylesheet" href="https://REPLACE-ME.b-cdn.net/scroll-video/v1/scroll-video.css" />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+<link rel="preconnect" href="https://temp-virtual-browser.b-cdn.net" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/gh/t-rlnd/virtual-browser@v1.0.0/dist/scroll-video.css"
+/>
 
 <!--
   Masque la page tant que la premiere image n'est pas decodee, pour eviter le

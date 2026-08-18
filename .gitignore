@@ -1,5 +1,4 @@
 node_modules/
-dist/
 masters/
 public/assets/
 .playwright/
@@ -7,6 +6,9 @@ public/assets/
 .DS_Store
 .env
 .env.local
+
+# dist/ est volontairement versionne : jsDelivr sert le bundle depuis
+# GitHub. Les medias, eux, restent hors depot (Bunny les porte).
 
 # Masters egares a la racine
 /*.mp4

@@ -38,6 +38,9 @@ Ajouter `?real` a l'URL pour utiliser les vrais MP4.
 
 ## Mise en production
 
+Les medias et le code sont heberges separement : les MP4 sur Bunny, le bundle
+sur GitHub via jsDelivr. Voir [`docs/hosting.md`](docs/hosting.md).
+
 ```bash
 # 0. Inspecter les masters
 ./scripts/probe.sh masters/*.mp4
@@ -45,15 +48,17 @@ Ajouter `?real` a l'URL pour utiliser les vrais MP4.
 # 1. Encoder les masters (all-intra sur la plage scrubee)
 ./scripts/encode.sh masters/video1.mp4:166:398 masters/video2.mp4:116:247
 
-# 2. Construire le bundle
-npm run build
-
-# 3. Televerser assets et bundle
+# 2. Televerser les medias sur Bunny
 export BUNNY_STORAGE_ZONE=ma-zone BUNNY_STORAGE_KEY=xxxxxxxx
 ./scripts/upload-bunny.sh
 
-# 4. Verifier que le CDN sert bien du MP4 brut avec Range et CORS
+# 3. Verifier que le CDN sert bien du MP4 brut avec Range et CORS
 ./scripts/check-cdn.sh https://ma-zone.b-cdn.net/scroll-video/v1/video1-1280.mp4
+
+# 4. Publier le code : dist/ est versionne, c'est ce que jsDelivr sert
+npm run build
+git add dist && git commit -m "build: v1.0.0"
+git tag v1.0.0 && git push --tags
 ```
 
 Il reste a coller [`webflow/head.html`](webflow/head.html) et

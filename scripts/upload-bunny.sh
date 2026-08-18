@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 #
-# Televerse les assets encodes et le bundle vers une Storage Zone Bunny.
+# Televerse les assets encodes vers une Storage Zone Bunny.
+#
+# Bunny ne porte que les medias : le bundle JS/CSS est servi depuis GitHub via
+# jsDelivr, et ne passe donc pas par ici.
 #
 # Usage :
 #   export BUNNY_STORAGE_ZONE=ma-zone
@@ -11,7 +14,6 @@
 #   BUNNY_HOST=storage.bunnycdn.com   ny. / la. / sg. / uk. / se. selon la region
 #   REMOTE_PREFIX=scroll-video/v1     versionner ce prefixe evite tout purge de cache
 #   SRC_DIR=public/assets             dossier des MP4 et posters
-#   DIST_DIR=dist                     dossier du bundle
 
 set -euo pipefail
 
@@ -21,14 +23,11 @@ set -euo pipefail
 BUNNY_HOST="${BUNNY_HOST:-storage.bunnycdn.com}"
 REMOTE_PREFIX="${REMOTE_PREFIX:-scroll-video/v1}"
 SRC_DIR="${SRC_DIR:-public/assets}"
-DIST_DIR="${DIST_DIR:-dist}"
 
 content_type() {
   case "$1" in
     *.mp4) echo "video/mp4" ;;
     *.jpg | *.jpeg) echo "image/jpeg" ;;
-    *.js) echo "application/javascript" ;;
-    *.css) echo "text/css" ;;
     *) echo "application/octet-stream" ;;
   esac
 }
@@ -48,14 +47,14 @@ put() {
 
 uploaded=0
 
-for file in "$SRC_DIR"/*.mp4 "$SRC_DIR"/*.jpg "$DIST_DIR"/scroll-video.js "$DIST_DIR"/scroll-video.css; do
+for file in "$SRC_DIR"/*.mp4 "$SRC_DIR"/*.jpg; do
   [ -f "$file" ] || continue
   put "$file"
   uploaded=$((uploaded + 1))
 done
 
 if [ "$uploaded" -eq 0 ]; then
-  echo "Rien a televerser. Lancer d'abord : npm run encode && npm run build" >&2
+  echo "Rien a televerser. Lancer d'abord : npm run encode" >&2
   exit 1
 fi
 

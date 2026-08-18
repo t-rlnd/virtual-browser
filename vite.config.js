@@ -5,6 +5,10 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   build: {
     target: 'es2019',
+    // dist/ est versionne et sert de source a jsDelivr : les medias, eux,
+    // vivent sur Bunny. Sans ce reglage vite y recopierait public/assets,
+    // soit 19 Mo de video pousses sur GitHub a chaque build.
+    copyPublicDir: false,
     cssCodeSplit: false,
     lib: {
       entry: 'src/main.js',

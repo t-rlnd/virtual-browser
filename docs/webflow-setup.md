@@ -135,8 +135,17 @@ derriere.
 
 Coller [`webflow/head.html`](../webflow/head.html) dans **Page settings > Inside
 `<head>` tag** et [`webflow/footer.html`](../webflow/footer.html) dans **Before
-`</body>` tag**, en remplacant `REPLACE-ME.b-cdn.net` par le domaine de la Pull
-Zone.
+`</body>` tag**. Les deux fichiers sont deja renseignes.
+
+Ils pointent sur deux origines distinctes : le bundle vient de GitHub via
+jsDelivr, les videos de Bunny. A retenir pour la maintenance :
+
+| Ce qui change | Ou le modifier | Effet de bord |
+| --- | --- | --- |
+| Le code | tag `@vX.Y.Z` dans head.html **et** footer.html | rebuild + commit de `dist/` + tag git |
+| Le domaine Bunny | `base` dans [`src/config.js`](../src/config.js) | l URL est compilee dans le bundle : rebuild et nouveau tag obligatoires |
+
+Le second cas est le piege : changer le CDN video impose de republier le code.
 
 L'ordre du footer compte : `gsap`, puis `ScrollTrigger`, puis `scroll-video.js`.
 

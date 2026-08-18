@@ -1,0 +1,114 @@
+/**
+ * Styles structurels de l'animation.
+ *
+ * Tout est cible par attribut `data-vb-*` : aucune classe Webflow n'est
+ * referencee, le designer reste libre de renommer ce qu'il veut.
+ *
+ * Le JS ne pilote que les proprietes dynamiques (opacity, visibility,
+ * z-index) ; la mise en page vit ici.
+ */
+
+/* --- Le fond video persistant ------------------------------------------- */
+
+[data-vb-stage] {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background-color: #000;
+  pointer-events: none;
+}
+
+[data-vb-stage] [data-vb-video] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  visibility: hidden;
+  will-change: opacity;
+  /* Empeche l'overlay de lecture natif d'iOS d'apparaitre. */
+  pointer-events: none;
+}
+
+[data-vb-stage] [data-vb-poster] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* --- Les sections -------------------------------------------------------- */
+
+/* Sans hauteur supplementaire, il n'y a aucune course de scroll a mapper. */
+[data-vb-scrub] {
+  position: relative;
+  z-index: 1;
+  min-height: 250vh;
+}
+
+[data-vb-scrub-inner] {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+[data-vb-loop] {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+/* --- Etat de chargement -------------------------------------------------- */
+
+[data-vb-loader] {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  opacity: 1;
+  transition: opacity 400ms ease;
+}
+
+:root[data-vb-state='ready'] [data-vb-loader],
+:root[data-vb-state='error'] [data-vb-loader],
+:root[data-vb-state='reduced'] [data-vb-loader] {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* Si les videos n'ont pas pu se charger, le fond disparait plutot que de
+   laisser un aplat noir par-dessus la page. */
+:root[data-vb-state='error'] [data-vb-stage] {
+  display: none;
+}
+
+/* --- Selecteur de use-case ----------------------------------------------- */
+
+[data-vb-usecase] {
+  cursor: pointer;
+}
+
+/* Le designer peut surcharger : `is-active` est le seul contrat impose. */
+[data-vb-usecase][aria-pressed='true'] {
+  opacity: 1;
+}
+
+[data-vb-usecase][aria-pressed='false'] {
+  opacity: 0.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-vb-stage] [data-vb-video],
+  [data-vb-usecase] {
+    transition: none !important;
+  }
+
+  [data-vb-scrub] {
+    min-height: 100vh;
+  }
+}
