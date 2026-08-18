@@ -69,5 +69,7 @@ fi
 
 echo
 echo "Les durees differentes sont prevues : chaque video porte son propre"
-echo "data-vb-transition. Encoder ensuite :"
+echo "data-vb-transition. Confronter le decoupage choisi aux standards :"
+echo "  ./scripts/check-video.sh masters/video1.mp4:166:398 masters/video2.mp4:116:247"
+echo "puis encoder :"
 echo "  ./scripts/encode.sh masters/video1.mp4:166:398 masters/video2.mp4:116:247"

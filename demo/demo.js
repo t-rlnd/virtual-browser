@@ -11,6 +11,8 @@ import { resolveConfig, sourceFor, collectVideos } from '../src/config.js';
 import { Stage } from '../src/Stage.js';
 import { Mp4VideoLayer } from '../src/layers/Mp4VideoLayer.js';
 import { initScroll } from '../src/scroll.js';
+import { initFrame } from '../src/frame.js';
+import { initProgress } from '../src/progress.js';
 import { initUseCases } from '../src/usecases.js';
 import { DebugLayer } from './DebugLayer.js';
 
@@ -62,6 +64,8 @@ const stage = new Stage({ layers, config: { ...config, defaultActive } });
 Promise.all(Object.values(layers).map((layer) => layer.preload()))
   .then(() => {
     stage.mount();
+    initProgress({ stage });
+    const frame = initFrame({ stage, config, stageElement });
     initScroll({
       stage,
       config,
@@ -72,7 +76,7 @@ Promise.all(Object.values(layers).map((layer) => layer.preload()))
     });
     initUseCases({ stage });
     document.documentElement.setAttribute('data-vb-state', 'ready');
-    startHud(stage);
+    startHud(stage, frame);
   })
   .catch((error) => {
     console.error(error);
@@ -80,13 +84,14 @@ Promise.all(Object.values(layers).map((layer) => layer.preload()))
   });
 
 /** Affiche l'etat interne en direct, pour pouvoir le verifier a l'oeil. */
-function startHud(stage) {
+function startHud(stage, frame) {
   const hud = document.querySelector('[data-hud]');
   const fields = {
     mode: hud.querySelector('[data-hud-mode]'),
     active: hud.querySelector('[data-hud-active]'),
     progress: hud.querySelector('[data-hud-progress]'),
     time: hud.querySelector('[data-hud-time]'),
+    dock: hud.querySelector('[data-hud-dock]'),
   };
 
   const render = () => {
@@ -94,6 +99,7 @@ function startHud(stage) {
     fields.active.textContent = stage.activeId;
     fields.progress.textContent = stage.progress.toFixed(3);
     fields.time.textContent = (stage.active.currentTime ?? 0).toFixed(3);
+    fields.dock.textContent = (frame.progress ?? 0).toFixed(3);
     requestAnimationFrame(render);
   };
 

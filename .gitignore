@@ -9,6 +9,7 @@ node_modules/
 dev/
 masters/
 public/assets/
+exports/
 .playwright/
 .artifacts/
 .DS_Store

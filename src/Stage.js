@@ -66,8 +66,15 @@ export class Stage extends Emitter {
     return layer.timeForProgress(clamp01(progress));
   }
 
+  /**
+   * La progression est aussi emise, et pas seulement stockee : le recadrage et
+   * la publication de `--vb-scrub` s'y accrochent. Elle est emise meme hors
+   * mode scrub, un verrou de boucle devant figer l'habillage la ou il en est
+   * plutot que de le laisser sur une valeur perimee.
+   */
   setProgress(progress) {
     this.progress = clamp01(progress);
+    this.emit('progress', this.progress);
     if (this.mode !== MODES.SCRUB) return;
     this.active.seek(this.timeForProgress(this.progress));
   }

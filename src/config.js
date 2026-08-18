@@ -19,6 +19,29 @@ export const CONFIG = {
   scrub: { start: 0, end: 3 },
   loop: { start: 3, end: 6 },
 
+  /**
+   * Hauteur d'ecran laissee libre en fin de piste, ou la video boucle dans son
+   * cadre. Exprimee en hauteurs d'ecran : 1 = 100vh de boucle.
+   *
+   * La course d'epinglage vaut `hauteur de piste - 100vh`, la derniere hauteur
+   * d'ecran etant consommee par le conteneur colle. Une piste de 300vh avec une
+   * reserve de 1 donne donc 100vh de scrub, puis 100vh de boucle.
+   *
+   * A 0, le scrub occupe toute la course et la boucle prend la main au moment
+   * ou la section se decolle — elle ne serait donc jamais vue.
+   */
+  loopReserve: 1,
+
+  /**
+   * Verrouille la boucle une fois atteinte : remonter ne relance plus le
+   * scrub, la video reste a boucler dans son cadre. Elle se met simplement en
+   * pause quand la section 2 quitte l'ecran, et repart en la retrouvant.
+   *
+   * `false` restaure l'aller-retour : remonter rembobine la video, ce qui rend
+   * le choix de use-case retroactif sur la section 1.
+   */
+  latchLoop: true,
+
   /** Cadence des masters. Convertit les numeros d'image en secondes. */
   fps: 30,
 
@@ -30,6 +53,16 @@ export const CONFIG = {
    * 4.5 s quand le scroll impose 3.0 s). Mettre a 0 pour un cut sec.
    */
   jumpFadeMs: 150,
+
+  /**
+   * Plage de progression sur laquelle le fond quitte le plein ecran pour se
+   * caler dans `[data-vb-frame]`. Le mouvement est pilote par le scroll, pas
+   * par une duree : a 0.30 de la course il est a mi-chemin, et remonter le
+   * defait.
+   *
+   * Une plage vide (`start === end`) rend la bascule seche au point donne.
+   */
+  dockRange: { start: 0.05, end: 0.65 },
 
   /** Inertie de GSAP sur le scrub. 0 = collage strict au scroll. */
   scrubSmoothing: 0.4,
@@ -74,6 +107,7 @@ export function resolveConfig(overrides = {}) {
     ...overrides,
     scrub: { ...CONFIG.scrub, ...(overrides.scrub ?? {}) },
     loop: { ...CONFIG.loop, ...(overrides.loop ?? {}) },
+    dockRange: { ...CONFIG.dockRange, ...(overrides.dockRange ?? {}) },
     videos,
   };
 }

@@ -93,15 +93,33 @@ const main = async () => {
   );
 
   const geometry = await page.evaluate(() => {
-    const loop = document.querySelector('[data-vb-loop]');
+    const scrub = document.querySelector('[data-vb-scrub]');
+    const config = window.scrollVideo.stage.config;
+    const reserve = config.loopReserve ?? 0;
+    const viewport = window.innerHeight;
+    // La course d'epinglage, le conteneur colle consommant la derniere
+    // hauteur d'ecran de la piste.
+    const travel = scrub.offsetHeight - viewport;
+
     return {
-      // Le scrub se termine quand la section 2 occupe tout l'ecran.
-      scrubEnd: loop.offsetTop,
-      loopTop: loop.offsetTop,
-      viewport: window.innerHeight,
-      pageBottom: document.body.scrollHeight - window.innerHeight,
+      // Le scrub s'acheve une reserve avant la fin de la course : c'est la que
+      // la boucle prend la main, section 2 encore sous les yeux.
+      scrubEnd: scrub.offsetTop + travel - viewport * reserve,
+      // Fin de l'epinglage : au-dela, le conteneur se decolle et le cadre se
+      // remet a defiler avec la page.
+      unpin: scrub.offsetTop + travel,
+      dockRange: config.dockRange,
+      reserve,
+      viewport,
+      pageBottom: document.body.scrollHeight - viewport,
     };
   });
+
+  /** Le recadrage etant pilote par le scroll, il se predit depuis la progression. */
+  const dockFor = (progress) => {
+    const { start, end } = geometry.dockRange;
+    return Math.min(1, Math.max(0, (progress - start) / (end - start)));
+  };
 
   /**
    * Lit l'etat interne, mais aussi ce qui est reellement peint : c'est la
@@ -137,9 +155,23 @@ const main = async () => {
         luminance = null;
       }
 
+      const stageElement = document.querySelector('[data-vb-stage]');
+      const frameElement = document.querySelector('[data-vb-frame]');
+      const box = (node) => {
+        if (!node) return null;
+        const rect = node.getBoundingClientRect();
+        return [rect.x, rect.y, rect.width, rect.height].map(Math.round);
+      };
+
       return {
         mode: stage.mode,
         active: stage.activeId,
+        // Geometrie reelle de la couche : c'est elle qui dit si le fond est
+        // plein ecran ou cale dans son cadre.
+        videoBox: box(element),
+        frameBox: box(frameElement),
+        stageBox: box(stageElement),
+        dock: Number(getComputedStyle(stageElement).getPropertyValue('--vb-dock')) || 0,
         progress: Number(stage.progress.toFixed(3)),
         time: Number((stage.active.currentTime ?? 0).toFixed(3)),
         opacity: getComputedStyle(element).opacity,
@@ -169,6 +201,13 @@ const main = async () => {
   const inLoop = (state) =>
     state.time >= state.segments.loop.start - 0.15 && state.time <= state.segments.loop.end + 0.15;
 
+  /** Deux boites au meme endroit, a l'arrondi et au sous-pixel pres. */
+  const near = (a, b, tolerance = 2) =>
+    Array.isArray(a) && Array.isArray(b) && a.every((value, index) => Math.abs(value - b[index]) <= tolerance);
+
+  const boxes = (state) =>
+    `video=[${state.videoBox}] cadre=[${state.frameBox}] stage=[${state.stageBox}]`;
+
   const shot = (name) => page.screenshot({ path: `${SHOTS}/${name}.png` });
   const show = (state) =>
     `mode=${state.mode} active=${state.active} affiche=${state.visibleId} progress=${state.progress} currentTime=${state.time} luminance=${state.luminance}`;
@@ -191,26 +230,26 @@ const main = async () => {
   await shot('03-retour-haut');
   record(3, 'Remonter rembobine', state.time < 0.1, show(state));
 
-  // 4 — la section 2 arrive mais n'occupe pas encore tout l'ecran
-  await scrollTo(geometry.loopTop - geometry.viewport / 2);
+  // 4 — la section 2 arrive mais n'occupe pas encore sa part d'ecran
+  await scrollTo(geometry.scrubEnd - geometry.viewport / 4);
   const halfway = await read();
   await shot('04-section2-a-moitie');
   record(
     4,
-    'Le scrub continue tant que la section 2 ne remplit pas l ecran',
+    'Le scrub continue tant que la reserve de boucle n est pas atteinte',
     halfway.mode === 'scrub' && halfway.progress > 0.4 && halfway.progress < 1,
     show(halfway)
   );
 
-  // 5 — boucle autonome, des que la section 2 occupe tout l'ecran
-  await scrollTo(geometry.loopTop);
+  // 5 — boucle autonome, des que la section 2 occupe sa part d'ecran
+  await scrollTo(geometry.scrubEnd);
   const first = await read();
   await page.waitForTimeout(1000);
   const second = await read();
   await shot('05-boucle');
   record(
     5,
-    'La section 2 pleine page declenche la boucle',
+    'L entree dans la reserve declenche la boucle',
     first.mode === 'loop' && second.time !== first.time && inLoop(first) && inLoop(second),
     `${show(first)} puis currentTime=${second.time}`
   );
@@ -222,22 +261,32 @@ const main = async () => {
   await shot('06-usecase-2');
   record(6, 'Le use-case 2 remplace la video de fond', shows(state, 'v2') && inLoop(state), show(state));
 
-  // 7 — retroactivite, le point central de la specification
+  // 7 — le verrou : remonter ne rend plus la main au scrub
   await scrollTo(geometry.scrubEnd / 2);
   state = await read();
-  await shot('07-retroactivite');
+  await shot('07-verrou-remontee');
   record(
     7,
-    'Le choix de use-case est retroactif sur la section 1',
-    state.mode === 'scrub' && shows(state, 'v2') && scrubbedTo(state, state.progress),
-    show(state)
+    'Remonter ne relance pas le scrub une fois la boucle atteinte',
+    state.mode !== 'scrub' && shows(state, 'v2') && near(state.videoBox, state.frameBox),
+    `${show(state)} ${boxes(state)}`
   );
 
-  // 8 — rembobinage complet de la nouvelle video
+  // 8 — la piste restant a l'ecran, la video continue de boucler dans sa zone
   await scrollTo(0);
-  state = await read();
-  await shot('08-haut-v2');
-  record(8, 'La video 2 se rembobine jusqu a 00:00', state.time < 0.1 && shows(state, 'v2'), show(state));
+  const locked = await read();
+  await page.waitForTimeout(700);
+  const lockedAgain = await read();
+  await shot('08-haut-verrouille');
+  record(
+    8,
+    'Remonter en haut de piste laisse la video calee et bouclee, sans rembobiner',
+    locked.mode === 'loop' &&
+      inLoop(locked) &&
+      lockedAgain.time !== locked.time &&
+      locked.dock === 1,
+    `${show(locked)} dock=${locked.dock}`
+  );
 
   // 9 — mise en pause hors ecran
   await scrollTo(geometry.pageBottom);
@@ -248,7 +297,7 @@ const main = async () => {
   record(9, 'La video est figee quand la section 2 sort de l ecran', idleFirst.mode === 'idle' && idleFirst.time === idleSecond.time, `${show(idleFirst)} puis currentTime=${idleSecond.time}`);
 
   // 10 — reprise
-  await scrollTo(geometry.loopTop);
+  await scrollTo(geometry.scrubEnd);
   const resumeFirst = await read();
   await page.waitForTimeout(1000);
   const resumeSecond = await read();
@@ -261,6 +310,132 @@ const main = async () => {
   state = await read();
   await shot('11-usecase-1');
   record(11, 'Le use-case 1 restaure la video 1', shows(state, 'v1'), show(state));
+
+  // 13 — le fond vient se caler sur [data-vb-frame] pendant la boucle
+  await scrollTo(geometry.scrubEnd, 1600);
+  const docked = await read();
+  await shot('13-cale-sur-le-cadre');
+  record(
+    13,
+    'La boucle cale le fond sur le cadre de la section 2',
+    docked.frameBox != null && near(docked.videoBox, docked.frameBox) && docked.dock > 0.99,
+    `${boxes(docked)} dock=${docked.dock}`
+  );
+
+  // 14 — et il suit ce cadre une fois l'epinglage relache, quand il se remet a defiler
+  await scrollTo(geometry.unpin + 100, 400);
+  const followed = await read();
+  await shot('14-le-cadre-defile');
+  record(
+    14,
+    'Le fond suit le cadre pendant que la section defile',
+    followed.frameBox != null && near(followed.videoBox, followed.frameBox),
+    boxes(followed)
+  );
+
+  /**
+   * Verrou relache — l'autre moitie du contrat. Le rechargement est le seul
+   * moyen d'exercer `latchLoop: false`, la valeur etant lue au cablage.
+   */
+  await page.addInitScript(() => {
+    window.SCROLL_VIDEO_CONFIG = { ...(window.SCROLL_VIDEO_CONFIG ?? {}), latchLoop: false };
+  });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(
+    () => document.documentElement.dataset.vbState === 'ready',
+    undefined,
+    { timeout: 60_000 }
+  );
+
+  // 15 — sans verrou, remonter rend la main au scrub et defait le recadrage
+  //      a la position exacte du scroll, pas en un temps fixe
+  await scrollTo(geometry.scrubEnd, 1600);
+  await page.click('[data-vb-usecase="v2"]');
+  await page.waitForTimeout(700);
+  await scrollTo(geometry.scrubEnd / 2, 1600);
+  const undocked = await read();
+  const expected = dockFor(undocked.progress);
+  await shot('15-verrou-relache');
+  record(
+    15,
+    'latchLoop:false rend la main au scrub, et le recadrage suit le scroll',
+    undocked.mode === 'scrub' && Math.abs(undocked.dock - expected) < 0.05,
+    `${show(undocked)} dock=${undocked.dock} attendu=${expected.toFixed(3)}`
+  );
+
+  // 16 — avant le debut de la plage de recadrage, le fond est rendu plein ecran
+  await scrollTo(0);
+  const rewound = await read();
+  await shot('16-retroactivite');
+  record(
+    16,
+    'Sans verrou, le fond redevient plein ecran et le use-case reste retroactif',
+    rewound.mode === 'scrub' &&
+      shows(rewound, 'v2') &&
+      rewound.time < 0.1 &&
+      rewound.dock === 0 &&
+      near(rewound.videoBox, rewound.stageBox),
+    `${show(rewound)} ${boxes(rewound)} dock=${rewound.dock}`
+  );
+
+  /**
+   * 17 — la mise en scene accrochee a `--vb-scrub`. C'est la contrepartie CSS
+   * du montage superpose : le JS ne fait plus qu'ecrire un nombre, et c'est la
+   * page qui en tire l'apparition et la disparition de ses calques. Verifier
+   * la variable ne suffit donc pas, il faut lire ce qu'elle produit a l'ecran.
+   *
+   * Les attentes se calculent depuis la progression reellement atteinte, et
+   * non depuis la position visee : le lissage du scrub laisse un retard, qui
+   * n'est pas une erreur.
+   */
+  const clamp = (value) => Math.min(1, Math.max(0, value));
+  const staging = [];
+
+  for (const fraction of [0, 0.15, 0.35, 0.5, 0.7, 0.9]) {
+    await scrollTo(geometry.scrubEnd * fraction, 1200);
+    const sample = await page.evaluate(() => {
+      const opacity = (selector) => {
+        const node = document.querySelector(selector);
+        return node ? Number(getComputedStyle(node).opacity) : null;
+      };
+      return {
+        variable: Number(
+          getComputedStyle(document.documentElement).getPropertyValue('--vb-scrub')
+        ),
+        progress: window.scrollVideo.stage.progress,
+        intro: opacity('.intro'),
+        demo: opacity('[data-vb-loop]'),
+        pins: opacity('.pins'),
+      };
+    });
+
+    const p = sample.progress;
+    const expected = {
+      intro: clamp(1 - p / 0.2),
+      demo: clamp((p - 0.3) / 0.3),
+      pins: clamp((p - 0.8) / 0.2),
+    };
+
+    const ok =
+      Math.abs(sample.variable - p) < 0.002 &&
+      ['intro', 'demo', 'pins'].every((key) => Math.abs(sample[key] - expected[key]) < 0.02);
+
+    staging.push({
+      ok,
+      detail:
+        `p=${p.toFixed(3)} intro=${sample.intro.toFixed(2)}/${expected.intro.toFixed(2)} ` +
+        `demo=${sample.demo.toFixed(2)}/${expected.demo.toFixed(2)} ` +
+        `pins=${sample.pins.toFixed(2)}/${expected.pins.toFixed(2)}`,
+    });
+  }
+
+  await shot('17-mise-en-scene');
+  record(
+    17,
+    'Les calques suivent --vb-scrub aux seuils poses par la page',
+    staging.every((entry) => entry.ok),
+    staging.map((entry) => `${entry.ok ? 'ok' : 'KO'} ${entry.detail}`).join('\n      ')
+  );
 
   // 12 — cout reel d'un seek, le chiffre qui decide entre <video> et canvas
   await scrollTo(0);
