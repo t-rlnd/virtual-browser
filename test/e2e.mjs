@@ -8,13 +8,22 @@
  * Prerequis : npm run dev -- --port 5180
  * Usage     : PLAYWRIGHT_BROWSERS_PATH=$PWD/.playwright node test/e2e.mjs
  */
-import { chromium } from 'playwright';
+import { chromium, firefox, webkit } from 'playwright';
 import { mkdir, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
 /** REAL=1 exerce les vraies balises <video> plutot que les canvas de test. */
 const REAL = process.env.REAL === '1';
-const URL = (process.env.DEMO_URL ?? 'http://localhost:5180/') + (REAL ? '?real' : '');
+const URL = (process.env.DEMO_URL ?? 'http://localhost:3000/') + (REAL ? '?real' : '');
+
+/**
+ * BROWSER=webkit est le seul moyen local d'approcher Safari, ou se concentre
+ * le risque du scrub : son decodeur peut se figer sur des seeks rapides la ou
+ * Chromium ne bronche pas. Ce n'est pas Safari lui-meme, mais c'est le meme
+ * moteur, et cela rattrape la majorite des regressions avant l'appareil reel.
+ */
+const ENGINES = { chromium, firefox, webkit };
+const ENGINE = process.env.BROWSER ?? 'chromium';
 const SHOTS = REAL ? '.artifacts/real' : '.artifacts';
 const BROWSERS = ['.playwright', process.env.PLAYWRIGHT_BROWSERS_PATH].filter(Boolean);
 
@@ -54,7 +63,16 @@ function record(step, label, ok, detail) {
 const main = async () => {
   await mkdir(SHOTS, { recursive: true });
 
-  const browser = await chromium.launch({ executablePath: await findHeadlessShell() });
+  const engine = ENGINES[ENGINE];
+  if (!engine) {
+    throw new Error(`BROWSER=${ENGINE} inconnu, attendu : ${Object.keys(ENGINES).join(', ')}`);
+  }
+
+  // Le contournement de resolution ne concerne que Chromium ; pour les autres
+  // moteurs, playwright trouve seul son binaire sous PLAYWRIGHT_BROWSERS_PATH.
+  const browser = await engine.launch(
+    ENGINE === 'chromium' ? { executablePath: await findHeadlessShell() } : {}
+  );
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 
   page.on('console', (message) => {
@@ -64,8 +82,15 @@ const main = async () => {
   });
   page.on('pageerror', (error) => consoleMessages.push(`[pageerror] ${error.message}`));
 
-  await page.goto(URL, { waitUntil: 'networkidle' });
-  await page.waitForFunction(() => document.documentElement.dataset.vbState === 'ready');
+  // Surtout pas `networkidle` : une video en preload garde le reseau occupe,
+  // et le client de live reload maintient une connexion ouverte en permanence.
+  // Le vrai signal de disponibilite est celui que pose le script lui-meme.
+  await page.goto(URL, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(
+    () => document.documentElement.dataset.vbState === 'ready',
+    undefined,
+    { timeout: 60_000 }
+  );
 
   const geometry = await page.evaluate(() => {
     const loop = document.querySelector('[data-vb-loop]');
@@ -276,7 +301,10 @@ const main = async () => {
   console.log(consoleMessages.length ? consoleMessages.join('\n') : '  (aucune erreur ni avertissement)');
 
   const failures = results.filter((result) => !result.ok);
-  console.log(`\n${results.length - failures.length}/${results.length} etapes validees`);
+  console.log(
+    `\n${results.length - failures.length}/${results.length} etapes validees` +
+      `  (${ENGINE}${REAL ? ', MP4 reels' : ''})`
+  );
   process.exit(failures.length === 0 ? 0 : 1);
 };
 

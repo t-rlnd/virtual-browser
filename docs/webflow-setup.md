@@ -186,6 +186,28 @@ Le second cas est le piege : changer le CDN video impose de republier le code.
 
 L'ordre du footer compte : `gsap`, puis `ScrollTrigger`, puis `scroll-video.js`.
 
+## 7. Developper contre le site, sans republier
+
+Pendant la mise au point, remplacer les deux URL jsDelivr par celles du serveur
+local (`npm run dev` les affiche au demarrage) :
+
+```html
+<link href="http://localhost:3000/dev/scroll-video.css" rel="stylesheet" />
+<script defer src="http://localhost:3000/dev/scroll-video.js"></script>
+```
+
+Publier sur le domaine de staging `*.webflow.io` : le site charge alors le code
+de la machine, et chaque sauvegarde recharge la page. Ni commit, ni tag, ni
+televersement dans la boucle.
+
+Le code personnalise ne s'executant pas dans le preview du Designer, il faut
+publier au moins une fois. `http://localhost` echappant au blocage du contenu
+mixte, une page HTTPS a le droit de charger ces deux fichiers ; un tunnel n'est
+necessaire que pour tester depuis un telephone.
+
+Ne pas oublier de remettre les URL jsDelivr avant de publier en production :
+sinon la page cherche un localhost que le visiteur n'a pas.
+
 ## Verifier que tout est branche
 
 Une fois publie, ouvrir la console :

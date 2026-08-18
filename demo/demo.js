@@ -17,7 +17,7 @@ import { DebugLayer } from './DebugLayer.js';
 const useRealVideos = new URLSearchParams(location.search).has('real');
 
 const config = resolveConfig({
-  base: useRealVideos ? '/assets' : undefined,
+  base: useRealVideos ? '/public/assets' : undefined,
   ...(window.SCROLL_VIDEO_CONFIG ?? {}),
 });
 

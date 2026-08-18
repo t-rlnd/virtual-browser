@@ -1,4 +1,8 @@
 node_modules/
+
+# Sortie du mode watch. La sortie de production, elle, vit dans dist/
+# et est versionnee : jsDelivr la lit depuis le depot.
+dev/
 masters/
 public/assets/
 .playwright/

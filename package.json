@@ -5,18 +5,16 @@
   "description": "Fond video pilote au scroll pour Webflow : scrub sur la section 1, boucle sur la section 2, bascule a chaud entre deux use-cases.",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build && cp src/styles/scroll-video.css dist/",
-    "preview": "vite preview",
+    "dev": "node ./bin/build.js",
+    "build": "NODE_ENV=production node ./bin/build.js",
     "test": "node --test 'test/*.test.mjs'",
-    "test:e2e": "node test/e2e.mjs",
+    "test:e2e": "PLAYWRIGHT_BROWSERS_PATH=$PWD/.playwright node test/e2e.mjs",
+    "test:bundle": "DEMO_URL=http://localhost:3000/demo/bundle.html npm run test:e2e",
     "encode": "./scripts/encode.sh",
-    "upload": "./scripts/upload-bunny.sh",
-    "serve": "python3 -m http.server 5181",
-    "test:bundle": "DEMO_URL=http://localhost:5181/demo/bundle.html node test/e2e.mjs"
+    "upload": "./scripts/upload-bunny.sh"
   },
   "devDependencies": {
-    "playwright": "^1.62.1",
-    "vite": "^7.1.3"
+    "esbuild": "^0.28.2",
+    "playwright": "^1.62.1"
   }
 }

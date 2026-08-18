@@ -30,11 +30,38 @@ npm install
 npm run dev
 ```
 
+esbuild passe en watch, et un serveur local sert sur
+**http://localhost:3000** les fichiers **tels qu'ils seront en ligne** : sans
+transformation, avec les bons types MIME et le support des requetes Range que
+reclame le scrub. Chaque sauvegarde reconstruit et recharge les pages ouvertes.
+
 La page de demonstration tourne sur **DebugLayer**, un rendu `<canvas>` qui ne
 demande aucun fichier video : c'est ce qui permet de valider le scroll et la
 bascule avant meme d'avoir encode les masters. Un HUD affiche l'etat en direct.
 
 Ajouter `?real` a l'URL pour utiliser les vrais MP4.
+
+### Developper contre le vrai site Webflow
+
+Au demarrage, le serveur affiche les balises a coller dans le code
+personnalise d'une page Webflow :
+
+```html
+<link href="http://localhost:3000/dev/scroll-video.css" rel="stylesheet" />
+<script defer src="http://localhost:3000/dev/scroll-video.js"></script>
+```
+
+Publie sur le domaine de staging `*.webflow.io` avec ces deux lignes a la place
+des URL jsDelivr, et le site charge ton code local : une sauvegarde suffit a
+voir l'effet, sans commit, sans tag, sans televersement. Le code personnalise ne
+s'executant pas dans le preview du Designer, il faut publier au moins une fois.
+
+`http://localhost` echappe au blocage du contenu mixte : une page en HTTPS a le
+droit de charger ces deux fichiers. Un tunnel n'est necessaire que pour tester
+depuis un telephone, dont le localhost n'est pas le tien.
+
+Le mode watch ecrit dans `dev/`, jamais dans `dist/` : ce dernier est versionne
+et sert de source a jsDelivr, un bundle de developpement n'a rien a y faire.
 
 ## Mise en production
 
@@ -114,6 +141,10 @@ scripts/
   encode.sh              encodage ffmpeg all-intra
   upload-bunny.sh        televersement CDN
   check-cdn.sh           controle Range / CORS / MIME
+bin/
+  build.js               esbuild : watch + serveur local, ou build de production
+  serve-media.js         service des medias avec Range, ce qu'esbuild ne fait pas
+  live-reload.js         recharge la page a chaque rebuild, injecte en dev seul
 ```
 
 ## Tests
@@ -124,44 +155,59 @@ npm run test:e2e         # parcours complet sur les canvas de test
 REAL=1 npm run test:e2e  # meme parcours sur les vrais MP4 encodes
 ```
 
-Les trois tournent contre les sources, via le serveur de developpement. Pour
-eprouver ce qui sera reellement en ligne — le bundle construit, les videos
-tirees du CDN — il faut un serveur statique :
+Tous exigent `npm run dev` dans un autre terminal.
+
+Pour eprouver ce qui sera reellement en ligne — le bundle construit, les videos
+tirees du CDN — il reste `test:bundle`, dernier filet avant de publier un tag :
 
 ```bash
 npm run build
-npm run serve            # dans un autre terminal
 npm run test:bundle
 ```
 
-C'est le dernier filet avant de publier un tag : il exerce `dist/` tel quel et
-les MP4 du CDN, la seule difference avec la page Webflow etant l'URL du bundle.
+La seule difference qui subsiste avec la page Webflow est l'URL du bundle.
 
-Ne jamais servir `dist/` par `npm run dev` : vite transforme ce qu'il sert, le
-JS y triple de volume et le CSS ressort en `content-type` JavaScript, que le
-navigateur refuse comme feuille de style.
+### Le moteur, pas seulement le parcours
 
-Le test end-to-end verifie les dix etapes du parcours, dont la retroactivite,
-et depose des captures dans `.artifacts/`.
+`BROWSER=` choisit le moteur de rendu, `webkit` etant celui de Safari :
 
-En mode `REAL=1` il ajoute une onzieme etape qui mesure le cout reel d'un seek.
-C'est le chiffre qui arbitre entre la balise `<video>` et la sequence
-d'images : au-dela de 33 ms de mediane, le scrub ne peut pas tenir 30 images
-par seconde et il faut envisager la migration.
+```bash
+BROWSER=webkit REAL=1 npm run test:e2e
+BROWSER=firefox npm run test:e2e
+```
 
-Attention : ce test tourne dans Chromium. Il valide la justesse du
-comportement, mais le risque reel du rendu `<video>` est Safari et iOS, qui ne
-peuvent se verifier que sur un vrai appareil.
+C'est la ou se joue le risque du rendu `<video>` : le scrub depend du decodeur,
+et Safari peut se figer sur des seeks rapides la ou Chromium ne bronche pas.
+
+Le test depose des captures dans `.artifacts/` et verifie les onze etapes du
+parcours, dont la retroactivite. En mode `REAL=1` il en ajoute une douzieme,
+qui mesure le cout d'un seek : au-dela de 33 ms de mediane le scrub ne peut
+pas tenir 30 images par seconde, et il faut envisager la sequence d'images.
+
+Releve actuel, sur les MP4 encodes :
+
+| Moteur | Seek median | Pire cas |
+| --- | --- | --- |
+| WebKit | 2 ms | 5 ms |
+| Chromium | 5 ms | 9 ms |
+
+Reste hors de portee : **iOS**. WebKit de bureau partage le decodeur de Safari,
+mais pas ses regles d'autoplay ni son economiseur d'energie. Le deblocage au
+premier geste ne se verifie que sur un appareil reel.
 
 ## Migrer vers un rendu par sequence d'images
 
-Le scrub d'une balise `<video>` depend du decodeur du navigateur, et Safari
-peut se figer sur des seeks rapides. Si le rendu ne convient pas, la bascule
+Le scrub d'une balise `<video>` depend du decodeur du navigateur. Les mesures
+ci-dessus rendent cette migration improbable — WebKit seek plus vite que
+Chromium — mais elle reste ouverte si iOS se comporte autrement. La bascule
 vers un rendu `<canvas>` alimente par une sequence d'images ne demande qu'une
 seconde implementation de [`VideoLayer`](src/layers/VideoLayer.js) et sa
 substitution dans `main.js`. Ni la machine a etats ni le pilotage du scroll ne
 changent — [`demo/DebugLayer.js`](demo/DebugLayer.js) en est la preuve, c'est
 deja une implementation canvas complete du meme contrat.
+
+Le `crossOrigin` pose sur les balises `<video>` est la ou pour cette raison :
+sans lui, un canvas lisant des pixels venus du CDN serait teinte et illisible.
 
 ## Point encore ouvert
 
