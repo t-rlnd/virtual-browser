@@ -92,3 +92,8 @@ test('une video se declare uniquement par ses attributs', () => {
   assert.equal(videos[2].segments.scrub.end, 90 / 30);
   assert.equal(sourceFor(videos[2], 1280, config).endsWith('/video3-1280.mp4'), true);
 });
+
+test('compactMaxWidth vaut 991 et se surcharge', () => {
+  assert.equal(resolveConfig().compactMaxWidth, 991);
+  assert.equal(resolveConfig({ compactMaxWidth: 768 }).compactMaxWidth, 768);
+});

@@ -50,6 +50,13 @@ export const CONFIG = {
   /** Use-case affiche au chargement, s'il existe dans le DOM. */
   defaultActive: 'v1',
 
+  /**
+   * En dessous de cette largeur (tablette et mobile Webflow), le scrub est
+   * coupe : les deux sections s'empilent, la video boucle dans son cadre.
+   * 991 = breakpoint tablette Webflow (`max-width: 991px`).
+   */
+  compactMaxWidth: 991,
+
   /** Largeurs encodees, de la plus petite a la plus grande. */
   widths: [750, 1280, 1920],
 

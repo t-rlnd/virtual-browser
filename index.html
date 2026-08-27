@@ -157,6 +157,35 @@
         }
       }
 
+      /**
+       * Tablette et mobile Webflow : plus de montage superpose. Les deux
+       * sections s'empilent, le fond est deja cale dans son cadre, et la
+       * page ne lit plus `--vb-scrub` pour leurs opacites.
+       */
+      @media (max-width: 991px) {
+        [data-vb-scrub] {
+          height: auto;
+        }
+
+        [data-vb-scrub-inner] {
+          position: relative;
+          height: auto;
+          overflow: visible;
+        }
+
+        .intro,
+        [data-vb-loop] {
+          position: relative;
+          inset: auto;
+          opacity: 1;
+          pointer-events: auto;
+        }
+
+        .pins {
+          opacity: 1;
+        }
+      }
+
       [data-vb-usecase] {
         appearance: none;
         border: 1px solid rgba(255, 255, 255, 0.35);
@@ -252,6 +281,7 @@
       <div><b>progress</b><span data-hud-progress>—</span></div>
       <div><b>currentTime</b><span data-hud-time>—</span></div>
       <div><b>dock</b><span data-hud-dock>—</span></div>
+      <div><b>layout</b><span data-hud-layout>—</span></div>
     </div>
 
     <!--

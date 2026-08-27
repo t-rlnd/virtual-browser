@@ -1,11 +1,11 @@
 import { resolveConfig, sourceFor, posterFor, collectVideos } from './config.js';
 import { Mp4VideoLayer } from './layers/Mp4VideoLayer.js';
 import { Stage } from './Stage.js';
-import { initScroll } from './scroll.js';
+import { initPlayback } from './playback.js';
 import { initFrame } from './frame.js';
 import { initProgress } from './progress.js';
 import { initUseCases } from './usecases.js';
-import { pickWidth, prefersReducedMotion } from './env.js';
+import { pickWidth, prefersReducedMotion, isCompactViewport } from './env.js';
 
 const STATE_ATTRIBUTE = 'data-vb-state';
 
@@ -50,6 +50,10 @@ export async function init(config = resolveConfig(window.SCROLL_VIDEO_CONFIG)) {
   config = { ...config, defaultActive };
   const stage = new Stage({ layers, config });
 
+  // En compact la progression est figee a 1 : mount pose alors la couche
+  // sur le debut de la boucle, pas sur la premiere image du scrub.
+  if (isCompactViewport(config.compactMaxWidth)) stage.setProgress(1);
+
   // Arme le deblocage iOS avant tout chargement : sur iOS le decodeur reste
   // inerte tant qu'aucune lecture n'a ete autorisee, et les seeks ne rendent rien.
   installUnlock(stage, layers);
@@ -64,12 +68,12 @@ export async function init(config = resolveConfig(window.SCROLL_VIDEO_CONFIG)) {
 
   stage.mount();
 
-  // Avant initScroll : c'est lui qui pose la progression initiale, et le
+  // Avant initPlayback : c'est lui qui pose la progression initiale, et le
   // cadrage comme la variable CSS doivent etre en place pour l'entendre.
   const progress = initProgress({ stage });
   const frame = initFrame({ stage, config, stageElement });
 
-  const scroll = initScroll({ stage, config, track });
+  const playback = initPlayback({ stage, config, track });
   const useCases = initUseCases({ stage });
 
   setState('ready');
@@ -82,7 +86,7 @@ export async function init(config = resolveConfig(window.SCROLL_VIDEO_CONFIG)) {
   const api = {
     stage,
     destroy() {
-      scroll.destroy();
+      playback.destroy();
       useCases.destroy();
       frame.destroy();
       progress.destroy();

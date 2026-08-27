@@ -76,6 +76,26 @@
         aspect-ratio: 16 / 9;
         border: 2px dashed rgba(255, 45, 45, 0.9);
       }
+      @media (max-width: 991px) {
+        [data-vb-scrub] {
+          height: auto;
+        }
+        [data-vb-scrub-inner] {
+          position: relative;
+          height: auto;
+          overflow: visible;
+        }
+        .intro,
+        [data-vb-loop] {
+          position: relative;
+          inset: auto;
+          opacity: 1;
+          pointer-events: auto;
+        }
+        .pins {
+          opacity: 1;
+        }
+      }
       .after {
         position: relative;
         z-index: 1;

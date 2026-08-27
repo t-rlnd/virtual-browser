@@ -126,8 +126,8 @@ const main = async () => {
    * seule facon de distinguer « le Stage croit afficher v2 » de « v2 est
    * effectivement a l'ecran ».
    */
-  const read = async () =>
-    page.evaluate(() => {
+  const read = (target = page) =>
+    target.evaluate(() => {
       const stage = window.scrollVideo.stage;
       const element = stage.active.element;
 
@@ -187,9 +187,9 @@ const main = async () => {
   const shows = (state, id) =>
     state.active === id && state.visibleId === id && state.opacity === '1' && state.luminance > 0;
 
-  const scrollTo = async (y, settle = 900) => {
-    await page.evaluate((target) => window.scrollTo(0, target), y);
-    await page.waitForTimeout(settle);
+  const scrollTo = async (y, settle = 900, target = page) => {
+    await target.evaluate((top) => window.scrollTo(0, top), y);
+    await target.waitForTimeout(settle);
   };
 
   /** Le timecode correspond-il a la progression, sur la plage de CETTE video ? */
@@ -208,7 +208,7 @@ const main = async () => {
   const boxes = (state) =>
     `video=[${state.videoBox}] cadre=[${state.frameBox}] stage=[${state.stageBox}]`;
 
-  const shot = (name) => page.screenshot({ path: `${SHOTS}/${name}.png` });
+  const shot = (name, target = page) => target.screenshot({ path: `${SHOTS}/${name}.png` });
   const show = (state) =>
     `mode=${state.mode} active=${state.active} affiche=${state.visibleId} progress=${state.progress} currentTime=${state.time} luminance=${state.luminance}`;
 
@@ -469,6 +469,112 @@ const main = async () => {
       `mediane ${latency.median} ms, pire cas ${latency.worst} ms (budget : 33 ms par image a 30 fps)`
     );
   }
+
+  /**
+   * Mode compact — tablette et mobile. Un second viewport, independant du
+   * parcours desktop (y compris du rechargement `latchLoop: false`).
+   */
+  const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  mobile.on('console', (message) => {
+    if (message.type() === 'error' || message.type() === 'warning') {
+      consoleMessages.push(`[compact ${message.type()}] ${message.text()}`);
+    }
+  });
+  mobile.on('pageerror', (error) =>
+    consoleMessages.push(`[compact pageerror] ${error.message}`)
+  );
+
+  await mobile.goto(URL, { waitUntil: 'domcontentloaded' });
+  await mobile.waitForFunction(
+    () => document.documentElement.dataset.vbState === 'ready',
+    undefined,
+    { timeout: 60_000 }
+  );
+
+  const compactGeo = await mobile.evaluate(() => {
+    const loop = document.querySelector('[data-vb-loop]');
+    const intro = document.querySelector('.intro');
+    const after = document.querySelector('.after');
+    return {
+      flagged: document.documentElement.getAttribute('data-vb-compact') === 'true',
+      introOpacity: Number(getComputedStyle(intro).opacity),
+      demoOpacity: Number(getComputedStyle(loop).opacity),
+      introPosition: getComputedStyle(intro).position,
+      demoPosition: getComputedStyle(loop).position,
+      loopTop: loop.getBoundingClientRect().top + window.scrollY,
+      pageBottom: Math.max(0, document.body.scrollHeight - window.innerHeight),
+      afterTop: after.getBoundingClientRect().top + window.scrollY,
+    };
+  });
+
+  await scrollTo(0, 400, mobile);
+  const compactTop = await read(mobile);
+  await shot('c01-top', mobile);
+  record(
+    18,
+    'Sous 991 px le layout compact est actif, intro et demo visibles',
+    compactGeo.flagged &&
+      compactGeo.introOpacity === 1 &&
+      compactGeo.demoOpacity === 1 &&
+      compactGeo.introPosition === 'relative' &&
+      compactGeo.demoPosition === 'relative' &&
+      compactTop.progress === 1,
+    `compact=${compactGeo.flagged} intro=${compactGeo.introOpacity}/${compactGeo.introPosition} demo=${compactGeo.demoOpacity}/${compactGeo.demoPosition} ${show(compactTop)}`
+  );
+
+  await scrollTo(compactGeo.loopTop, 900, mobile);
+  const compactLoop = await read(mobile);
+  await mobile.waitForTimeout(700);
+  const compactLoopAgain = await read(mobile);
+  await shot('c02-boucle', mobile);
+  record(
+    19,
+    'La video boucle dans son cadre, sans scrub, sur le segment de boucle',
+    compactLoop.mode === 'loop' &&
+      compactLoop.progress === 1 &&
+      compactLoop.dock === 1 &&
+      near(compactLoop.videoBox, compactLoop.frameBox) &&
+      inLoop(compactLoop) &&
+      compactLoopAgain.time !== compactLoop.time,
+    `${show(compactLoop)} ${boxes(compactLoop)} dock=${compactLoop.dock} puis currentTime=${compactLoopAgain.time}`
+  );
+
+  await mobile.click('[data-vb-usecase="v2"]');
+  await mobile.waitForTimeout(700);
+  const compactSwitch = await read(mobile);
+  await shot('c03-usecase-2', mobile);
+  record(
+    20,
+    'Les use-cases restent cliquables en compact',
+    shows(compactSwitch, 'v2') && inLoop(compactSwitch),
+    show(compactSwitch)
+  );
+
+  await scrollTo(compactGeo.pageBottom, 900, mobile);
+  const compactIdle = await read(mobile);
+  await mobile.waitForTimeout(800);
+  const compactIdleAgain = await read(mobile);
+  await shot('c04-hors-ecran', mobile);
+  record(
+    21,
+    'Hors ecran, la boucle compacte se coupe',
+    compactIdle.mode === 'idle' && compactIdle.time === compactIdleAgain.time,
+    `${show(compactIdle)} puis currentTime=${compactIdleAgain.time}`
+  );
+
+  await scrollTo(compactGeo.loopTop, 900, mobile);
+  const compactResume = await read(mobile);
+  await mobile.waitForTimeout(700);
+  const compactResumeAgain = await read(mobile);
+  await shot('c05-reprise', mobile);
+  record(
+    22,
+    'Revenir sur la section demo relance la boucle',
+    compactResume.mode === 'loop' && compactResumeAgain.time !== compactResume.time,
+    `${show(compactResume)} puis currentTime=${compactResumeAgain.time}`
+  );
+
+  await mobile.close();
 
   await browser.close();
 

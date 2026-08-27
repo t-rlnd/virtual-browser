@@ -10,8 +10,14 @@ du scrub qui fait disparaitre le titre, apparaitre les use-cases et venir la
 video se caler dans son cadre. Le JavaScript n'ecrit qu'un nombre — la variable
 CSS `--vb-scrub` — et la page en tire toute sa mise en scene.
 
-Le scrub **ne joue qu'une fois** : la boucle atteinte, remonter ne rembobine
-plus rien, la video reste a tourner dans son cadre (`latchLoop`, ci-dessous).
+Le scrub **ne joue qu'une fois** : la boucle atteinte, remonter ne
+rembobine plus rien, la video reste a tourner dans son cadre (`latchLoop`,
+ci-dessous).
+
+Sous **991 px** (tablette et mobile Webflow), ce montage est coupe : les
+deux sections s'empilent, la video boucle directement dans son cadre, et
+il n'y a plus de course de scroll. Voir
+[`docs/webflow-setup.md`](docs/webflow-setup.md#5-ter-tablette-et-mobile-sous-991-px).
 
 > Pour reprendre le code : [`docs/architecture.md`](docs/architecture.md).
 > Pour construire la page : [`docs/webflow-setup.md`](docs/webflow-setup.md).
@@ -66,6 +72,7 @@ Deux choses sont publiees pour que la page anime ses propres calques :
 | --- | --- | --- |
 | `<html>` | `--vb-scrub` | Progression du scrub, de 0 a 1 |
 | `<html>` | `data-vb-mode` | `scrub`, `loop` ou `idle` |
+| `<html>` | `data-vb-compact` | `true` sous 991 px |
 
 Une opacite s'interpole depuis la variable ; un `pointer-events` non, d'ou
 l'attribut. Un calque a opacite nulle reste cliquable : sans lui, les boutons
@@ -302,12 +309,14 @@ toucher a `src/`.
 src/
   config.js              reglages globaux ; le decoupage se lit sur les balises
   Stage.js               machine a etats (activeId / mode / progress)
+  playback.js            choix compact (< 991 px) vs scrub desktop
+  compact.js             visibilite de la section demo → loop / idle
   scroll.js              cablage GSAP ScrollTrigger
   frame.js               le fond quitte le plein ecran pour [data-vb-frame]
   progress.js            publie --vb-scrub et data-vb-mode sur <html>
   usecases.js            selecteur de use-case et avancee de la boucle
   main.js                initialisation et garde-fous
-  env.js                 detection reduced-motion, save-data, largeur utile
+  env.js                 reduced-motion, save-data, largeur utile, breakpoint compact
   utils.js               clamp, wait, emetteur d'evenements
   layers/
     VideoLayer.js        le contrat d'une couche d'image

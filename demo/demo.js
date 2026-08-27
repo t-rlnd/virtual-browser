@@ -10,10 +10,11 @@
 import { resolveConfig, sourceFor, collectVideos } from '../src/config.js';
 import { Stage } from '../src/Stage.js';
 import { Mp4VideoLayer } from '../src/layers/Mp4VideoLayer.js';
-import { initScroll } from '../src/scroll.js';
+import { initPlayback } from '../src/playback.js';
 import { initFrame } from '../src/frame.js';
 import { initProgress } from '../src/progress.js';
 import { initUseCases } from '../src/usecases.js';
+import { isCompactViewport } from '../src/env.js';
 import { DebugLayer } from './DebugLayer.js';
 
 const useRealVideos = new URLSearchParams(location.search).has('real');
@@ -61,12 +62,18 @@ const defaultActive = layers[config.defaultActive]
 
 const stage = new Stage({ layers, config: { ...config, defaultActive } });
 
+if (isCompactViewport(config.compactMaxWidth)) stage.setProgress(1);
+
 Promise.all(Object.values(layers).map((layer) => layer.preload()))
   .then(() => {
     stage.mount();
     initProgress({ stage });
     const frame = initFrame({ stage, config, stageElement });
-    initScroll({ stage, config, track: document.querySelector('[data-vb-scrub]') });
+    initPlayback({
+      stage,
+      config,
+      track: document.querySelector('[data-vb-scrub]'),
+    });
     initUseCases({ stage });
     document.documentElement.setAttribute('data-vb-state', 'ready');
     startHud(stage, frame);
@@ -85,6 +92,7 @@ function startHud(stage, frame) {
     progress: hud.querySelector('[data-hud-progress]'),
     time: hud.querySelector('[data-hud-time]'),
     dock: hud.querySelector('[data-hud-dock]'),
+    layout: hud.querySelector('[data-hud-layout]'),
   };
 
   const render = () => {
@@ -93,6 +101,11 @@ function startHud(stage, frame) {
     fields.progress.textContent = stage.progress.toFixed(3);
     fields.time.textContent = (stage.active.currentTime ?? 0).toFixed(3);
     fields.dock.textContent = (frame.progress ?? 0).toFixed(3);
+    if (fields.layout) {
+      fields.layout.textContent = document.documentElement.hasAttribute('data-vb-compact')
+        ? 'compact'
+        : 'desktop';
+    }
     requestAnimationFrame(render);
   };
 

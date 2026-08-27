@@ -331,6 +331,7 @@ valeurs posees sur la balise `<html>`.
 | `--vb-scrub` | Progression du scrub, de 0 a 1 | Tout ce qui s'interpole : opacites, deplacements, echelles |
 | `data-vb-mode` | `scrub`, `loop` ou `idle` | Tout ce qui ne s'interpole pas : `pointer-events`, `visibility` |
 | `data-vb-state` | `loading`, `ready`, `error`, `reduced` | Les styles de chargement |
+| `data-vb-compact` | `true` sous 991 px, absent sinon | Accrocher le layout empile sans dupliquer le breakpoint |
 
 Les seuils de la maquette actuelle, a poser dans un Embed puisque `calc()` n'est
 pas saisissable dans le Designer :
@@ -353,6 +354,45 @@ formule qui passe en negatif avant son seuil n'a pas besoin d'etre bornee.
 
 Un bloc portant `data-vb-loader` est masque automatiquement des que la premiere
 video est prete.
+
+## 5 ter. Tablette et mobile (sous 991 px)
+
+Le montage superpose ne s'applique plus. Dans le Designer, au breakpoint
+**Tablet** (et en dessous) :
+
+1. `prot intro` et `prot demo` passent en `position: relative` (plus
+   d'`absolute` / `inset: 0`) : elles s'empilent, l'une sous l'autre.
+2. La piste (`data-vb-scrub`) reprend une hauteur `auto` : plus de `300vh`,
+   plus de conteneur `sticky` 100 vh.
+3. Les opacites accrochees a `--vb-scrub` sont forcees a `1`. Le script
+   fige la progression a 1 pour caler la video dans son cadre : sans cet
+   override, le titre disparaitrait.
+
+```css
+@media (max-width: 991px) {
+  .protocol_intro,
+  [data-vb-loop] {
+    position: relative;
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+```
+
+Le script publie `data-vb-compact="true"` sur `<html>` des que le viewport
+passe sous 991 px. On peut s'en servir a la place du media query :
+
+```css
+:root[data-vb-compact] .protocol_intro { opacity: 1; }
+```
+
+Cote video, plus de scrub : lecture autonome du segment de boucle
+(`data-vb-transition` → `data-vb-end`) dans `[data-vb-frame]`. Les
+use-cases restent cliquables. Quand `prot demo` quitte l'ecran, la video
+se met en pause.
+
+Le breakpoint se regle par `compactMaxWidth` dans
+[`src/config.js`](../src/config.js) (991 par defaut).
 
 ## 6. Le reste du site
 

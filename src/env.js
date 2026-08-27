@@ -1,11 +1,29 @@
 /** Detection des capacites et preferences du navigateur. */
 
 function matches(query) {
-  return typeof window.matchMedia === 'function' && window.matchMedia(query).matches;
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia(query).matches
+  );
 }
 
 export function prefersReducedMotion() {
   return matches('(prefers-reduced-motion: reduce)');
+}
+
+/**
+ * Tablette et mobile Webflow : plus de course de scrub, les sections
+ * s'empilent et la video boucle dans son cadre.
+ */
+export function isCompactViewport(maxWidth = 991) {
+  return matches(`(max-width: ${maxWidth}px)`);
+}
+
+/** Media query correspondant a `isCompactViewport`, pour ecouter les rotations. */
+export function compactQuery(maxWidth = 991) {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return null;
+  return window.matchMedia(`(max-width: ${maxWidth}px)`);
 }
 
 export function saveDataEnabled() {

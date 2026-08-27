@@ -118,3 +118,9 @@
   width: 0%;
 }
 
+/* Compact : la section demo est dans le flux, les boutons restent cliquables
+   meme si la page a pose `pointer-events: none` hors mode loop. */
+:root[data-vb-compact] [data-vb-loop] {
+  pointer-events: auto;
+}
+

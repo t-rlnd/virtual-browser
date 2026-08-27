@@ -15,8 +15,11 @@ des calques de la page.
 scroll de la page
       │
       ▼
-scroll.js          traduit le scroll en progression (0 → 1) et en mode
-      │            via GSAP ScrollTrigger
+playback.js        compact (< 991 px) ou scrub (desktop)
+      │
+      ├──────────────► compact.js   visibilite de [data-vb-loop] → loop / idle
+      └──────────────► scroll.js    GSAP ScrollTrigger → progress + mode
+      │
       ▼
 Stage.js           machine a etats : { activeId, mode, progress }
       │            n'ecrit jamais dans le DOM, ne parle qu'aux couches
@@ -53,18 +56,25 @@ et retroactive quand `latchLoop` est a `false`.
 | `loop` | lecture autonome en boucle sur son dernier segment |
 | `idle` | en pause, rien ne se decode |
 
+Sous 991 px (`compactMaxWidth`), `scroll.js` n'est jamais branche : la
+progression est figee a 1, le mode ne fait que `loop` / `idle` selon la
+visibilite de `[data-vb-loop]`, et l'intro scrubee n'est pas lue. Voir
+[`decisions/0002-mode-compact-sous-991.md`](decisions/0002-mode-compact-sous-991.md).
+
 ## Le role de chaque fichier
 
 | Fichier | Responsabilite | A ouvrir quand |
 | --- | --- | --- |
 | `src/config.js` | reglages globaux + lecture des attributs `data-vb-*` d'une balise | on ajoute une video, on change un fondu |
 | `src/Stage.js` | machine a etats, transitions et fondus croises | le comportement d'ensemble est faux |
+| `src/playback.js` | choix compact vs scrub, attribut `data-vb-compact` | le mauvais cablage se declenche sous 991 px |
 | `src/scroll.js` | GSAP ScrollTrigger : course de scrub, verrou de boucle | le declenchement se fait au mauvais moment |
+| `src/compact.js` | visibilite de la section demo → boucle ou pause | la video tourne hors ecran, ou pas du tout |
 | `src/frame.js` | le fond quitte le plein ecran pour `[data-vb-frame]` | le recadrage est mal place |
 | `src/progress.js` | publie `--vb-scrub` et `data-vb-mode` sur `<html>` | les calques de la page ne s'animent pas |
 | `src/usecases.js` | boutons de use-case et barres d'avancee | un clic ne fait rien |
 | `src/main.js` | assemblage, garde-fous, prechargement, deblocage iOS | rien ne demarre |
-| `src/env.js` | reduced-motion, save-data, largeur a telecharger | la mauvaise definition est servie |
+| `src/env.js` | reduced-motion, save-data, largeur a telecharger, breakpoint compact | la mauvaise definition est servie |
 | `src/utils.js` | `clamp`, `wait`, et un emetteur d'evenements minimal | jamais, ou presque |
 | `src/layers/VideoLayer.js` | le **contrat** d'une couche d'image | on veut un autre moteur de rendu |
 | `src/layers/Mp4VideoLayer.js` | l'implementation `<video>` + MP4 | le scrub saccade, un seek ne rend rien |
@@ -107,4 +117,6 @@ sur place :
   concurrence avec une bascule declenchee par le meme clic.
 - **`scroll.js`, le drapeau `reached`** — la section 2 etant superposee, elle
   est visible des le premier pixel. Sans ce garde-fou, le declencheur de
-  visibilite lancerait la boucle avant meme que le scrub ait commence.
+  visibilite lancerait la boucle avant meme que le scrub ait commence. En
+  compact ce probleme n'existe pas : il n'y a plus de superpositions, et
+  c'est `[data-vb-loop]` qui est observee, pas la piste.
