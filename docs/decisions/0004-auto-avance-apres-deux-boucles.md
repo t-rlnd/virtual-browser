@@ -38,3 +38,6 @@ Infinity` restaure l'ancien comportement.
 - Le scrub n'est pas compté. Compact et desktop partagent la même règle,
   c'est le mode `loop` qui déclenche, pas le câblage.
 - Les boutons `[data-vb-usecase]` ne changent pas.
+- La barre `[data-vb-progress]` couvre la serie de tours (0 → 100 % au
+  dernier), pas un tour isole. En `loopRepeats: Infinity`, elle rembobine
+  encore a chaque passage.

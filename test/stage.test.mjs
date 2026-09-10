@@ -30,6 +30,10 @@ class FakeLayer extends VideoLayer {
     this.onCycle = null;
   }
 
+  get currentTime() {
+    return this.time;
+  }
+
   preload() {
     this.calls.push(['preload']);
     return Promise.resolve(this);
@@ -364,4 +368,42 @@ test('refresh ne remet pas le compteur de boucle a zero', async () => {
 
   assert.equal(stage.activeId, 'v2');
   assert.deepEqual(v2.named('playLoop').at(-1), ['playLoop', 2, 5]);
+});
+
+test('loopProgress couvre les deux tours sans rembobiner', async () => {
+  const { stage, v1 } = makeStage();
+  stage.mount();
+  await stage.setMode(MODES.LOOP);
+
+  v1.time = 3;
+  assert.equal(stage.loopProgress, 0);
+
+  v1.time = 4.5;
+  assert.equal(stage.loopProgress, 0.25);
+
+  v1.time = 6;
+  assert.equal(stage.loopProgress, 0.5);
+
+  v1.completeCycle();
+  assert.equal(v1.time, 3);
+  assert.equal(stage.loopProgress, 0.5);
+
+  v1.time = 4.5;
+  assert.equal(stage.loopProgress, 0.75);
+
+  v1.time = 6;
+  assert.equal(stage.loopProgress, 1);
+});
+
+test('loopProgress rembobine a chaque tour si la boucle est infinie', async () => {
+  const { stage, v1 } = makeStage({ loopRepeats: Infinity });
+  stage.mount();
+  await stage.setMode(MODES.LOOP);
+
+  v1.time = 4.5;
+  assert.equal(stage.loopProgress, 0.5);
+
+  v1.completeCycle();
+  v1.time = 4.5;
+  assert.equal(stage.loopProgress, 0.5);
 });

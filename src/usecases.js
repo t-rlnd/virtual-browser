@@ -1,5 +1,4 @@
 import { MODES } from './Stage.js';
-import { clamp01 } from './utils.js';
 
 /** Pose sur le bouton du use-case affiche. La page se stylise dessus. */
 const ACTIVE_ATTRIBUTE = 'data-vb-active';
@@ -12,8 +11,8 @@ const ACTIVE_ATTRIBUTE = 'data-vb-active';
  * video reellement affichee, y compris si une bascule est annulee.
  *
  * Deuxieme role, purement descriptif lui aussi : refleter l'avancee de la
- * boucle sur les elements `[data-vb-progress]`, dont la largeur va de 0 a
- * 100 % au rythme de la video active.
+ * serie de tours sur les elements `[data-vb-progress]`, dont la largeur va
+ * de 0 a 100 % sur l'ensemble des `loopRepeats` (pas un tour isole).
  */
 export function initUseCases({ stage, root = document }) {
   const buttons = Array.from(root.querySelectorAll('[data-vb-usecase]'));
@@ -81,19 +80,14 @@ export function initUseCases({ stage, root = document }) {
   };
 
   /**
-   * La position lue est celle de la video, pas un timer : la barre reste donc
-   * juste meme si le decodage prend du retard, et rembobine avec la boucle.
+   * La position lue est celle de la video, etapee par le Stage sur toute la
+   * serie de tours : la barre ne rembobine plus a chaque passage.
    */
   function tick() {
     raf = 0;
     if (stage.mode !== MODES.LOOP) return;
 
-    const layer = stage.active;
-    const { start, end } = layer.segments.loop;
-    const span = end - start;
-    const value = span > 0 ? clamp01(((layer.currentTime ?? start) - start) / span) : 0;
-
-    paint(bars, stage.activeId, value);
+    paint(bars, stage.activeId, stage.loopProgress);
     schedule();
   }
 

@@ -93,7 +93,7 @@ visibilite de `[data-vb-loop]`, et l'intro scrubee n'est pas lue. Voir
 | `src/compact.js` | visibilite de la section demo → boucle ou pause | la video tourne hors ecran, ou pas du tout |
 | `src/frame.js` | le fond quitte le plein ecran pour `[data-vb-frame]` | le recadrage est mal place |
 | `src/progress.js` | publie `--vb-scrub`, `data-vb-mode`, `data-vb-current` sur `<html>`, et `data-vb-shown` sur chaque `[data-vb-when]` | les calques ne s'animent pas, ou les piles restent toutes visibles |
-| `src/usecases.js` | boutons de use-case et barres d'avancee | un clic ne fait rien |
+| `src/usecases.js` | boutons de use-case et barres d'avancee (`loopProgress`) | un clic ne fait rien, ou la barre rembobine |
 | `src/main.js` | assemblage, garde-fous, prechargement, deblocage iOS | rien ne demarre |
 | `src/env.js` | reduced-motion, save-data, largeur a telecharger, breakpoint compact | la mauvaise definition est servie |
 | `src/utils.js` | `clamp`, `wait`, et un emetteur d'evenements minimal | jamais, ou presque |

@@ -46,6 +46,23 @@ export class Stage extends Emitter {
     return this.layers[this.activeId];
   }
 
+  /**
+   * Avancee dans la serie de tours, de 0 a 1. Avec `loopRepeats: 2`, 0.5 est
+   * la fin du premier tour ; 1 est la fin du second. En boucle infinie, un
+   * seul tour : 0 a 1, puis ca recommence.
+   */
+  get loopProgress() {
+    const layer = this.active;
+    if (!layer) return 0;
+
+    const { start, end } = layer.segments.loop;
+    const span = end - start;
+    const inCycle = span > 0 ? clamp01(((layer.currentTime ?? start) - start) / span) : 0;
+    const repeats = this.config.loopRepeats;
+    if (!Number.isFinite(repeats) || repeats < 1) return inCycle;
+    return clamp01((this._loopCount + inCycle) / repeats);
+  }
+
   /** Place la couche active a l'image correspondant a la position de scroll initiale. */
   mount() {
     for (const [id, layer] of Object.entries(this.layers)) {

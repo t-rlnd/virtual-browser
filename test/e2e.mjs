@@ -346,6 +346,13 @@ const main = async () => {
   // 18 — auto-avance : deux tours du segment boucle enchainent le use-case suivant
   await completeLoopCycle();
   const afterOneCycle = await read();
+  const afterOneBar = await page.evaluate(() => {
+    const bar = document.querySelector('[data-vb-usecase="v1"] [data-vb-progress]');
+    return {
+      loopProgress: window.scrollVideo.stage.loopProgress,
+      width: bar ? parseFloat(bar.style.width) : null,
+    };
+  });
   await completeLoopCycle();
   await page.waitForTimeout(400);
   const afterTwoCycles = await read();
@@ -353,8 +360,14 @@ const main = async () => {
   record(
     23,
     'Deux tours de boucle enchainent le use-case suivant',
-    afterOneCycle.active === 'v1' && shows(afterTwoCycles, 'v2') && whenMatches(afterTwoCycles, 'v2'),
-    `apres 1 tour ${show(afterOneCycle)} ; apres 2 tours ${show(afterTwoCycles)}`
+    afterOneCycle.active === 'v1' &&
+      afterOneBar.loopProgress > 0.45 &&
+      afterOneBar.loopProgress < 0.55 &&
+      afterOneBar.width > 45 &&
+      afterOneBar.width < 55 &&
+      shows(afterTwoCycles, 'v2') &&
+      whenMatches(afterTwoCycles, 'v2'),
+    `apres 1 tour ${show(afterOneCycle)} barre=${afterOneBar.width}% p=${afterOneBar.loopProgress} ; apres 2 tours ${show(afterTwoCycles)}`
   );
 
   // 13 — le fond vient se caler sur [data-vb-frame] pendant la boucle

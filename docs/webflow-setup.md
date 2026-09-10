@@ -31,7 +31,7 @@ body
 │       │
 │       └── div  "Use cases"  data-vb-loop            absolute · inset 0 · z-index 2
 │           ├── div / button  data-vb-usecase="v1"     fond transparent
-│           │   └── div       data-vb-progress         largeur 0 → 100 % sur la boucle
+│           │   └── div       data-vb-progress         largeur 0 → 100 % sur les 2 tours
 │           ├── div / button  data-vb-usecase="v2"
 │           │   └── div       data-vb-progress
 │           ├── div           data-vb-when="v1"        cards + legende use-case 1
@@ -244,10 +244,11 @@ cote classes :
 ### La barre d'avancee de la boucle
 
 Un element portant `data-vb-progress` **a l'interieur** d'un bouton voit sa
-largeur ecrite a chaque image, de `0%` au debut de la boucle a `100%` a sa fin,
-puis repart a zero au rebouclage. C'est la position reelle de la video qui est
-lue, pas un minuteur : la barre reste donc juste meme si le decodage prend du
-retard.
+largeur ecrite a chaque image, de `0%` au debut de la serie de tours a `100%`
+a la fin du dernier (`loopRepeats`, 2 par defaut). Elle ne rembobine plus a
+chaque passage : a mi-serie elle est a 50 %. C'est la position reelle de la
+video, etagee par le Stage, qui est lue, pas un minuteur : la barre reste
+juste meme si le decodage prend du retard.
 
 ```
 div / button          data-vb-usecase="v1"
