@@ -118,6 +118,15 @@
   width: 0%;
 }
 
+/**
+ * Calques propres a un use-case. Le script pose `data-vb-shown` ; sans
+ * `true` le calque ne prend pas de place — deux piles de cards ne
+ * s'empilent pas. Le designer peut surcharger (fondu, superposition).
+ */
+[data-vb-when]:not([data-vb-shown='true']) {
+  display: none;
+}
+
 /* Compact : la section demo est dans le flux, les boutons restent cliquables
    meme si la page a pose `pointer-events: none` hors mode loop. */
 :root[data-vb-compact] [data-vb-loop] {

@@ -9,6 +9,26 @@ Le scroll ecrit **un seul nombre** — une progression de 0 a 1 — et tout le
 reste en decoule : le timecode de la video, la position du fond, l'apparition
 des calques de la page.
 
+## Stack
+
+- JS vanilla (ES modules), pas de framework.
+- GSAP 3 + ScrollTrigger charges depuis jsDelivr, lus sur `window` — jamais
+  bundle (voir `bin/build.js` et `webflow/footer.html`).
+- esbuild : bundle `dist/scroll-video.js` + `.css` ; serveur local avec
+  requetes Range (`bin/serve-media.js`).
+- Playwright pour les parcours e2e (Chromium / WebKit / Firefox).
+- ffmpeg via `scripts/` pour l'encodage all-intra.
+
+## Points d'entrée
+
+| Surface | Fichier |
+| --- | --- |
+| Runtime Webflow | `src/main.js` → `init()`, colle via `webflow/head.html` + `webflow/footer.html` |
+| Demo locale | `index.html` + `demo/demo.js` (`DebugLayer`) ; `?real` charge les MP4 |
+| Build / serveur | `bin/build.js` (`pnpm dev` / `pnpm build`) |
+| Tests unitaires | `test/*.test.mjs` (`pnpm test`) — attributs, Stage, mode compact |
+| Parcours e2e | `test/e2e.mjs` (`pnpm test:e2e`, `test:bundle`) |
+
 ## Le chemin d'une information
 
 ```
@@ -26,7 +46,7 @@ Stage.js           machine a etats : { activeId, mode, progress }
       │
       ├──────────────► layers/Mp4VideoLayer.js   seek / play / fondu sur la <video>
       ├──────────────► frame.js                  --vb-frame-* : le fond se cale dans son cadre
-      ├──────────────► progress.js               --vb-scrub + data-vb-mode : la page anime ses calques
+      ├──────────────► progress.js               --vb-scrub, data-vb-mode, data-vb-current / [data-vb-when]
       └──────────────► usecases.js               boutons actifs + barres d'avancee
 ```
 
@@ -71,13 +91,14 @@ visibilite de `[data-vb-loop]`, et l'intro scrubee n'est pas lue. Voir
 | `src/scroll.js` | GSAP ScrollTrigger : course de scrub, verrou de boucle | le declenchement se fait au mauvais moment |
 | `src/compact.js` | visibilite de la section demo → boucle ou pause | la video tourne hors ecran, ou pas du tout |
 | `src/frame.js` | le fond quitte le plein ecran pour `[data-vb-frame]` | le recadrage est mal place |
-| `src/progress.js` | publie `--vb-scrub` et `data-vb-mode` sur `<html>` | les calques de la page ne s'animent pas |
+| `src/progress.js` | publie `--vb-scrub`, `data-vb-mode`, `data-vb-current` sur `<html>`, et `data-vb-shown` sur chaque `[data-vb-when]` | les calques ne s'animent pas, ou les piles restent toutes visibles |
 | `src/usecases.js` | boutons de use-case et barres d'avancee | un clic ne fait rien |
 | `src/main.js` | assemblage, garde-fous, prechargement, deblocage iOS | rien ne demarre |
 | `src/env.js` | reduced-motion, save-data, largeur a telecharger, breakpoint compact | la mauvaise definition est servie |
 | `src/utils.js` | `clamp`, `wait`, et un emetteur d'evenements minimal | jamais, ou presque |
 | `src/layers/VideoLayer.js` | le **contrat** d'une couche d'image | on veut un autre moteur de rendu |
 | `src/layers/Mp4VideoLayer.js` | l'implementation `<video>` + MP4 | le scrub saccade, un seek ne rend rien |
+| `src/styles/scroll-video.css` | styles structurels, cibles par `data-vb-*` ; ne positionne pas le stage | un style du fond ou d'une couche est faux |
 
 ## Pourquoi une classe `VideoLayer` abstraite
 
@@ -100,7 +121,14 @@ Le decoupage de chaque video vit **sur la balise**, pas dans `config.js` :
 ```
 
 Une seule source de verite. Ajouter un troisieme use-case, c'est ajouter une
-`<video>` et un bouton dans le Designer Webflow — aucun rebuild, aucun tag.
+`<video>`, un bouton et les piles `[data-vb-when]` dans le Designer Webflow —
+aucun rebuild, aucun tag. Voir
+[`decisions/0003-decoupage-sur-la-balise.md`](decisions/0003-decoupage-sur-la-balise.md).
+
+Les cards et legendes propres a un use-case vivent de la meme facon **sur la
+page**, pas dans le JS : `data-vb-when="v1"` (ou `v2`). `progress.js` pose
+`data-vb-current` sur `<html>` et `data-vb-shown` sur chaque pile ; la feuille
+masque le reste.
 
 ## Les points d'attention
 

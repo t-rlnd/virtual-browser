@@ -77,8 +77,9 @@ scroll.js | compact.js -> Stage.js -> { Mp4VideoLayer.js, frame.js, progress.js,
 - **`frame.js`** — sort le fond du plein ecran pour le caler sur
   `[data-vb-frame]`, pilote par `dockRange` (fonction de la progression, pas
   d'une duree).
-- **`progress.js`** — publie `--vb-scrub` et `data-vb-mode` sur `<html>` ; la
-  page anime ses propres calques en CSS a partir de la.
+- **`progress.js`** — publie `--vb-scrub`, `data-vb-mode` et `data-vb-current`
+  sur `<html>`, et `data-vb-shown` sur chaque `[data-vb-when]` ; la page anime
+  ses calques en CSS a partir de la.
 - **`usecases.js`** — boutons de use-case. Ne modifie jamais l'affichage
   lui-meme : demande une bascule (`stage.setActive(...)`) et attend
   l'evenement `activechange` du Stage avant de refleter le changement.

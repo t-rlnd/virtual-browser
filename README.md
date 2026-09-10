@@ -66,13 +66,15 @@ rejouee ; les deux comportements restent couverts par les tests.
 
 ## La mise en scene, en CSS
 
-Deux choses sont publiees pour que la page anime ses propres calques :
+Quelques valeurs sont publiees pour que la page anime ses propres calques :
 
 | Publie sur | Nom | Valeur |
 | --- | --- | --- |
 | `<html>` | `--vb-scrub` | Progression du scrub, de 0 a 1 |
 | `<html>` | `data-vb-mode` | `scrub`, `loop` ou `idle` |
+| `<html>` | `data-vb-current` | Use-case affiche (`v1`, `v2`, …) |
 | `<html>` | `data-vb-compact` | `true` sous 991 px |
+| `[data-vb-when]` | `data-vb-shown` | `true` / `false` selon que l'id courant figure dans `data-vb-when` |
 
 Une opacite s'interpole depuis la variable ; un `pointer-events` non, d'ou
 l'attribut. Un calque a opacite nulle reste cliquable : sans lui, les boutons
@@ -83,6 +85,10 @@ de use-case capteraient les clics bien avant d'etre visibles.
 [data-vb-loop]  { opacity: calc((var(--vb-scrub) - 0.3) / 0.3); pointer-events: none; }
 :root[data-vb-mode='loop'] [data-vb-loop] { pointer-events: auto; }
 ```
+
+Cards et legendes propres a un use-case portent `data-vb-when="v1"` (ou `v2`) :
+le script pose `data-vb-shown`, la feuille masque les piles inactives. Voir
+[`docs/webflow-setup.md`](docs/webflow-setup.md).
 
 ## Le recadrage, pilote par le scroll
 
@@ -313,7 +319,7 @@ src/
   compact.js             visibilite de la section demo → loop / idle
   scroll.js              cablage GSAP ScrollTrigger
   frame.js               le fond quitte le plein ecran pour [data-vb-frame]
-  progress.js            publie --vb-scrub et data-vb-mode sur <html>
+  progress.js            publie --vb-scrub, data-vb-mode, data-vb-current ; data-vb-shown sur [data-vb-when]
   usecases.js            selecteur de use-case et avancee de la boucle
   main.js                initialisation et garde-fous
   env.js                 reduced-motion, save-data, largeur utile, breakpoint compact

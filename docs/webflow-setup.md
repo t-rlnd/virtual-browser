@@ -34,6 +34,8 @@ body
 │           │   └── div       data-vb-progress         largeur 0 → 100 % sur la boucle
 │           ├── div / button  data-vb-usecase="v2"
 │           │   └── div       data-vb-progress
+│           ├── div           data-vb-when="v1"        cards + legende use-case 1
+│           ├── div           data-vb-when="v2"        cards + legende use-case 2
 │           └── div           data-vb-frame            ou le fond vient se caler
 └── (suite du site)
 ```
@@ -146,7 +148,8 @@ Rien a modifier dans le JavaScript. Dans le Designer :
    `data-vb-transition="140"` (et `data-vb-end` si la boucle ne va pas jusqu'a
    la fin du fichier).
 3. Dupliquer un bouton dans la section 2 avec `data-vb-usecase="v3"`.
-4. Encoder et televerser `video3-750.mp4`, `video3-1280.mp4`, `video3-1920.mp4`
+4. Dupliquer les piles `[data-vb-when]` (cards, legende) avec `data-vb-when="v3"`.
+5. Encoder et televerser `video3-750.mp4`, `video3-1280.mp4`, `video3-1920.mp4`
    (voir `scripts/encode.sh`).
 
 Le script decouvre les balises au chargement : la nouvelle video est scrubee
@@ -269,6 +272,54 @@ En plus de la largeur, la valeur brute est publiee en variable CSS
 `--vb-progress` (0 a 1) sur le meme element, de quoi piloter autre chose sans
 repasser par le JS.
 
+### Cards, legendes, calques propres a un use-case
+
+Tout element qui ne doit vivre que pour certains use-cases porte
+`data-vb-when`. La valeur est le meme identifiant que `data-vb-video` /
+`data-vb-usecase` :
+
+- `data-vb-when="v1"` — visible seulement pour le use-case 1
+- `data-vb-when="v2"` — visible seulement pour le use-case 2
+- `data-vb-when="v1 v2"` — visible pour les deux (espaces ou virgules)
+
+Sans l'attribut, l'element reste toujours affiche (boutons, cadre video, texte
+commun).
+
+Dans le Designer, dupliquer cards et legende, les laisser dans le meme parent,
+et taguer chaque pile. Settings (D) > Custom attributes : Name `data-vb-when`,
+Value `v1` ou `v2`.
+
+```
+div  data-vb-when="v1"
+├── cards use-case 1
+└── legende use-case 1
+
+div  data-vb-when="v2"
+├── cards use-case 2
+└── legende use-case 2
+```
+
+Si cards et legende ne sont pas dans le meme wrapper, poser `data-vb-when` sur
+chacun.
+
+Le script ne decide pas du style. Il publie l'etat, la feuille masque :
+
+- `data-vb-current="v1"` (ou `v2`) sur `<html>`
+- `data-vb-shown="true"` / `"false"` sur chaque `[data-vb-when]`
+
+Ne pas ecrire `data-vb-shown` a la main : le script le pose au chargement et a
+chaque bascule.
+
+La feuille du bundle masque les piles inactives pour qu'elles ne s'empilent
+pas :
+
+```css
+[data-vb-when]:not([data-vb-shown='true']) { display: none; }
+```
+
+Un fondu se surcharge cote page (opacity, visibility) si besoin : retirer le
+`display: none` dans un Embed, puis animer `[data-vb-shown]`.
+
 ## 4. Le cadre d'accueil de la video (optionnel)
 
 Un element de la section 2 portant `data-vb-frame` devient la place du fond
@@ -323,13 +374,16 @@ l'autre : l'attribut est le seul interrupteur.
 
 ## 5. Ce que le script publie pour la mise en scene
 
-Toute l'apparition et la disparition des calques se pilote en CSS, depuis deux
-valeurs posees sur la balise `<html>`.
+Toute l'apparition et la disparition des calques se pilote en CSS, depuis des
+valeurs posees sur la balise `<html>` — et, pour les piles de use-case, sur
+chaque `[data-vb-when]`.
 
 | Nom | Valeur | Sert a |
 | --- | --- | --- |
 | `--vb-scrub` | Progression du scrub, de 0 a 1 | Tout ce qui s'interpole : opacites, deplacements, echelles |
 | `data-vb-mode` | `scrub`, `loop` ou `idle` | Tout ce qui ne s'interpole pas : `pointer-events`, `visibility` |
+| `data-vb-current` | `v1`, `v2`, … | Quel use-case est affiche ; cible CSS `:root[data-vb-current='v1']` |
+| `data-vb-shown` | `true` / `false` | Pose sur chaque `[data-vb-when]`, pas sur `<html>` |
 | `data-vb-state` | `loading`, `ready`, `error`, `reduced` | Les styles de chargement |
 | `data-vb-compact` | `true` sous 991 px, absent sinon | Accrocher le layout empile sans dupliquer le breakpoint |
 
@@ -447,6 +501,8 @@ Une fois publie, ouvrir la console :
 
 - `window.scrollVideo.stage.mode` renvoie `scrub`, `loop` ou `idle`
 - `window.scrollVideo.stage.activeId` renvoie `v1` ou `v2`
+- `document.documentElement.getAttribute('data-vb-current')` doit valoir la
+  meme chose que `activeId`
 - `window.scrollVideo.stage.progress` suit la position dans la course de scrub
 - `document.documentElement.style.getPropertyValue('--vb-scrub')` doit suivre
   la meme valeur : c'est elle qui pilote la mise en scene
@@ -454,6 +510,8 @@ Une fois publie, ouvrir la console :
   renvoyer `['VIDEO', 'VIDEO']`. Un `DIV` signale que l'element Video du
   Designer a ete utilise a la place d'un HTML Embed, et le scrub ne peut pas
   fonctionner
+- un `[data-vb-when="v1"]` doit porter `data-vb-shown="true"` quand v1 est
+  actif, `"false"` sinon (et l'inverse pour v2)
 
 Si `window.scrollVideo` est indefini, `[data-vb-stage]` ou `[data-vb-scrub]`
 manque : ce sont les deux seuls elements dont le script a besoin pour demarrer,
@@ -462,3 +520,6 @@ et le detail est logue au chargement.
 `data-vb-loop` n'en fait pas partie : c'est un repere pour la feuille de style,
 pas pour le script. L'oublier n'empeche rien de tourner — la section 2 ne se
 revelera simplement jamais, faute de regle CSS accrochee a `--vb-scrub`.
+
+`data-vb-when`, lui, est lu par le script : sans lui, cards et legendes des
+deux use-cases restent toutes visibles en meme temps.

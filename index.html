@@ -233,6 +233,33 @@
         background: #ffffff;
       }
 
+      .scene {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-top: 0.25rem;
+      }
+
+      .cards {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .cards article {
+        background: #fff;
+        color: #111;
+        border-radius: 12px;
+        padding: 0.85rem 1rem;
+        font-size: 0.9rem;
+      }
+
+      .legend {
+        margin: 0;
+        font-size: 0.8rem;
+        opacity: 0.7;
+      }
+
       .after {
         position: relative;
         z-index: 1;
@@ -352,6 +379,22 @@
                 <span>Illustre par la video 2</span>
                 <div class="timeblock-rail"><div data-vb-progress></div></div>
               </button>
+              <div class="scene">
+                <div data-vb-when="v1">
+                  <div class="cards">
+                    <article>Card A — use-case 1</article>
+                    <article>Card B — use-case 1</article>
+                  </div>
+                  <p class="legend">Legende du use-case 1</p>
+                </div>
+                <div data-vb-when="v2">
+                  <div class="cards">
+                    <article>Card A — use-case 2</article>
+                    <article>Card B — use-case 2</article>
+                  </div>
+                  <p class="legend">Legende du use-case 2</p>
+                </div>
+              </div>
             </div>
 
             <!-- Le fond video vient se caler ici au fil du scrub. -->

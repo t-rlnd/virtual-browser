@@ -3,7 +3,7 @@ import { Mp4VideoLayer } from './layers/Mp4VideoLayer.js';
 import { Stage } from './Stage.js';
 import { initPlayback } from './playback.js';
 import { initFrame } from './frame.js';
-import { initProgress } from './progress.js';
+import { initProgress, paintCurrent } from './progress.js';
 import { initUseCases } from './usecases.js';
 import { pickWidth, prefersReducedMotion, isCompactViewport } from './env.js';
 
@@ -31,7 +31,8 @@ export async function init(config = resolveConfig(window.SCROLL_VIDEO_CONFIG)) {
   const width = pickWidth(config.widths);
 
   if (prefersReducedMotion()) {
-    showPoster(stageElement, config, width);
+    const activeId = showPoster(stageElement, config, width);
+    if (activeId) paintCurrent(activeId);
     setState('reduced');
     return null;
   }
@@ -139,13 +140,14 @@ function showPoster(stageElement, config, width) {
   const videos = collectVideos(stageElement, config);
   const video =
     videos.find((entry) => entry.id === config.defaultActive) ?? videos[0];
-  if (!video) return;
+  if (!video) return null;
 
   const { element } = video;
   element.poster = posterFor(video, width, config);
   element.removeAttribute('src');
   element.style.visibility = 'visible';
   element.style.opacity = '1';
+  return video.id;
 }
 
 /**

@@ -177,6 +177,14 @@ const main = async () => {
         opacity: getComputedStyle(element).opacity,
         visibleId: visible ? visible.dataset.vbVideo : null,
         luminance,
+        current: document.documentElement.getAttribute('data-vb-current'),
+        when: [...document.querySelectorAll('[data-vb-when]')].map((node) => ({
+          ids: (node.getAttribute('data-vb-when') ?? '')
+            .trim()
+            .split(/[\s,]+/)
+            .filter(Boolean),
+          shown: node.getAttribute('data-vb-shown'),
+        })),
         // Chaque video a son propre decoupage : les attentes se calculent
         // depuis les bornes de la couche active, jamais en dur.
         segments: stage.active.segments,
@@ -186,6 +194,12 @@ const main = async () => {
   /** Le Stage designe la bonne couche, et c'est bien elle qui est a l'ecran. */
   const shows = (state, id) =>
     state.active === id && state.visibleId === id && state.opacity === '1' && state.luminance > 0;
+
+  /** Les calques `[data-vb-when]` suivent le use-case actif. */
+  const whenMatches = (state, id) =>
+    state.current === id &&
+    state.when.length > 0 &&
+    state.when.every((entry) => entry.shown === String(entry.ids.includes(id)));
 
   const scrollTo = async (y, settle = 900, target = page) => {
     await target.evaluate((top) => window.scrollTo(0, top), y);
@@ -210,13 +224,13 @@ const main = async () => {
 
   const shot = (name, target = page) => target.screenshot({ path: `${SHOTS}/${name}.png` });
   const show = (state) =>
-    `mode=${state.mode} active=${state.active} affiche=${state.visibleId} progress=${state.progress} currentTime=${state.time} luminance=${state.luminance}`;
+    `mode=${state.mode} active=${state.active} affiche=${state.visibleId} current=${state.current} progress=${state.progress} currentTime=${state.time} luminance=${state.luminance}`;
 
   // 1 — etat initial
   await scrollTo(0);
   let state = await read();
   await shot('01-top');
-  record(1, 'Etat initial en haut de page', state.mode === 'scrub' && shows(state, 'v1') && state.time < 0.1, show(state));
+  record(1, 'Etat initial en haut de page', state.mode === 'scrub' && shows(state, 'v1') && state.time < 0.1 && whenMatches(state, 'v1'), show(state));
 
   // 2 — scrub vers l'avant
   await scrollTo(geometry.scrubEnd / 2);
@@ -259,7 +273,7 @@ const main = async () => {
   await page.waitForTimeout(700);
   state = await read();
   await shot('06-usecase-2');
-  record(6, 'Le use-case 2 remplace la video de fond', shows(state, 'v2') && inLoop(state), show(state));
+  record(6, 'Le use-case 2 remplace la video de fond', shows(state, 'v2') && inLoop(state) && whenMatches(state, 'v2'), show(state));
 
   // 7 — le verrou : remonter ne rend plus la main au scrub
   await scrollTo(geometry.scrubEnd / 2);
@@ -309,7 +323,7 @@ const main = async () => {
   await page.waitForTimeout(700);
   state = await read();
   await shot('11-usecase-1');
-  record(11, 'Le use-case 1 restaure la video 1', shows(state, 'v1'), show(state));
+  record(11, 'Le use-case 1 restaure la video 1', shows(state, 'v1') && whenMatches(state, 'v1'), show(state));
 
   // 13 — le fond vient se caler sur [data-vb-frame] pendant la boucle
   await scrollTo(geometry.scrubEnd, 1600);
@@ -546,7 +560,7 @@ const main = async () => {
   record(
     20,
     'Les use-cases restent cliquables en compact',
-    shows(compactSwitch, 'v2') && inLoop(compactSwitch),
+    shows(compactSwitch, 'v2') && inLoop(compactSwitch) && whenMatches(compactSwitch, 'v2'),
     show(compactSwitch)
   );
 
