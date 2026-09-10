@@ -28,7 +28,7 @@ scroll. Voir
 | Mode | Quand | Ce que fait la video active |
 | --- | --- | --- |
 | `scrub` | Jusqu'a la fin de la course de scrub | En pause, son `currentTime` est ecrit par la position de scroll sur 00:00 → 00:03 |
-| `loop` | Sur la reserve de fin de piste, puis tant que la piste reste visible | Lecture autonome, 2 tours du segment 00:03 → 00:06, puis le use-case suivant ; un clic bascule tout de suite |
+| `loop` | Des que le scrub s'acheve, puis tant que la piste reste visible | Lecture autonome, 2 tours du segment 00:03 → 00:06, puis le use-case suivant ; un clic bascule tout de suite |
 | `idle` | Piste entierement sortie de l'ecran | Tout en pause, rien ne se decode |
 
 ## La geometrie de la piste
@@ -49,12 +49,21 @@ Sans reserve, la boucle prendrait la main au moment ou le conteneur se decolle,
 c'est-a-dire hors de vue. Pour allonger le scrub sans toucher a la boucle, il
 suffit de monter la hauteur de la piste.
 
+Une fois la boucle atteinte, la piste est ramenee a `100dvh` : le scrub deja
+consomme (et la reserve) ne servent plus. Un cran vers le haut quitte la
+section ; un cran vers le bas montre la suite du site. Voir
+[`docs/decisions/0005-collapse-piste-apres-latch.md`](docs/decisions/0005-collapse-piste-apres-latch.md).
+
 ## Le verrou de boucle
 
 Une fois la boucle atteinte, le scrub ne reprend plus la main : remonter vers
 la section 1 laisse la video tourner dans son cadre, et la met simplement en
 pause quand la section 2 quitte l'ecran. Redescendre la relance ou elle en
 etait. C'est `latchLoop: true` dans [`src/config.js`](src/config.js).
+
+Le verrou replie aussi la piste a `100dvh` (`data-vb-latched` sur `<html>`),
+pour ne pas laisser 200vh de scroll mort. `latchLoop: false` restaure
+l'aller-retour **et** conserve la 300vh.
 
 Cliquer sur un use-case change uniquement **quelle** video est active : ni le
 mode ni la progression ne bougent. Sans clic, la boucle s'arrete apres
@@ -75,6 +84,7 @@ Quelques valeurs sont publiees pour que la page anime ses propres calques :
 | --- | --- | --- |
 | `<html>` | `--vb-scrub` | Progression du scrub, de 0 a 1 |
 | `<html>` | `data-vb-mode` | `scrub`, `loop` ou `idle` |
+| `<html>` | `data-vb-latched` | `true` une fois la boucle atteinte (collapse 100dvh) |
 | `<html>` | `data-vb-current` | Use-case affiche (`v1`, `v2`, …) |
 | `<html>` | `data-vb-compact` | `true` sous 991 px |
 | `[data-vb-when]` | `data-vb-shown` | `true` / `false` selon que l'id courant figure dans `data-vb-when` |
@@ -320,7 +330,7 @@ src/
   Stage.js               machine a etats (activeId / mode / progress)
   playback.js            choix compact (< 991 px) vs scrub desktop
   compact.js             visibilite de la section demo → loop / idle
-  scroll.js              cablage GSAP ScrollTrigger
+  scroll.js              cablage GSAP ScrollTrigger ; collapse 100dvh apres latch
   frame.js               le fond quitte le plein ecran pour [data-vb-frame]
   progress.js            publie --vb-scrub, data-vb-mode, data-vb-current ; data-vb-shown sur [data-vb-when]
   usecases.js            selecteur de use-case et avancee de la boucle

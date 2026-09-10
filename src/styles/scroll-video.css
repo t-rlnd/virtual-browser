@@ -5,7 +5,8 @@
  * referencee, le designer reste libre de renommer ce qu'il veut.
  *
  * Le JS ne pilote que les proprietes dynamiques (opacity, visibility,
- * z-index) ; la mise en page vit ici.
+ * z-index) ; la mise en page vit ici. Exception : une fois le verrou
+ * arme, `[data-vb-scrub]` passe a `100dvh` (voir `data-vb-latched`).
  */
 
 /* --- Le fond video persistant ------------------------------------------- */
@@ -131,5 +132,15 @@
    meme si la page a pose `pointer-events: none` hors mode loop. */
 :root[data-vb-compact] [data-vb-loop] {
   pointer-events: auto;
+}
+
+/**
+ * Piste collapsee une fois le verrou arme. La 300vh initiale est au Designer ;
+ * apres le loop elle ne sert plus (scroll mort). `data-vb-latched` reste pose
+ * en idle, contrairement a `data-vb-mode` : retendre la piste ferait sauter
+ * la page. Exclu en compact, ou la hauteur est deja `auto`.
+ */
+:root[data-vb-latched]:not([data-vb-compact]) [data-vb-scrub] {
+  height: 100dvh;
 }
 

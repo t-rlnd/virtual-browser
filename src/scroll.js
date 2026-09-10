@@ -1,5 +1,8 @@
 import { MODES } from './Stage.js';
 
+const LATCHED_ATTRIBUTE = 'data-vb-latched';
+const COLLAPSED_HEIGHT = '100dvh';
+
 /**
  * Cablage du scroll, via GSAP ScrollTrigger.
  *
@@ -11,12 +14,19 @@ import { MODES } from './Stage.js';
  *
  * `track` est l'element `[data-vb-scrub]` : la piste entiere, section 2
  * comprise puisqu'elle lui est superposee.
+ *
+ * Une fois la boucle atteinte et le verrou arme, la piste est ramenee a
+ * `100dvh` : le scrub deja consomme (et la reserve) ne servent plus, et
+ * laisseraient un long scroll mort. Le scroll est recale dans la meme
+ * foulee, sinon le sticky decroche — on a deja parcouru plus d'un ecran
+ * dans une piste qui vient de retrecir.
  */
 export function initScroll({ stage, config, track }) {
   const { gsap, ScrollTrigger } = requireGsap();
   gsap.registerPlugin(ScrollTrigger);
 
   const proxy = { p: 0 };
+  const html = document.documentElement;
 
   /**
    * Fin de la course de scrub.
@@ -49,6 +59,7 @@ export function initScroll({ stage, config, track }) {
    */
   const latching = config.latchLoop !== false;
   let latched = false;
+  let collapsed = false;
 
   /**
    * Le scrub a-t-il deja atteint son terme au moins une fois ? La section 2
@@ -57,6 +68,48 @@ export function initScroll({ stage, config, track }) {
    * le verrou — avant meme que le scrub ait commence.
    */
   let reached = false;
+
+  /**
+   * Ramene la piste a une hauteur d'ecran une fois le verrou arme.
+   *
+   * Sans compensation, reduire `[data-vb-scrub]` alors qu'on a deja scrolle
+   * dedans fait partir le sticky vers le haut : le haut de la piste ne
+   * bouge pas (elle retrecit par le bas), `scrollY` se retrouve au-dela.
+   * Deux cas :
+   *  - entree live : recaler sur `offsetTop` pour garder UseCase plein ecran ;
+   *  - reload deja sous la section : retrancher le delta pour que le
+   *    contenu en cours de lecture ne saute pas.
+   *
+   * Accroche a `data-vb-latched`, pas a `data-vb-mode` : en `idle` (piste
+   * quittee) le mode changerait et la piste reprendrait 300vh, ce qui
+   * ferait sauter toute la page.
+   */
+  const collapseTrack = ({ keepTrackInView, deferRefresh = false }) => {
+    if (collapsed || !latching) return;
+
+    const heightBefore = track.offsetHeight;
+    const scrollBefore = window.scrollY;
+
+    html.setAttribute(LATCHED_ATTRIBUTE, 'true');
+    track.style.height = COLLAPSED_HEIGHT;
+    collapsed = true;
+
+    const shrink = heightBefore - track.offsetHeight;
+
+    if (keepTrackInView) {
+      window.scrollTo(0, track.offsetTop);
+    } else if (shrink > 0 && scrollBefore > track.offsetTop) {
+      window.scrollTo(0, Math.max(track.offsetTop, scrollBefore - shrink));
+    }
+
+    // `enterLoop` est appele depuis `onLeave` : refresh() ici reentrerait
+    // dans ScrollTrigger en cours de tick. La frame suivante suffit.
+    if (deferRefresh) {
+      requestAnimationFrame(() => ScrollTrigger.refresh());
+    } else {
+      ScrollTrigger.refresh();
+    }
+  };
 
   const enterScrub = () => {
     if (!latched) stage.setMode(MODES.SCRUB);
@@ -70,6 +123,7 @@ export function initScroll({ stage, config, track }) {
     // arreterait la mise en scene avant son terme. La boucle commence a 1.
     stage.setProgress(1);
     stage.setMode(MODES.LOOP);
+    collapseTrack({ keepTrackInView: true, deferRefresh: true });
   };
 
   const scrubTween = gsap.to(proxy, {
@@ -129,11 +183,15 @@ export function initScroll({ stage, config, track }) {
     // remonter rembobinerait une video que le visiteur a deja vue boucler.
     reached = true;
     latched = latching;
+    collapseTrack({ keepTrackInView: false });
     stage.setMode(MODES.IDLE);
   }
 
   return {
     destroy() {
+      html.removeAttribute(LATCHED_ATTRIBUTE);
+      track.style.removeProperty('height');
+      collapsed = false;
       scrubTween.kill();
       scrubTrigger.kill();
       visibility.kill();

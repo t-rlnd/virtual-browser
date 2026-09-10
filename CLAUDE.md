@@ -100,13 +100,16 @@ cesse de rendre), `Mp4VideoLayer.unlock` + `Stage.refresh` (le premier geste
 iOS debloque toutes les couches sans rien restaurer lui-meme), et le drapeau
 `reached` dans `scroll.js` (la section boucle est visible des le premier
 pixel car superposee — sans garde-fou la boucle demarrerait avant le scrub).
+Le collapse a `100dvh` une fois le verrou arme vit aussi dans `scroll.js`
+(recaler `scrollY`, signal `data-vb-latched` et non `data-vb-mode`).
 
 ## Points d'attention specifiques au projet
 
 - **`latchLoop: true`** (dans `src/config.js`) : une fois la boucle
-  atteinte, remonter ne rembobine plus rien. `false` restaure l'aller-retour
-  d'origine, ou le choix de use-case redevenait retroactif. Les deux
-  comportements sont couverts par les tests.
+  atteinte, remonter ne rembobine plus rien, et la piste passe a `100dvh`
+  (`data-vb-latched`). `false` restaure l'aller-retour d'origine, ou le
+  choix de use-case redevenait retroactif. Les deux comportements sont
+  couverts par les tests.
 - **MP4 servis bruts, jamais via Bunny Stream / Cloudflare Stream** : le
   streaming adaptatif (HLS) rend `currentTime` imprecis et casse le scrub.
   Voir [`docs/hosting.md`](docs/hosting.md) et

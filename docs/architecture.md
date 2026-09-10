@@ -39,6 +39,7 @@ playback.js        compact (< 991 px) ou scrub (desktop)
       │
       ├──────────────► compact.js   visibilite de [data-vb-loop] → loop / idle
       └──────────────► scroll.js    GSAP ScrollTrigger → progress + mode
+                                    (+ collapse piste / data-vb-latched)
       │
       ▼
 Stage.js           machine a etats : { activeId, mode, progress }
@@ -89,7 +90,7 @@ visibilite de `[data-vb-loop]`, et l'intro scrubee n'est pas lue. Voir
 | `src/config.js` | reglages globaux + lecture des attributs `data-vb-*` d'une balise | on ajoute une video, on change un fondu |
 | `src/Stage.js` | machine a etats, transitions, fondus, auto-avance apres `loopRepeats` tours | le comportement d'ensemble est faux |
 | `src/playback.js` | choix compact vs scrub, attribut `data-vb-compact` | le mauvais cablage se declenche sous 991 px |
-| `src/scroll.js` | GSAP ScrollTrigger : course de scrub, verrou de boucle | le declenchement se fait au mauvais moment |
+| `src/scroll.js` | GSAP ScrollTrigger : course de scrub, verrou de boucle, collapse de la piste a 100dvh | le declenchement se fait au mauvais moment, ou remonter traverse du scroll mort |
 | `src/compact.js` | visibilite de la section demo → boucle ou pause | la video tourne hors ecran, ou pas du tout |
 | `src/frame.js` | le fond quitte le plein ecran pour `[data-vb-frame]` | le recadrage est mal place |
 | `src/progress.js` | publie `--vb-scrub`, `data-vb-mode`, `data-vb-current` sur `<html>`, et `data-vb-shown` sur chaque `[data-vb-when]` | les calques ne s'animent pas, ou les piles restent toutes visibles |
@@ -99,7 +100,7 @@ visibilite de `[data-vb-loop]`, et l'intro scrubee n'est pas lue. Voir
 | `src/utils.js` | `clamp`, `wait`, et un emetteur d'evenements minimal | jamais, ou presque |
 | `src/layers/VideoLayer.js` | le **contrat** d'une couche d'image | on veut un autre moteur de rendu |
 | `src/layers/Mp4VideoLayer.js` | l'implementation `<video>` + MP4 | le scrub saccade, un seek ne rend rien |
-| `src/styles/scroll-video.css` | styles structurels, cibles par `data-vb-*` ; ne positionne pas le stage | un style du fond ou d'une couche est faux |
+| `src/styles/scroll-video.css` | styles structurels, cibles par `data-vb-*` ; ne positionne pas le stage (sauf collapse latched) | un style du fond ou d'une couche est faux |
 
 ## Pourquoi une classe `VideoLayer` abstraite
 
@@ -135,7 +136,7 @@ masque le reste.
 
 ## Les points d'attention
 
-Trois endroits ou le code fait quelque chose de non evident, chacun commente
+Quatre endroits ou le code fait quelque chose de non evident, chacun commente
 sur place :
 
 - **`Mp4VideoLayer._drainSeek`** — un seul seek en vol a la fois. Sans cette
@@ -151,3 +152,9 @@ sur place :
   visibilite lancerait la boucle avant meme que le scrub ait commence. En
   compact ce probleme n'existe pas : il n'y a plus de superpositions, et
   c'est `[data-vb-loop]` qui est observee, pas la piste.
+- **`scroll.js`, le collapse a `100dvh`** — une fois le verrou arme, la piste
+  de 300vh ne sert plus. La ramener a une hauteur d'ecran sans recaler
+  `scrollY` decroche le sticky (on a deja parcouru plus d'un ecran). Le
+  signal est `data-vb-latched`, pas `data-vb-mode` : en idle, retendre la
+  piste ferait sauter la page. Voir
+  [`decisions/0005-collapse-piste-apres-latch.md`](decisions/0005-collapse-piste-apres-latch.md).

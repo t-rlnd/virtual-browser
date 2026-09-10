@@ -15,7 +15,7 @@ conteneur colle, et ce sont leurs opacites qui font passer de l'une a l'autre.
 body
 ├── div                       data-vb-loader          (optionnel)
 ├── div  "Protocol"           data-vb-scrub           la piste · height: 300vh
-│   └── div                   data-vb-scrub-inner     sticky · top 0 · 100vh · overflow hidden
+│   └── div                   data-vb-scrub-inner     sticky · top 0 · 100dvh · overflow hidden
 │       ├── div               data-vb-stage           absolute · inset 0 · z-index 0
 │       │   ├── video         data-vb-video="v1"
 │       │   │                 data-vb-file="video1"
@@ -159,12 +159,13 @@ sur **sa** intro, boucle sur **son** segment, et reste sticky comme les autres.
 
 La piste porte `data-vb-scrub` et une hauteur fixe — `300vh` pour le rythme
 actuel. Son unique enfant porte `data-vb-scrub-inner` et se met en
-`position: sticky; top: 0; height: 100vh; overflow: hidden`. C'est lui qui
+`position: sticky; top: 0; height: 100dvh; overflow: hidden`. C'est lui qui
 reste colle a l'ecran, et c'est dans lui que vivent les trois calques : le
 fond, le titre, les use-cases.
 
-La feuille de style du script n'impose ni hauteur ni positionnement — c'est au
-Designer de les poser.
+La feuille de style du script n'impose ni hauteur ni positionnement au
+chargement — c'est au Designer de les poser. Exception : une fois la boucle
+atteinte, le script ramene la piste a `100dvh` (voir plus bas).
 
 Le scrub commence quand le haut de la piste atteint le haut de l'ecran. Il ne
 va pas jusqu'au bout de la course : `loopReserve` dans
@@ -188,14 +189,34 @@ Remonter ne relance pas le scrub : la video reste a tourner dans son cadre, et
 se met en pause quand la piste quitte l'ecran. C'est `latchLoop: true` dans
 [`src/config.js`](../src/config.js).
 
+Dans la foulee, la piste passe de 300vh a `100dvh` : le scrub deja consomme
+(et la reserve) ne servent plus, et laisseraient un long scroll mort.
+`data-vb-latched="true"` est pose sur `<html>` et y reste, y compris en
+`idle`. Ne pas accrocher ce collapse a `data-vb-mode` — en sortant de la
+section le mode reviendrait a `idle` et la piste reprendrait 300vh, ce qui
+ferait sauter toute la page.
+
+Cote Designer : **aucune** hauteur a changer. Garder 300vh sur Protocol ;
+le script la passe a 100dvh tout seul. L'inner sticky doit rester en
+`100dvh` (pas `100vh`) pour coller a la piste collapsee.
+
+Masquer l'Intro une fois UseCase plein ecran est un choix de page, orthogonal :
+
+```css
+:root[data-vb-latched] .protocol_intro { display: none; }
+```
+
 Consequence a garder en tete cote maquette, et elle est plus large qu'avant :
-le verrou fige aussi la progression, donc `--vb-scrub` avec elle. Remonter en
-haut de la piste n'y ramene pas le titre — la mise en scene reste ou elle en
-etait, section 2 affichee par-dessus une video calee dans son cadre.
+le verrou fige aussi la progression, donc `--vb-scrub` avec elle. Remonter
+n'y ramene pas le titre — la mise en scene reste ou elle en etait, section 2
+affichee par-dessus une video calee dans son cadre. Un cran vers le haut
+quitte la section (s'il y a du contenu au-dessus) ; un cran vers le bas
+montre la suite du site.
 
 `latchLoop: false` restaure l'aller-retour : remonter rembobine la video,
-ramene le titre et rend le fond au plein ecran. C'est le comportement le plus
-proche d'une maquette entierement pilotee par le scroll.
+ramene le titre et rend le fond au plein ecran. La piste reste a 300vh. C'est
+le comportement le plus proche d'une maquette entierement pilotee par le
+scroll.
 
 ## 3. La section des use-cases
 
@@ -383,6 +404,7 @@ chaque `[data-vb-when]`.
 | --- | --- | --- |
 | `--vb-scrub` | Progression du scrub, de 0 a 1 | Tout ce qui s'interpole : opacites, deplacements, echelles |
 | `data-vb-mode` | `scrub`, `loop` ou `idle` | Tout ce qui ne s'interpole pas : `pointer-events`, `visibility` |
+| `data-vb-latched` | `true` une fois la boucle atteinte | Collapse de la piste a 100dvh ; masquer l'Intro. Reste pose en `idle` |
 | `data-vb-current` | `v1`, `v2`, … | Quel use-case est affiche ; cible CSS `:root[data-vb-current='v1']` |
 | `data-vb-shown` | `true` / `false` | Pose sur chaque `[data-vb-when]`, pas sur `<html>` |
 | `data-vb-state` | `loading`, `ready`, `error`, `reduced` | Les styles de chargement |
@@ -501,6 +523,8 @@ sinon la page cherche un localhost que le visiteur n'a pas.
 Une fois publie, ouvrir la console :
 
 - `window.scrollVideo.stage.mode` renvoie `scrub`, `loop` ou `idle`
+- `document.documentElement.getAttribute('data-vb-latched')` vaut `true`
+  une fois la boucle atteinte (piste a 100dvh), absent avant et en compact
 - `window.scrollVideo.stage.activeId` renvoie `v1` ou `v2`
 - `document.documentElement.getAttribute('data-vb-current')` doit valoir la
   meme chose que `activeId`

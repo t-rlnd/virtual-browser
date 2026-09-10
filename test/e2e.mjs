@@ -206,6 +206,25 @@ const main = async () => {
     await target.waitForTimeout(settle);
   };
 
+  /** Geometrie de la piste, a relire apres le collapse (la 300vh initiale est perimee). */
+  const readTrack = (target = page) =>
+    target.evaluate(() => {
+      const scrub = document.querySelector('[data-vb-scrub]');
+      const loop = document.querySelector('[data-vb-loop]');
+      const viewport = window.innerHeight;
+      const top = scrub.offsetTop;
+      const height = scrub.offsetHeight;
+      return {
+        latched: document.documentElement.getAttribute('data-vb-latched') === 'true',
+        height,
+        top,
+        viewport,
+        loopTop: loop.getBoundingClientRect().top,
+        unpin: top + Math.max(0, height - viewport),
+        pageBottom: Math.max(0, document.body.scrollHeight - viewport),
+      };
+    });
+
   /** Le timecode correspond-il a la progression, sur la plage de CETTE video ? */
   const scrubbedTo = (state, expected) => {
     const { start, end } = state.segments.scrub;
@@ -268,6 +287,23 @@ const main = async () => {
     `${show(first)} puis currentTime=${second.time}`
   );
 
+  // 24 — le verrou replie la piste : plus de scroll mort au-dessus ni de reserve en dessous
+  await page.waitForFunction(
+    () => document.documentElement.getAttribute('data-vb-latched') === 'true',
+    undefined,
+    { timeout: 2_000 }
+  );
+  const latchedTrack = await readTrack();
+  await shot('24-piste-collapsee');
+  record(
+    24,
+    'Une fois la boucle atteinte, la piste se replie a 100dvh sous les yeux',
+    latchedTrack.latched &&
+      Math.abs(latchedTrack.height - latchedTrack.viewport) <= 2 &&
+      Math.abs(latchedTrack.loopTop) <= 2,
+    `latched=${latchedTrack.latched} height=${latchedTrack.height} viewport=${latchedTrack.viewport} loopTop=${latchedTrack.loopTop}`
+  );
+
   // 6 — bascule de use-case
   await page.click('[data-vb-usecase="v2"]');
   await page.waitForTimeout(700);
@@ -276,7 +312,7 @@ const main = async () => {
   record(6, 'Le use-case 2 remplace la video de fond', shows(state, 'v2') && inLoop(state) && whenMatches(state, 'v2'), show(state));
 
   // 7 — le verrou : remonter ne rend plus la main au scrub
-  await scrollTo(geometry.scrubEnd / 2);
+  await scrollTo(latchedTrack.top);
   state = await read();
   await shot('07-verrou-remontee');
   record(
@@ -287,7 +323,7 @@ const main = async () => {
   );
 
   // 8 — la piste restant a l'ecran, la video continue de boucler dans sa zone
-  await scrollTo(0);
+  await scrollTo(latchedTrack.top);
   const locked = await read();
   await page.waitForTimeout(700);
   const lockedAgain = await read();
@@ -303,7 +339,7 @@ const main = async () => {
   );
 
   // 9 — mise en pause hors ecran
-  await scrollTo(geometry.pageBottom);
+  await scrollTo(latchedTrack.pageBottom);
   const idleFirst = await read();
   await page.waitForTimeout(1000);
   const idleSecond = await read();
@@ -311,7 +347,7 @@ const main = async () => {
   record(9, 'La video est figee quand la section 2 sort de l ecran', idleFirst.mode === 'idle' && idleFirst.time === idleSecond.time, `${show(idleFirst)} puis currentTime=${idleSecond.time}`);
 
   // 10 — reprise
-  await scrollTo(geometry.scrubEnd);
+  await scrollTo(latchedTrack.top);
   const resumeFirst = await read();
   await page.waitForTimeout(1000);
   const resumeSecond = await read();
@@ -371,7 +407,7 @@ const main = async () => {
   );
 
   // 13 — le fond vient se caler sur [data-vb-frame] pendant la boucle
-  await scrollTo(geometry.scrubEnd, 1600);
+  await scrollTo(latchedTrack.top, 1600);
   const docked = await read();
   await shot('13-cale-sur-le-cadre');
   record(
@@ -382,7 +418,7 @@ const main = async () => {
   );
 
   // 14 — et il suit ce cadre une fois l'epinglage relache, quand il se remet a defiler
-  await scrollTo(geometry.unpin + 100, 400);
+  await scrollTo(latchedTrack.unpin + 100, 400);
   const followed = await read();
   await shot('14-le-cadre-defile');
   record(
@@ -408,6 +444,7 @@ const main = async () => {
 
   // 15 — sans verrou, remonter rend la main au scrub et defait le recadrage
   //      a la position exacte du scroll, pas en un temps fixe
+  const unlockedTrack = await readTrack();
   await scrollTo(geometry.scrubEnd, 1600);
   await page.click('[data-vb-usecase="v2"]');
   await page.waitForTimeout(700);
@@ -418,8 +455,11 @@ const main = async () => {
   record(
     15,
     'latchLoop:false rend la main au scrub, et le recadrage suit le scroll',
-    undocked.mode === 'scrub' && Math.abs(undocked.dock - expected) < 0.05,
-    `${show(undocked)} dock=${undocked.dock} attendu=${expected.toFixed(3)}`
+    !unlockedTrack.latched &&
+      unlockedTrack.height > unlockedTrack.viewport * 2 &&
+      undocked.mode === 'scrub' &&
+      Math.abs(undocked.dock - expected) < 0.05,
+    `latched=${unlockedTrack.latched} height=${unlockedTrack.height} ${show(undocked)} dock=${undocked.dock} attendu=${expected.toFixed(3)}`
   );
 
   // 16 — avant le debut de la plage de recadrage, le fond est rendu plein ecran
@@ -556,6 +596,7 @@ const main = async () => {
     const after = document.querySelector('.after');
     return {
       flagged: document.documentElement.getAttribute('data-vb-compact') === 'true',
+      latched: document.documentElement.getAttribute('data-vb-latched') === 'true',
       introOpacity: Number(getComputedStyle(intro).opacity),
       demoOpacity: Number(getComputedStyle(loop).opacity),
       introPosition: getComputedStyle(intro).position,
@@ -573,12 +614,13 @@ const main = async () => {
     18,
     'Sous 991 px le layout compact est actif, intro et demo visibles',
     compactGeo.flagged &&
+      !compactGeo.latched &&
       compactGeo.introOpacity === 1 &&
       compactGeo.demoOpacity === 1 &&
       compactGeo.introPosition === 'relative' &&
       compactGeo.demoPosition === 'relative' &&
       compactTop.progress === 1,
-    `compact=${compactGeo.flagged} intro=${compactGeo.introOpacity}/${compactGeo.introPosition} demo=${compactGeo.demoOpacity}/${compactGeo.demoPosition} ${show(compactTop)}`
+    `compact=${compactGeo.flagged} latched=${compactGeo.latched} intro=${compactGeo.introOpacity}/${compactGeo.introPosition} demo=${compactGeo.demoOpacity}/${compactGeo.demoPosition} ${show(compactTop)}`
   );
 
   await scrollTo(compactGeo.loopTop, 900, mobile);

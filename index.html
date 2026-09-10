@@ -30,10 +30,12 @@
        *
        * La course d'epinglage vaut `hauteur de piste - 100vh`. A 300vh, elle
        * fait donc 200vh : 100vh de scrub, puis les 100vh de reserve ou la
-       * video boucle dans son cadre (`loopReserve: 1`).
+       * video boucle dans son cadre (`loopReserve: 1`). Une fois la boucle
+       * atteinte, le script ramene la piste a 100dvh.
        *
        * Cette mise en page est du ressort de la page — dans le projet reel, du
-       * Designer Webflow. La feuille de style du script ne pose que le fond.
+       * Designer Webflow. La feuille de style du script ne pose que le fond,
+       * plus le collapse apres verrou.
        */
       [data-vb-scrub] {
         position: relative;
@@ -44,7 +46,7 @@
       [data-vb-scrub-inner] {
         position: sticky;
         top: 0;
-        height: 100vh;
+        height: 100dvh;
         overflow: hidden;
       }
 
@@ -315,6 +317,7 @@
       Une seule piste de 300vh, un seul conteneur colle, et dedans trois
       calques empiles : le fond video, le titre, puis la section des use-cases.
       Ce sont les opacites qui font passer de l'un a l'autre, pas le flux.
+      Une fois la boucle atteinte, le script ramene la piste a 100dvh.
     -->
     <section data-vb-scrub>
       <div data-vb-scrub-inner>
