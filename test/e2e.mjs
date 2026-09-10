@@ -325,6 +325,38 @@ const main = async () => {
   await shot('11-usecase-1');
   record(11, 'Le use-case 1 restaure la video 1', shows(state, 'v1') && whenMatches(state, 'v1'), show(state));
 
+  const completeLoopCycle = async () => {
+    const previousId = await page.evaluate(() => window.scrollVideo.stage.activeId);
+    await page.evaluate(() => {
+      const layer = window.scrollVideo.stage.active;
+      layer.hardSeek(layer.segments.loop.end - 0.0001);
+    });
+    await page.waitForFunction(
+      (prevId) => {
+        const stage = window.scrollVideo.stage;
+        const layer = stage.active;
+        if (stage.activeId !== prevId) return true;
+        return layer.currentTime < layer.segments.loop.start + 0.5;
+      },
+      previousId,
+      { timeout: 4_000 }
+    );
+  };
+
+  // 18 — auto-avance : deux tours du segment boucle enchainent le use-case suivant
+  await completeLoopCycle();
+  const afterOneCycle = await read();
+  await completeLoopCycle();
+  await page.waitForTimeout(400);
+  const afterTwoCycles = await read();
+  await shot('23-auto-avance');
+  record(
+    23,
+    'Deux tours de boucle enchainent le use-case suivant',
+    afterOneCycle.active === 'v1' && shows(afterTwoCycles, 'v2') && whenMatches(afterTwoCycles, 'v2'),
+    `apres 1 tour ${show(afterOneCycle)} ; apres 2 tours ${show(afterTwoCycles)}`
+  );
+
   // 13 — le fond vient se caler sur [data-vb-frame] pendant la boucle
   await scrollTo(geometry.scrubEnd, 1600);
   const docked = await read();

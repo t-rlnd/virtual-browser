@@ -7,9 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Fond video pilote au scroll pour Webflow (pas de framework, JS vanilla + GSAP
 ScrollTrigger). Un unique fond video traverse deux sections superposees dans
 un meme conteneur colle : scrub par le scroll sur la premiere, boucle en
-autonomie sur la seconde, avec deux use-cases echangeables a chaud. Le
-scroll n'ecrit qu'une progression 0→1 (`--vb-scrub`) et tout — timecode video,
-position du cadre, apparition des calques — en decoule.
+autonomie (2 tours puis le use-case suivant) sur la seconde, avec bascule
+manuelle a tout moment. Le scroll n'ecrit qu'une progression 0→1
+(`--vb-scrub`) et tout — timecode video, position du cadre, apparition des
+calques — en decoule.
 
 Lire [`docs/architecture.md`](docs/architecture.md) avant de toucher a `src/` :
 il explique *qui fait quoi*. Le README explique *ce que fait* l'animation.
@@ -68,9 +69,11 @@ scroll.js | compact.js -> Stage.js -> { Mp4VideoLayer.js, frame.js, progress.js,
 - **`Stage.js`** — machine a etats pure `{ activeId, mode, progress }`.
   N'ecrit jamais dans le DOM, ne parle qu'aux couches. Les trois variables
   sont independantes (changer `activeId` ne touche ni au mode ni a la
-  progression).
+  progression). En `loop`, compte les tours et enchaine le use-case suivant
+  apres `loopRepeats` (defaut 2).
 - **`layers/VideoLayer.js`** — contrat abstrait d'une couche d'image
-  (`seek`, `playLoop`, `show`, `hide`). `layers/Mp4VideoLayer.js` l'implemente
+  (`seek`, `playLoop`, `show`, `hide`). `playLoop` notifie chaque fin de
+  tour via `onCycle`. `layers/Mp4VideoLayer.js` l'implemente
   avec `<video>` + MP4 ; `demo/DebugLayer.js` l'implemente avec un
   `<canvas>` sans fichier video, pour prouver que le contrat tient sans
   dependre d'un decodeur video.
@@ -84,10 +87,11 @@ scroll.js | compact.js -> Stage.js -> { Mp4VideoLayer.js, frame.js, progress.js,
   lui-meme : demande une bascule (`stage.setActive(...)`) et attend
   l'evenement `activechange` du Stage avant de refleter le changement.
 - **`config.js`** — reglages globaux (`CONFIG`) + lecture des attributs
-  `data-vb-*` d'une balise `<video>`. Le decoupage par video (fichier,
-  image de transition, fin de boucle) vit **sur la balise dans le DOM**, pas
-  dans ce fichier — source de verite unique, ajouter un use-case ne demande
-  aucun rebuild.
+  `data-vb-*` d'une balise `<video>`. `loopRepeats` (defaut 2) borne la
+  boucle avant l'auto-avance. Le decoupage par video (fichier, image de
+  transition, fin de boucle) vit **sur la balise dans le DOM**, pas dans ce
+  fichier — source de verite unique, ajouter un use-case ne demande aucun
+  rebuild.
 - **`main.js`** — assemblage, garde-fous, prechargement, deblocage iOS.
 
 Trois points non evidents, commentes sur place dans le code :

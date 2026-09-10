@@ -33,6 +33,10 @@ export class Stage extends Emitter {
     this.mode = MODES.IDLE;
     this.progress = 0;
 
+    // Tours du segment boucle deja joues sur la couche active. Remis a zero
+    // a chaque entree en LOOP et a chaque bascule de use-case.
+    this._loopCount = 0;
+
     // Jeton d'annulation : toute nouvelle transition invalide les precedentes,
     // dont les etapes asynchrones peuvent encore etre en vol.
     this._transition = 0;
@@ -103,7 +107,9 @@ export class Stage extends Emitter {
     const to = this.layers[id];
     const { fadeMs } = this.config;
     const loop = to.segments.loop;
+    const previousCount = this._loopCount;
 
+    this._loopCount = 0;
     this.activeId = id;
     this.emit('activechange', id);
 
@@ -112,6 +118,7 @@ export class Stage extends Emitter {
     } catch (error) {
       console.error('[scroll-video] bascule annulee', error);
       this.activeId = from.id;
+      this._loopCount = previousCount;
       this.emit('activechange', from.id);
       return;
     }
@@ -127,7 +134,7 @@ export class Stage extends Emitter {
     to.setDepth(1);
     to.show(fadeMs);
 
-    if (this.mode === MODES.LOOP) to.playLoop(loop.start, loop.end);
+    if (this.mode === MODES.LOOP) this._playActiveLoop(to);
 
     await wait(fadeMs);
     if (this.activeId === from.id) return;
@@ -147,7 +154,7 @@ export class Stage extends Emitter {
 
     const layer = this.active;
     if (this.mode === MODES.LOOP) {
-      layer.playLoop(layer.segments.loop.start, layer.segments.loop.end);
+      this._playActiveLoop(layer);
     } else if (this.mode === MODES.SCRUB) {
       layer.pause();
       layer.hardSeek(this.timeForProgress(this.progress));
@@ -158,6 +165,7 @@ export class Stage extends Emitter {
 
   async _enterScrub(previous) {
     const token = ++this._transition;
+    this._loopCount = 0;
     const layer = this.active;
     layer.pause();
 
@@ -184,14 +192,51 @@ export class Stage extends Emitter {
 
   _enterLoop() {
     this._transition += 1;
+    this._loopCount = 0;
     const layer = this.active;
     layer.show(0);
-    layer.playLoop(layer.segments.loop.start, layer.segments.loop.end);
+    this._playActiveLoop(layer);
   }
 
   _enterIdle() {
     this._transition += 1;
+    this._loopCount = 0;
     for (const layer of Object.values(this.layers)) layer.pause();
+  }
+
+  _playActiveLoop(layer = this.active) {
+    const { start, end } = layer.segments.loop;
+    layer.playLoop(start, end, () => this._onLoopCycle(layer.id));
+  }
+
+  /**
+   * Un tour du segment boucle vient de s'achever sur `id`.
+   * `false` : figer la derniere image, le Stage enchaine le use-case suivant.
+   * On ignore les tours d'une couche qui n'est plus active (fondu en cours).
+   */
+  _onLoopCycle(id) {
+    if (this.mode !== MODES.LOOP || id !== this.activeId) return true;
+
+    this._loopCount += 1;
+    const repeats = this.config.loopRepeats;
+    if (!Number.isFinite(repeats) || repeats < 1 || this._loopCount < repeats) {
+      return true;
+    }
+
+    const nextId = this._nextId();
+    if (nextId === this.activeId) {
+      this._loopCount = 0;
+      return true;
+    }
+
+    this.setActive(nextId);
+    return false;
+  }
+
+  _nextId() {
+    const ids = Object.keys(this.layers);
+    const index = ids.indexOf(this.activeId);
+    return ids[(index + 1) % ids.length];
   }
 
   destroy() {

@@ -2,8 +2,8 @@
 
 Un unique fond video traverse deux sections **superposees** dans un meme
 conteneur colle : il est **scrube par le scroll** sur la premiere, puis
-**boucle en autonomie** sur la seconde, ou deux use-cases permettent d'echanger
-la video a chaud.
+**boucle en autonomie** (deux tours, puis le use-case suivant) sur la
+seconde, ou un clic permet d'echanger la video avant la fin de la boucle.
 
 Les deux sections ne se succedent pas, elles s'empilent : c'est la progression
 du scrub qui fait disparaitre le titre, apparaitre les use-cases et venir la
@@ -15,8 +15,9 @@ rembobine plus rien, la video reste a tourner dans son cadre (`latchLoop`,
 ci-dessous).
 
 Sous **991 px** (tablette et mobile Webflow), ce montage est coupe : les
-deux sections s'empilent, la video boucle directement dans son cadre, et
-il n'y a plus de course de scroll. Voir
+deux sections s'empilent, la video boucle directement dans son cadre
+(deux tours, puis le use-case suivant), et il n'y a plus de course de
+scroll. Voir
 [`docs/webflow-setup.md`](docs/webflow-setup.md#5-ter-tablette-et-mobile-sous-991-px).
 
 > Pour reprendre le code : [`docs/architecture.md`](docs/architecture.md).
@@ -27,7 +28,7 @@ il n'y a plus de course de scroll. Voir
 | Mode | Quand | Ce que fait la video active |
 | --- | --- | --- |
 | `scrub` | Jusqu'a la fin de la course de scrub | En pause, son `currentTime` est ecrit par la position de scroll sur 00:00 → 00:03 |
-| `loop` | Sur la reserve de fin de piste, puis tant que la piste reste visible | Lecture autonome en boucle sur 00:03 → 00:06, calee dans le cadre de la section 2 |
+| `loop` | Sur la reserve de fin de piste, puis tant que la piste reste visible | Lecture autonome, 2 tours du segment 00:03 → 00:06, puis le use-case suivant ; un clic bascule tout de suite |
 | `idle` | Piste entierement sortie de l'ecran | Tout en pause, rien ne se decode |
 
 ## La geometrie de la piste
@@ -56,7 +57,9 @@ pause quand la section 2 quitte l'ecran. Redescendre la relance ou elle en
 etait. C'est `latchLoop: true` dans [`src/config.js`](src/config.js).
 
 Cliquer sur un use-case change uniquement **quelle** video est active : ni le
-mode ni la progression ne bougent.
+mode ni la progression ne bougent. Sans clic, la boucle s'arrete apres
+`loopRepeats` tours (2 par defaut) et enchaine le use-case suivant, dans
+l'ordre du DOM, puis revient au premier.
 
 `latchLoop: false` restaure l'aller-retour d'origine — remonter rembobine la
 video. C'est ce qui rendait le choix de use-case **retroactif** : apres avoir

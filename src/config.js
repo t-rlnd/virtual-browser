@@ -25,6 +25,12 @@ export const CONFIG = {
    */
   latchLoop: true,
 
+  /**
+   * Tours du segment boucle avant d'enchainer le use-case suivant.
+   * `Infinity` restaure la boucle infinie (ancien comportement).
+   */
+  loopRepeats: 2,
+
   /** Cadence des masters. Convertit les numeros d'image en secondes. */
   fps: 30,
 

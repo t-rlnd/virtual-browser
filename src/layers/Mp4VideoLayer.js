@@ -39,6 +39,7 @@ export class Mp4VideoLayer extends VideoLayer {
 
     this._loop = null;
     this._loopHandle = null;
+    this._onCycle = null;
 
     this._visible = false;
     this._visibilityTimer = 0;
@@ -240,8 +241,9 @@ export class Mp4VideoLayer extends VideoLayer {
 
   // --- Lecture en boucle sur un sous-segment ------------------------------
 
-  playLoop(start, end) {
+  playLoop(start, end, onCycle) {
     this._loop = { start, end };
+    this._onCycle = onCycle;
 
     const time = this.element.currentTime;
     if (time < start || time >= end) this.hardSeek(start);
@@ -252,6 +254,7 @@ export class Mp4VideoLayer extends VideoLayer {
 
   pause() {
     this._loop = null;
+    this._onCycle = null;
     this._stopLoopWatch();
     if (!this.element.paused) this.element.pause();
   }
@@ -276,7 +279,7 @@ export class Mp4VideoLayer extends VideoLayer {
     const tick = () => {
       if (!this._loop) return;
       if (this.element.currentTime >= this._loop.end - this._frameEpsilon) {
-        this.hardSeek(this._loop.start);
+        if (!this._wrapLoop()) return;
       }
       this._loopHandle = requestAnimationFrame(tick);
     };
@@ -290,11 +293,25 @@ export class Mp4VideoLayer extends VideoLayer {
     this._loopHandle = null;
   }
 
+  /**
+   * Fin d'un tour : `onCycle` decide si on reboucle ou si on fige la
+   * derniere image (auto-avance). Sans callback, comportement historique.
+   */
+  _wrapLoop() {
+    const loop = this._loop;
+    if (!loop) return false;
+    if (this._onCycle?.() === false) {
+      this.pause();
+      return false;
+    }
+    this.hardSeek(loop.start);
+    return true;
+  }
+
   /** Filet de securite si la fin du fichier est atteinte avant le rebouclage. */
   _onEnded() {
     if (!this._loop) return;
-    this.hardSeek(this._loop.start);
-    this._play();
+    if (this._wrapLoop()) this._play();
   }
 
   // --- Affichage ----------------------------------------------------------

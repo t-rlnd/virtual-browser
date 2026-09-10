@@ -61,8 +61,14 @@ export class VideoLayer {
     throw new Error('hardSeek() non implemente');
   }
 
-  /** Lecture autonome en boucle sur le sous-segment [start, end]. */
-  playLoop(_start, _end) {
+  /**
+   * Lecture autonome en boucle sur le sous-segment [start, end].
+   *
+   * `onCycle` est appele une fois a chaque fin de tour, avant le rebouclage.
+   * S'il renvoie `false`, la couche s'arrete sur la derniere image et ne
+   * reboucle pas — le Stage s'en sert pour fondre vers le use-case suivant.
+   */
+  playLoop(_start, _end, _onCycle) {
     throw new Error('playLoop() non implemente');
   }
 

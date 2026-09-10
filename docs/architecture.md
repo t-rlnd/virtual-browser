@@ -52,9 +52,10 @@ Stage.js           machine a etats : { activeId, mode, progress }
 
 Le sens des fleches ne s'inverse jamais. `usecases.js` peut demander une
 bascule (`stage.setActive('v2')`), mais il n'affiche rien de lui-meme : il
-attend que le Stage lui renvoie l'evenement `activechange`. C'est pour ca que
-l'affichage reste toujours d'accord avec ce qui est reellement joue, meme quand
-une bascule est annulee en vol.
+attend que le Stage lui renvoie l'evenement `activechange`. Le Stage peut
+aussi basculer tout seul, au bout de `loopRepeats` tours de boucle. Dans
+les deux cas l'affichage suit `activechange`, y compris si une bascule est
+annulee en vol.
 
 ## Les trois etats du Stage
 
@@ -64,7 +65,7 @@ Tout le comportement tient dans ces trois variables :
 | --- | --- | --- |
 | `progress` | ou en est le scroll dans la piste, de 0 a 1 | `scroll.js` |
 | `mode` | `scrub`, `loop` ou `idle` | `scroll.js` |
-| `activeId` | quelle video est affichee | `usecases.js` (au clic) |
+| `activeId` | quelle video est affichee | `usecases.js` (au clic) ; `Stage` (fin de boucle) |
 
 Elles sont **independantes**. Changer `activeId` ne touche ni au mode ni a la
 progression : c'est ce qui rend la bascule de use-case gratuite a implementer,
@@ -73,7 +74,7 @@ et retroactive quand `latchLoop` est a `false`.
 | Mode | La couche active |
 | --- | --- |
 | `scrub` | en pause, son `currentTime` est ecrit par la progression |
-| `loop` | lecture autonome en boucle sur son dernier segment |
+| `loop` | lecture autonome, `loopRepeats` tours (defaut 2) puis le use-case suivant |
 | `idle` | en pause, rien ne se decode |
 
 Sous 991 px (`compactMaxWidth`), `scroll.js` n'est jamais branche : la
@@ -86,7 +87,7 @@ visibilite de `[data-vb-loop]`, et l'intro scrubee n'est pas lue. Voir
 | Fichier | Responsabilite | A ouvrir quand |
 | --- | --- | --- |
 | `src/config.js` | reglages globaux + lecture des attributs `data-vb-*` d'une balise | on ajoute une video, on change un fondu |
-| `src/Stage.js` | machine a etats, transitions et fondus croises | le comportement d'ensemble est faux |
+| `src/Stage.js` | machine a etats, transitions, fondus, auto-avance apres `loopRepeats` tours | le comportement d'ensemble est faux |
 | `src/playback.js` | choix compact vs scrub, attribut `data-vb-compact` | le mauvais cablage se declenche sous 991 px |
 | `src/scroll.js` | GSAP ScrollTrigger : course de scrub, verrou de boucle | le declenchement se fait au mauvais moment |
 | `src/compact.js` | visibilite de la section demo → boucle ou pause | la video tourne hors ecran, ou pas du tout |
@@ -103,10 +104,12 @@ visibilite de `[data-vb-loop]`, et l'intro scrubee n'est pas lue. Voir
 ## Pourquoi une classe `VideoLayer` abstraite
 
 Le Stage ne sait pas ce qu'il pilote : il appelle `seek`, `playLoop`, `show`,
-`hide` sur un objet qui respecte le contrat de `VideoLayer`. Passer un jour a
-un rendu `<canvas>` alimente par une sequence d'images ne demanderait donc
-qu'une seconde implementation de ce contrat, sans toucher ni a la machine a
-etats ni au scroll.
+`hide` sur un objet qui respecte le contrat de `VideoLayer`. `playLoop` recoit
+un callback `onCycle` : la couche notifie chaque fin de tour, le Stage compte
+et decide s'il faut reboucler ou enchainer le use-case suivant. Passer un
+jour a un rendu `<canvas>` alimente par une sequence d'images ne demanderait
+donc qu'une seconde implementation de ce contrat, sans toucher ni a la
+machine a etats ni au scroll.
 
 Ce n'est pas theorique : [`demo/DebugLayer.js`](../demo/DebugLayer.js) en est
 deja une, qui dessine un compteur dans un `<canvas>`. C'est elle qui fait

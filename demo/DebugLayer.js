@@ -25,6 +25,7 @@ export class DebugLayer extends VideoLayer {
 
     this._time = 0;
     this._loop = null;
+    this._onCycle = null;
     this._raf = null;
     this._visible = false;
     this._visibilityTimer = 0;
@@ -60,8 +61,9 @@ export class DebugLayer extends VideoLayer {
     this._draw();
   }
 
-  playLoop(start, end) {
+  playLoop(start, end, onCycle) {
     this._loop = { start, end };
+    this._onCycle = onCycle;
     if (this._time < start || this._time >= end) this._time = start;
 
     this._stop();
@@ -72,7 +74,15 @@ export class DebugLayer extends VideoLayer {
       previous = now;
 
       this._time += delta;
-      if (this._time >= end) this._time = start + ((this._time - start) % (end - start));
+      if (this._time >= end) {
+        if (this._onCycle?.() === false) {
+          this._time = end;
+          this.pause();
+          this._draw();
+          return;
+        }
+        this._time = start + ((this._time - start) % (end - start));
+      }
 
       this._draw();
       this._raf = requestAnimationFrame(tick);
@@ -83,6 +93,7 @@ export class DebugLayer extends VideoLayer {
 
   pause() {
     this._loop = null;
+    this._onCycle = null;
     this._stop();
   }
 
