@@ -75,13 +75,14 @@
         opacity: calc(1 - var(--vb-scrub, 0) / 0.2);
       }
 
-      /* Section 2 : superposee a la premiere, revelee de 0.30 a 0.60. Fond
-         transparent, la video passant derriere elle. */
+      /* Section 2 : superposee a la premiere. Fond transparent, la video
+         passant derriere elle. L'opacite (0.30→0.60) vit dans le bundle
+         (`--vb-fade-start` / `--vb-fade-span`) avec `[data-vb-fade]` — ne
+         pas la reposer ici, sous peine de desync switcher / fade. */
       [data-vb-loop] {
         position: absolute;
         inset: 0;
         z-index: 2;
-        opacity: calc((var(--vb-scrub, 0) - 0.3) / 0.3);
         /* Une opacite s'interpole, un `pointer-events` non : a opacite nulle
            les boutons capteraient quand meme les clics. Le mode publie sur
            <html> tranche la question. */
@@ -90,6 +91,22 @@
 
       :root[data-vb-mode='loop'] [data-vb-loop] {
         pointer-events: auto;
+      }
+
+      /* Temoin hors de `[data-vb-loop]` : meme courbe que le switcher. */
+      [data-vb-fade].fade-probe {
+        position: absolute;
+        left: 1.25rem;
+        bottom: 1.25rem;
+        z-index: 3;
+        margin: 0;
+        padding: 0.4rem 0.7rem;
+        font: 12px ui-monospace, Menlo, monospace;
+        letter-spacing: 0.02em;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 8px;
+        background: rgba(8, 12, 20, 0.55);
+        pointer-events: none;
       }
 
       h1 {
@@ -176,7 +193,8 @@
         }
 
         .intro,
-        [data-vb-loop] {
+        [data-vb-loop],
+        [data-vb-fade] {
           position: relative;
           inset: auto;
           opacity: 1;
@@ -362,6 +380,8 @@
             timecode, de 00:00 a 00:03. Remonter la rembobine.
           </p>
         </div>
+
+        <p class="fade-probe" data-vb-fade>fade hors loop</p>
 
         <div data-vb-loop>
           <h1>Section 2</h1>

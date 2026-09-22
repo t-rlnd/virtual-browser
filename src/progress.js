@@ -14,6 +14,10 @@
  * .protocol_intro { opacity: calc(1 - var(--vb-scrub) / 0.2); }
  * ```
  *
+ * La section loop et `[data-vb-fade]` partagent une courbe dans le bundle
+ * (`--vb-fade-start` / `--vb-fade-span`) : la page ne doit pas en reposer une
+ * autre, sous peine de desynchroniser le switcher et le fade.
+ *
  * Le mode y est publie de la meme facon, en attribut cette fois : une opacite
  * s'interpole, un `pointer-events` non. Un calque revele par le scrub reste
  * cliquable a opacite nulle, ce qui laisserait les boutons de use-case capter

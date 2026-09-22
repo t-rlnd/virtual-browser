@@ -95,7 +95,8 @@ de use-case capteraient les clics bien avant d'etre visibles.
 
 ```css
 .protocol_intro { opacity: calc(1 - var(--vb-scrub) / 0.2); }
-[data-vb-loop]  { opacity: calc((var(--vb-scrub) - 0.3) / 0.3); pointer-events: none; }
+/* loop + fade : courbe dans le bundle (--vb-fade-start / --vb-fade-span) */
+[data-vb-loop]  { pointer-events: none; }
 :root[data-vb-mode='loop'] [data-vb-loop] { pointer-events: auto; }
 ```
 

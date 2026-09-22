@@ -47,13 +47,22 @@
         z-index: 1;
         opacity: calc(1 - var(--vb-scrub, 0) / 0.2);
       }
+      /* Opacite loop/fade : bundle (`--vb-fade-start` / `--vb-fade-span`). */
       [data-vb-loop] {
         z-index: 2;
-        opacity: calc((var(--vb-scrub, 0) - 0.3) / 0.3);
         pointer-events: none;
       }
       :root[data-vb-mode='loop'] [data-vb-loop] {
         pointer-events: auto;
+      }
+      [data-vb-fade].fade-probe {
+        position: absolute;
+        left: 1rem;
+        bottom: 1rem;
+        z-index: 3;
+        margin: 0;
+        font: 12px ui-monospace, Menlo, monospace;
+        pointer-events: none;
       }
       .intro,
       [data-vb-loop] {
@@ -86,7 +95,8 @@
           overflow: visible;
         }
         .intro,
-        [data-vb-loop] {
+        [data-vb-loop],
+        [data-vb-fade] {
           position: relative;
           inset: auto;
           opacity: 1;
@@ -123,6 +133,8 @@
         </div>
 
         <div class="intro"><h1>Section 1</h1></div>
+
+        <p class="fade-probe" data-vb-fade>fade hors loop</p>
 
         <div data-vb-loop>
           <h1>Section 2</h1>

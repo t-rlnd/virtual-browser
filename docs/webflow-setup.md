@@ -230,7 +230,7 @@ piste, et c'est son opacite qui la revele.
   position: absolute;
   inset: 0;
   z-index: 2;
-  opacity: calc((var(--vb-scrub) - 0.3) / 0.3);
+  /* Opacite : fournie par le bundle (meme courbe que [data-vb-fade]). */
   pointer-events: none;
 }
 
@@ -243,6 +243,43 @@ Le `pointer-events` n'est pas un detail : une opacite s'interpole, lui non. A
 opacite nulle les boutons resteraient cliquables, et un clic dans le vide
 changerait la video de fond. L'attribut `data-vb-mode` pose sur `<html>` tranche
 la question — voir la section 5.
+
+### Fade partage : `data-vb-fade` et `[data-vb-loop]`
+
+La courbe d'apparition (0.30 → 0.60 sur `--vb-scrub`) vit **dans le bundle**
+`scroll-video.css`, une seule fois, via deux custom properties :
+
+```css
+:root {
+  --vb-fade-start: 0.3;
+  --vb-fade-span: 0.3;
+}
+
+[data-vb-fade],
+[data-vb-loop] {
+  opacity: clamp(
+    0,
+    calc((var(--vb-scrub, 0) - var(--vb-fade-start)) / var(--vb-fade-span)),
+    1
+  );
+}
+```
+
+- `[data-vb-loop]` : la section qui contient le switcher (`data-vb-usecase`,
+  alias prevu `data-vb-switch`) — son opacite porte tout le sous-arbre.
+- `[data-vb-fade]` : elements **hors** de cette section, meme timing.
+
+**Ne pas** reposer une autre formule d'opacite sur `[data-vb-loop]` dans un
+Embed Webflow : elle ecraserait le bundle et le switcher n'arriverait plus
+en meme temps que les `[data-vb-fade]`. Pour retoucher le seuil :
+
+```css
+:root { --vb-fade-start: 0.35; --vb-fade-span: 0.25; }
+```
+
+Un `[data-vb-fade]` **enfant** de `[data-vb-loop]` est neutralise (`opacity: 1`)
+dans le bundle : sinon les deux opacites se multiplient et l'element arrive
+plus tard que le switcher.
 
 Les declencheurs portent `data-vb-usecase="v1"`, `data-vb-usecase="v2"`, etc. :
 Ils peuvent etre n'importe quel element : `Button`, `Link block`, `Div block`.
@@ -403,6 +440,7 @@ chaque `[data-vb-when]`.
 | Nom | Valeur | Sert a |
 | --- | --- | --- |
 | `--vb-scrub` | Progression du scrub, de 0 a 1 | Tout ce qui s'interpole : opacites, deplacements, echelles |
+| `--vb-fade-start` / `--vb-fade-span` | Seuils de la courbe loop/fade (defaut `0.3` / `0.3`) | Retoucher l'apparition sans reecrire la formule |
 | `data-vb-mode` | `scrub`, `loop` ou `idle` | Tout ce qui ne s'interpole pas : `pointer-events`, `visibility` |
 | `data-vb-latched` | `true` une fois la boucle atteinte | Collapse de la piste a 100dvh ; masquer l'Intro. Reste pose en `idle` |
 | `data-vb-current` | `v1`, `v2`, … | Quel use-case est affiche ; cible CSS `:root[data-vb-current='v1']` |
@@ -417,8 +455,9 @@ pas saisissable dans le Designer :
 /* Le titre s'efface sur le premier cinquieme de la course. */
 .protocol_intro { opacity: calc(1 - var(--vb-scrub) / 0.2); }
 
-/* La section 2 se revele de 30 % a 60 %. */
-[data-vb-loop] { opacity: calc((var(--vb-scrub) - 0.3) / 0.3); }
+/* Section 2 + fade hors loop : deja dans le bundle via --vb-fade-*.
+   Ne pas recopier une autre formule ici. Pour retoucher :
+   :root { --vb-fade-start: 0.3; --vb-fade-span: 0.3; } */
 
 /* Les pastilles n'arrivent que sur les 20 derniers pourcents. */
 .prot-demo_pin { opacity: calc((var(--vb-scrub) - 0.8) / 0.2); }
@@ -448,7 +487,8 @@ Le montage superpose ne s'applique plus. Dans le Designer, au breakpoint
 ```css
 @media (max-width: 991px) {
   .protocol_intro,
-  [data-vb-loop] {
+  [data-vb-loop],
+  [data-vb-fade] {
     position: relative;
     opacity: 1;
     pointer-events: auto;
@@ -545,6 +585,10 @@ et le detail est logue au chargement.
 `data-vb-loop` n'en fait pas partie : c'est un repere pour la feuille de style,
 pas pour le script. L'oublier n'empeche rien de tourner — la section 2 ne se
 revelera simplement jamais, faute de regle CSS accrochee a `--vb-scrub`.
+
+`data-vb-fade` non plus : attribut markup, lu uniquement par le CSS du bundle
+(meme courbe que `[data-vb-loop]` via `--vb-fade-start` / `--vb-fade-span`).
+Pas de JS. Ne pas dupliquer la formule d'opacite du loop dans l'Embed.
 
 `data-vb-when`, lui, est lu par le script : sans lui, cards et legendes des
 deux use-cases restent toutes visibles en meme temps.

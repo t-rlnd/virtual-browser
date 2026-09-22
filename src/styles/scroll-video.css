@@ -97,18 +97,26 @@
   display: none;
 }
 
-/* --- Selecteur de use-case ----------------------------------------------- */
+/* --- Selecteur de use-case / switch -------------------------------------- */
 
-[data-vb-usecase] {
+/**
+ * `data-vb-switch` est l'alias prevu de `data-vb-usecase` (rename markup
+ * pas encore applique dans le JS). Les deux noms partagent les memes styles
+ * pour ne pas desynchroniser l'apparence pendant la transition.
+ */
+[data-vb-usecase],
+[data-vb-switch] {
   cursor: pointer;
 }
 
 /* Le designer peut surcharger : `data-vb-active` est le seul contrat impose. */
-[data-vb-usecase][data-vb-active='true'] {
+[data-vb-usecase][data-vb-active='true'],
+[data-vb-switch][data-vb-active='true'] {
   opacity: 1;
 }
 
-[data-vb-usecase][data-vb-active='false'] {
+[data-vb-usecase][data-vb-active='false'],
+[data-vb-switch][data-vb-active='false'] {
   opacity: 0.55;
 }
 
@@ -128,10 +136,54 @@
   display: none;
 }
 
+/**
+ * Courbe d'apparition partagee (revelation typique 0.30 → 0.60).
+ *
+ * Une seule source : le bundle. `[data-vb-loop]` (donc le switcher
+ * `data-vb-usecase` / `data-vb-switch` qu'il contient) et `[data-vb-fade]`
+ * (elements hors loop) lisent les memes custom properties — plus de drift
+ * entre Embed Webflow et CSS bundle.
+ *
+ * Pour retoucher le seuil sans reecrire la formule, surcharger sur `:root`
+ * les proprietes `--vb-fade-start` (defaut 0.3) et `--vb-fade-span` (0.3).
+ *
+ * Ne pas reposer une autre formule d'opacite sur `[data-vb-loop]` dans
+ * l'Embed : elle ecraserait celle-ci et desynchroniserait le fade.
+ */
+:root {
+  --vb-fade-start: 0.3;
+  --vb-fade-span: 0.3;
+}
+
+[data-vb-fade],
+[data-vb-loop] {
+  opacity: clamp(
+    0,
+    calc((var(--vb-scrub, 0) - var(--vb-fade-start)) / var(--vb-fade-span)),
+    1
+  );
+}
+
+/**
+ * Un enfant `[data-vb-fade]` d'un `[data-vb-loop]` qui fade deja verrait
+ * ses opacites se multiplier (courbe au carre → arrive plus tard que le
+ * switcher). On neutralise : le parent porte la courbe, l'enfant reste a 1.
+ */
+[data-vb-loop] [data-vb-fade] {
+  opacity: 1;
+}
+
 /* Compact : la section demo est dans le flux, les boutons restent cliquables
-   meme si la page a pose `pointer-events: none` hors mode loop. */
+   meme si la page a pose `pointer-events: none` hors mode loop. Opacite a 1 :
+   `--vb-scrub` vaut 1, mais une page qui aurait surcharge le seuil ne doit
+   pas laisser un calque a demi transparent. */
 :root[data-vb-compact] [data-vb-loop] {
   pointer-events: auto;
+}
+
+:root[data-vb-compact] [data-vb-loop],
+:root[data-vb-compact] [data-vb-fade] {
+  opacity: 1;
 }
 
 /**
