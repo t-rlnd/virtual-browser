@@ -99,7 +99,7 @@ de use-case capteraient les clics bien avant d'etre visibles.
 :root[data-vb-mode='loop'] [data-vb-loop] { pointer-events: auto; }
 ```
 
-Les formules (`--vb-intro`, `--vb-demo`, `--vb-pins`) vivent dans
+Les formules (`--vb-intro`, `--vb-demo`, `--vb-overlay`) vivent dans
 [`src/styles/scene.css`](src/styles/scene.css), versees dans le bundle.
 
 Cards et legendes propres a un use-case portent `data-vb-visible-on="uc1"` (ou `uc2`) :
@@ -345,7 +345,7 @@ src/
     Mp4VideoLayer.js     implementation <video> + MP4
   styles/
     scroll-video.css     styles structurels, cibles par attributs data-vb-*
-    scene.css            mise en scene (--vb-intro / --vb-demo / --vb-pins)
+    scene.css            mise en scene (--vb-intro / --vb-demo / --vb-overlay)
 demo/
   demo.js, DebugLayer.js page de demonstration sans fichiers video
   bundle.html            verification du bundle de production

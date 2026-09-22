@@ -29,7 +29,7 @@ body
 │       ├── div  "Intro"        data-vb-intro          absolute · inset 0 · z-index 1
 │       │
 │       └── div  "Use cases"    data-vb-loop           absolute · inset 0 · z-index 2
-│           ├── div             data-vb-switcher       tabs · opacite --vb-pins
+│           ├── div             data-vb-overlay        tabs · opacite --vb-overlay
 │           │   ├── div / button  data-vb-switch="uc1" fond transparent
 │           │   │   └── div       data-vb-progress     largeur 0 → 100 % sur les 2 tours
 │           │   └── div / button  data-vb-switch="uc2"
@@ -404,7 +404,7 @@ chaque `[data-vb-visible-on]`.
 | Nom | Valeur | Sert a |
 | --- | --- | --- |
 | `--vb-scrub` | Progression du scrub, de 0 a 1 | Tout ce qui s'interpole : opacites, deplacements, echelles |
-| `--vb-intro` / `--vb-demo` / `--vb-pins` | Phases 0–1 derivees de `--vb-scrub` | Posees par `src/styles/scene.css` |
+| `--vb-intro` / `--vb-demo` / `--vb-overlay` | Phases 0–1 derivees de `--vb-scrub` | Posees par `src/styles/scene.css` |
 | `data-vb-mode` | `scrub`, `loop` ou `idle` | Tout ce qui ne s'interpole pas : `pointer-events`, `visibility` |
 | `data-vb-locked` | `true` une fois la boucle atteinte | Collapse de la piste a 100dvh ; masquer l'Intro. Reste pose en `idle` |
 | `data-vb-active-id` | `uc1`, `uc2`, … | Quel use-case est affiche ; cible CSS `:root[data-vb-active-id='uc1']` |
@@ -422,7 +422,7 @@ verses dans `scroll-video.css` au build. Poser les attributs dans le Designer
 | `data-vb-intro` | titre | visible → invisible, 0–20 % |
 | `data-vb-loop` | section demo | invisible → visible, 30–60 % |
 | `data-vb-cards` | colonne de cards | glisse de 24 px avec `--vb-demo` |
-| `data-vb-switcher` | wrapper des tabs | invisible → visible, 80–100 % |
+| `data-vb-overlay` | tout calque tardif : tabs, legendes, details | invisible → visible, 80–100 % |
 
 Retirer l'ancien `<style>` du code personnalise `<head>` : le bundle le
 remplace. Un rename de classe Webflow ne casse plus la mise en scene.
