@@ -504,6 +504,7 @@ const main = async () => {
         progress: window.scrollVideo.stage.progress,
         intro: opacity('.intro'),
         demo: opacity('[data-vb-loop]'),
+        fade: opacity('[data-vb-fade]'),
         pins: opacity('.pins'),
       };
     });
@@ -512,18 +513,21 @@ const main = async () => {
     const expected = {
       intro: clamp(1 - p / 0.2),
       demo: clamp((p - 0.3) / 0.3),
+      fade: clamp((p - 0.3) / 0.3),
       pins: clamp((p - 0.8) / 0.2),
     };
 
     const ok =
       Math.abs(sample.variable - p) < 0.002 &&
-      ['intro', 'demo', 'pins'].every((key) => Math.abs(sample[key] - expected[key]) < 0.02);
+      ['intro', 'demo', 'fade', 'pins'].every((key) => Math.abs(sample[key] - expected[key]) < 0.02) &&
+      Math.abs(sample.demo - sample.fade) < 0.02;
 
     staging.push({
       ok,
       detail:
         `p=${p.toFixed(3)} intro=${sample.intro.toFixed(2)}/${expected.intro.toFixed(2)} ` +
         `demo=${sample.demo.toFixed(2)}/${expected.demo.toFixed(2)} ` +
+        `fade=${sample.fade.toFixed(2)}/${expected.fade.toFixed(2)} ` +
         `pins=${sample.pins.toFixed(2)}/${expected.pins.toFixed(2)}`,
     });
   }
