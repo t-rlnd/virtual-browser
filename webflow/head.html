@@ -10,14 +10,30 @@
   code = pousser un nouveau tag, puis changer ce numero ici ET dans
   footer.html. Tant qu'il ne change pas, jsDelivr sert le fichier depuis son
   cache permanent.
+
+  Ajouter `?dev` a l'URL bascule sur `pnpm dev` (localhost:3000) : le site
+  publie sert alors le bundle en cours d'ecriture, sans republier la page.
+  Sans `?dev`, c'est toujours jsDelivr — un visiteur ne voit jamais localhost.
 -->
 
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link rel="preconnect" href="https://temp-virtual-browser.b-cdn.net" crossorigin />
-<link
-  rel="stylesheet"
-  href="https://cdn.jsdelivr.net/gh/t-rlnd/virtual-browser@v1.8.0/dist/scroll-video.css"
-/>
+
+<script>
+  /* Insere la feuille dans le <head> pendant le parsing : elle bloque le
+     rendu comme un <link> ecrit en dur, donc pas de flash de page non stylee.
+     Le meme drapeau est relu dans footer.html pour le script. */
+  (function () {
+    window.VB_DEV = new URLSearchParams(location.search).has('dev');
+
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = window.VB_DEV
+      ? 'http://localhost:3000/dev/scroll-video.css'
+      : 'https://cdn.jsdelivr.net/gh/t-rlnd/virtual-browser@v1.8.0/dist/scroll-video.css';
+    document.head.appendChild(link);
+  })();
+</script>
 
 <!--
   Masque la page tant que la premiere image n'est pas decodee, pour eviter le

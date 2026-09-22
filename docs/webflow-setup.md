@@ -506,25 +506,27 @@ L'ordre du footer compte : `gsap`, puis `ScrollTrigger`, puis `scroll-video.js`.
 
 ## 8. Developper contre le site, sans republier
 
-Pendant la mise au point, remplacer les deux URL jsDelivr par celles du serveur
-local (`pnpm dev` les affiche au demarrage) :
+Les deux snippets choisissent leur origine a l'execution : `?dev` a la fin de
+l'URL charge `pnpm dev` (localhost:3000), toute autre URL charge jsDelivr.
 
-```html
-<link href="http://localhost:3000/dev/scroll-video.css" rel="stylesheet" />
-<script defer src="http://localhost:3000/dev/scroll-video.js"></script>
+```
+https://virtual-browser.webflow.io/            jsDelivr, ce que voit le visiteur
+https://virtual-browser.webflow.io/?dev        le bundle en cours d'ecriture
 ```
 
-Publier sur le domaine de staging `*.webflow.io` : le site charge alors le code
-de la machine, et chaque sauvegarde recharge la page. Ni commit, ni tag, ni
-televersement dans la boucle.
+Publier une fois sur le domaine de staging `*.webflow.io` suffit : chaque
+sauvegarde de `pnpm dev` est ensuite visible en rechargeant avec `?dev`. Ni
+commit, ni tag, ni televersement dans la boucle — et plus rien a remettre en
+place avant de passer en production, la version publique etant le defaut.
 
 Le code personnalise ne s'executant pas dans le preview du Designer, il faut
 publier au moins une fois. `http://localhost` echappant au blocage du contenu
 mixte, une page HTTPS a le droit de charger ces deux fichiers ; un tunnel n'est
 necessaire que pour tester depuis un telephone.
 
-Ne pas oublier de remettre les URL jsDelivr avant de publier en production :
-sinon la page cherche un localhost que le visiteur n'a pas.
+Le drapeau est lu une seule fois, dans head.html, et depose sur `window.VB_DEV`
+pour que footer.html n'ait pas a le relire — si les deux snippets divergeaient,
+la feuille et le script viendraient de deux versions differentes.
 
 ## Verifier que tout est branche
 
