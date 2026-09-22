@@ -244,6 +244,24 @@ opacite nulle les boutons resteraient cliquables, et un clic dans le vide
 changerait la video de fond. L'attribut `data-vb-mode` pose sur `<html>` tranche
 la question — voir la section 5.
 
+### Fade hors de la section loop : `data-vb-fade`
+
+Pour reveler un element **avec la meme courbe** (0.30 → 0.60 sur `--vb-scrub`)
+sans le placer dans `[data-vb-loop]`, poser `data-vb-fade` dessus. Aucun JS :
+la regle vit dans le bundle `scroll-video.css` (jsDelivr), pas dans un Embed
+Webflow.
+
+```css
+[data-vb-fade] {
+  opacity: clamp(0, calc((var(--vb-scrub, 0) - 0.3) / 0.3), 1);
+}
+```
+
+Si l'element est deja **dans** `[data-vb-loop]` et que cette section fade deja
+toute sa sous-arbre, `data-vb-fade` est redondant. Il sert surtout aux
+elements hors de ce conteneur, ou si le CSS Webflow de `[data-vb-loop]` n'est
+pas le meme (pas d'opacite accrochee au scrub).
+
 Les declencheurs portent `data-vb-usecase="v1"`, `data-vb-usecase="v2"`, etc. :
 Ils peuvent etre n'importe quel element : `Button`, `Link block`, `Div block`.
 Si ce n'est pas un vrai `<button>`, le script ajoute `role="button"` et
@@ -420,6 +438,9 @@ pas saisissable dans le Designer :
 /* La section 2 se revele de 30 % a 60 %. */
 [data-vb-loop] { opacity: calc((var(--vb-scrub) - 0.3) / 0.3); }
 
+/* Meme courbe, fournie par le bundle — elements hors de [data-vb-loop]. */
+[data-vb-fade] { opacity: clamp(0, calc((var(--vb-scrub, 0) - 0.3) / 0.3), 1); }
+
 /* Les pastilles n'arrivent que sur les 20 derniers pourcents. */
 .prot-demo_pin { opacity: calc((var(--vb-scrub) - 0.8) / 0.2); }
 ```
@@ -448,7 +469,8 @@ Le montage superpose ne s'applique plus. Dans le Designer, au breakpoint
 ```css
 @media (max-width: 991px) {
   .protocol_intro,
-  [data-vb-loop] {
+  [data-vb-loop],
+  [data-vb-fade] {
     position: relative;
     opacity: 1;
     pointer-events: auto;
@@ -545,6 +567,9 @@ et le detail est logue au chargement.
 `data-vb-loop` n'en fait pas partie : c'est un repere pour la feuille de style,
 pas pour le script. L'oublier n'empeche rien de tourner — la section 2 ne se
 revelera simplement jamais, faute de regle CSS accrochee a `--vb-scrub`.
+
+`data-vb-fade` non plus : attribut markup, lu uniquement par le CSS du bundle
+(meme opacite que la section loop). Pas de JS.
 
 `data-vb-when`, lui, est lu par le script : sans lui, cards et legendes des
 deux use-cases restent toutes visibles en meme temps.

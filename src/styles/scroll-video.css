@@ -128,6 +128,19 @@
   display: none;
 }
 
+/**
+ * Fade accroche a `--vb-scrub`, meme courbe que la section loop typique
+ * (revelation 0.30 → 0.60). Markup seul, aucun JS.
+ *
+ * Sert aux elements hors de `[data-vb-loop]`, ou si le CSS Webflow de la
+ * section loop n'applique pas deja cette opacite. Un enfant de
+ * `[data-vb-loop]` herite deja du fade du parent : `data-vb-fade` y est
+ * redondant.
+ */
+[data-vb-fade] {
+  opacity: clamp(0, calc((var(--vb-scrub, 0) - 0.3) / 0.3), 1);
+}
+
 /* Compact : la section demo est dans le flux, les boutons restent cliquables
    meme si la page a pose `pointer-events: none` hors mode loop. */
 :root[data-vb-compact] [data-vb-loop] {

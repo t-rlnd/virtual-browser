@@ -76,16 +76,21 @@
       }
 
       /* Section 2 : superposee a la premiere, revelee de 0.30 a 0.60. Fond
-         transparent, la video passant derriere elle. */
+         transparent, la video passant derriere elle. `data-vb-fade` partage
+         la meme courbe (aussi fournie par le bundle pour Webflow). */
       [data-vb-loop] {
         position: absolute;
         inset: 0;
         z-index: 2;
-        opacity: calc((var(--vb-scrub, 0) - 0.3) / 0.3);
         /* Une opacite s'interpole, un `pointer-events` non : a opacite nulle
            les boutons capteraient quand meme les clics. Le mode publie sur
            <html> tranche la question. */
         pointer-events: none;
+      }
+
+      [data-vb-loop],
+      [data-vb-fade] {
+        opacity: clamp(0, calc((var(--vb-scrub, 0) - 0.3) / 0.3), 1);
       }
 
       :root[data-vb-mode='loop'] [data-vb-loop] {
@@ -176,7 +181,8 @@
         }
 
         .intro,
-        [data-vb-loop] {
+        [data-vb-loop],
+        [data-vb-fade] {
           position: relative;
           inset: auto;
           opacity: 1;

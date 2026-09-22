@@ -49,8 +49,11 @@
       }
       [data-vb-loop] {
         z-index: 2;
-        opacity: calc((var(--vb-scrub, 0) - 0.3) / 0.3);
         pointer-events: none;
+      }
+      [data-vb-loop],
+      [data-vb-fade] {
+        opacity: clamp(0, calc((var(--vb-scrub, 0) - 0.3) / 0.3), 1);
       }
       :root[data-vb-mode='loop'] [data-vb-loop] {
         pointer-events: auto;
@@ -86,7 +89,8 @@
           overflow: visible;
         }
         .intro,
-        [data-vb-loop] {
+        [data-vb-loop],
+        [data-vb-fade] {
           position: relative;
           inset: auto;
           opacity: 1;
