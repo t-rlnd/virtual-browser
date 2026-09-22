@@ -17,26 +17,27 @@ body
 ├── div  "Protocol"           data-vb-scrub           la piste · height: 300vh
 │   └── div                   data-vb-scrub-inner     sticky · top 0 · 100dvh · overflow hidden
 │       ├── div               data-vb-stage           absolute · inset 0 · z-index 0
-│       │   ├── video         data-vb-video="v1"
-│       │   │                 data-vb-file="video1"
-│       │   │                 data-vb-transition="166"
-│       │   │                 data-vb-end="398"
-│       │   └── video         data-vb-video="v2"
-│       │                     data-vb-file="video2"
-│       │                     data-vb-transition="116"
-│       │                     data-vb-end="247"
+│       │   ├── video         data-vb-id="uc1"
+│       │   │                 data-vb-asset="video1"
+│       │   │                 data-vb-loop-at="166"
+│       │   │                 data-vb-loop-end="398"
+│       │   └── video         data-vb-id="uc2"
+│       │                     data-vb-asset="video2"
+│       │                     data-vb-loop-at="116"
+│       │                     data-vb-loop-end="247"
 │       │
-│       ├── div  "Intro"                              absolute · inset 0 · z-index 1
-│       │   └── (titre, texte...)                     opacite pilotee par --vb-scrub
+│       ├── div  "Intro"        data-vb-intro          absolute · inset 0 · z-index 1
 │       │
-│       └── div  "Use cases"  data-vb-loop            absolute · inset 0 · z-index 2
-│           ├── div / button  data-vb-usecase="v1"     fond transparent
-│           │   └── div       data-vb-progress         largeur 0 → 100 % sur les 2 tours
-│           ├── div / button  data-vb-usecase="v2"
-│           │   └── div       data-vb-progress
-│           ├── div           data-vb-when="v1"        cards + legende use-case 1
-│           ├── div           data-vb-when="v2"        cards + legende use-case 2
-│           └── div           data-vb-frame            ou le fond vient se caler
+│       └── div  "Use cases"    data-vb-loop           absolute · inset 0 · z-index 2
+│           ├── div             data-vb-switcher       tabs · opacite --vb-pins
+│           │   ├── div / button  data-vb-switch="uc1" fond transparent
+│           │   │   └── div       data-vb-progress     largeur 0 → 100 % sur les 2 tours
+│           │   └── div / button  data-vb-switch="uc2"
+│           │       └── div       data-vb-progress
+│           ├── div             data-vb-cards          colonne · glisse avec --vb-demo
+│           │   ├── div           data-vb-visible-on="uc1"  cards + legende use-case 1
+│           │   └── div           data-vb-visible-on="uc2"  cards + legende use-case 2
+│           └── div             data-vb-frame          ou le fond vient se caler
 └── (suite du site)
 ```
 
@@ -110,11 +111,11 @@ aussi inadapte, Webflow lui imposant sa propre source et son autoplay.
 Un seul HTML Embed suffit pour les deux balises :
 
 ```html
-<video data-vb-video="v1" data-vb-file="video1"
-       data-vb-transition="166" data-vb-end="398"
+<video data-vb-id="uc1" data-vb-asset="video1"
+       data-vb-loop-at="166" data-vb-loop-end="398"
        muted playsinline preload="auto"></video>
-<video data-vb-video="v2" data-vb-file="video2"
-       data-vb-transition="116" data-vb-end="247"
+<video data-vb-id="uc2" data-vb-asset="video2"
+       data-vb-loop-at="116" data-vb-loop-end="247"
        muted playsinline preload="auto"></video>
 ```
 
@@ -122,16 +123,16 @@ Chaque balise porte son identifiant **et** son decoupage :
 
 | Attribut | Exemple | Role |
 | --- | --- | --- |
-| `data-vb-video` | `v1` | Identifiant, le meme que sur le bouton `data-vb-usecase` |
-| `data-vb-file` | `video1` | Racine du fichier CDN : `video1-1280.mp4` |
-| `data-vb-transition` | `166` | Numero d'image ou le scrub s'arrete et la boucle commence |
-| `data-vb-end` | `398` | Derniere image de la boucle (optionnel : a defaut, fin du fichier) |
+| `data-vb-id` | `uc1` | Identifiant, le meme que sur le bouton `data-vb-switch` |
+| `data-vb-asset` | `video1` | Racine du fichier CDN : `video1-1280.mp4` |
+| `data-vb-loop-at` | `166` | Numero d'image ou le scrub s'arrete et la boucle commence |
+| `data-vb-loop-end` | `398` | Derniere image de la boucle (optionnel : a defaut, fin du fichier) |
 
 Les valeurs actuelles :
 
 ```
-video v1    data-vb-transition="166"    data-vb-end="398"
-video v2    data-vb-transition="116"    data-vb-end="247"
+uc1 / video1    data-vb-loop-at="166"    data-vb-loop-end="398"
+uc2 / video2    data-vb-loop-at="116"    data-vb-loop-end="247"
 ```
 
 Ne renseigner **aucun `src`** : le script choisit lui-meme le fichier selon la
@@ -144,11 +145,11 @@ consequence — ils figurent ci-dessus par simple precaution.
 Rien a modifier dans le JavaScript. Dans le Designer :
 
 1. Ajouter une balise `<video>` dans le meme HTML Embed.
-2. Lui donner par exemple `data-vb-video="v3"`, `data-vb-file="video3"`,
-   `data-vb-transition="140"` (et `data-vb-end` si la boucle ne va pas jusqu'a
+2. Lui donner par exemple `data-vb-id="uc3"`, `data-vb-asset="video3"`,
+   `data-vb-loop-at="140"` (et `data-vb-loop-end` si la boucle ne va pas jusqu'a
    la fin du fichier).
-3. Dupliquer un bouton dans la section 2 avec `data-vb-usecase="v3"`.
-4. Dupliquer les piles `[data-vb-when]` (cards, legende) avec `data-vb-when="v3"`.
+3. Dupliquer un bouton dans la section 2 avec `data-vb-switch="uc3"`.
+4. Dupliquer les piles `[data-vb-visible-on]` (cards, legende) avec `data-vb-visible-on="uc3"`.
 5. Encoder et televerser `video3-750.mp4`, `video3-1280.mp4`, `video3-1920.mp4`
    (voir `scripts/encode.sh`).
 
@@ -191,7 +192,7 @@ se met en pause quand la piste quitte l'ecran. C'est `latchLoop: true` dans
 
 Dans la foulee, la piste passe de 300vh a `100dvh` : le scrub deja consomme
 (et la reserve) ne servent plus, et laisseraient un long scroll mort.
-`data-vb-latched="true"` est pose sur `<html>` et y reste, y compris en
+`data-vb-locked="true"` est pose sur `<html>` et y reste, y compris en
 `idle`. Ne pas accrocher ce collapse a `data-vb-mode` — en sortant de la
 section le mode reviendrait a `idle` et la piste reprendrait 300vh, ce qui
 ferait sauter toute la page.
@@ -203,7 +204,7 @@ le script la passe a 100dvh tout seul. L'inner sticky doit rester en
 Masquer l'Intro une fois UseCase plein ecran est un choix de page, orthogonal :
 
 ```css
-:root[data-vb-latched] .protocol_intro { display: none; }
+:root[data-vb-locked] [data-vb-intro] { display: none; }
 ```
 
 Consequence a garder en tete cote maquette, et elle est plus large qu'avant :
@@ -244,14 +245,14 @@ opacite nulle les boutons resteraient cliquables, et un clic dans le vide
 changerait la video de fond. L'attribut `data-vb-mode` pose sur `<html>` tranche
 la question — voir la section 5.
 
-Les declencheurs portent `data-vb-usecase="v1"`, `data-vb-usecase="v2"`, etc. :
+Les declencheurs portent `data-vb-switch="uc1"`, `data-vb-switch="uc2"`, etc. :
 Ils peuvent etre n'importe quel element : `Button`, `Link block`, `Div block`.
 Si ce n'est pas un vrai `<button>`, le script ajoute `role="button"` et
 `tabindex="0"` pour que le clavier fonctionne.
 
 L'etat selectionne est reflete de trois facons, au choix pour le styling :
 
-- l'attribut `data-vb-active="true"` / `"false"`
+- l'attribut `data-vb-selected="true"` / `"false"`
 - l'attribut `aria-pressed="true"` / `"false"`
 - la classe `is-active`
 
@@ -259,7 +260,7 @@ En Webflow, le plus simple est de styliser sur l'attribut, qui n'oblige a rien
 cote classes :
 
 ```css
-[data-vb-active="true"] .prot-demo_timeblock { background: #fff; }
+[data-vb-selected="true"] .prot-demo_timeblock { background: #fff; }
 ```
 
 ### La barre d'avancee de la boucle
@@ -272,14 +273,14 @@ video, etagee par le Stage, qui est lue, pas un minuteur : la barre reste
 juste meme si le decodage prend du retard.
 
 ```
-div / button          data-vb-usecase="v1"
+div / button          data-vb-switch="uc1"
 └── div  .prot-demo_timeblock-rail     le rail, largeur fixe, overflow: hidden
     └── div  .prot-demo_timeblock      data-vb-progress
 ```
 
 L'attribut est laisse **sans valeur** : le use-case est deduit du bouton
 parent. Une barre placee ailleurs dans la page doit nommer le sien :
-`data-vb-progress="v1"`.
+`data-vb-progress="uc1"`.
 
 A poser en Webflow sur `.prot-demo_timeblock` : `width: 0%`, et une hauteur et
 une couleur. Ne pas y mettre de `transition` sur `width` — le script ecrit la
@@ -297,50 +298,50 @@ repasser par le JS.
 ### Cards, legendes, calques propres a un use-case
 
 Tout element qui ne doit vivre que pour certains use-cases porte
-`data-vb-when`. La valeur est le meme identifiant que `data-vb-video` /
-`data-vb-usecase` :
+`data-vb-visible-on`. La valeur est le meme identifiant que `data-vb-id` /
+`data-vb-switch` :
 
-- `data-vb-when="v1"` — visible seulement pour le use-case 1
-- `data-vb-when="v2"` — visible seulement pour le use-case 2
-- `data-vb-when="v1 v2"` — visible pour les deux (espaces ou virgules)
+- `data-vb-visible-on="uc1"` — visible seulement pour le use-case 1
+- `data-vb-visible-on="uc2"` — visible seulement pour le use-case 2
+- `data-vb-visible-on="v1 v2"` — visible pour les deux (espaces ou virgules)
 
 Sans l'attribut, l'element reste toujours affiche (boutons, cadre video, texte
 commun).
 
 Dans le Designer, dupliquer cards et legende, les laisser dans le meme parent,
-et taguer chaque pile. Settings (D) > Custom attributes : Name `data-vb-when`,
-Value `v1` ou `v2`.
+et taguer chaque pile. Settings (D) > Custom attributes : Name `data-vb-visible-on`,
+Value `uc1` ou `uc2`.
 
 ```
-div  data-vb-when="v1"
+div  data-vb-visible-on="uc1"
 ├── cards use-case 1
 └── legende use-case 1
 
-div  data-vb-when="v2"
+div  data-vb-visible-on="uc2"
 ├── cards use-case 2
 └── legende use-case 2
 ```
 
-Si cards et legende ne sont pas dans le meme wrapper, poser `data-vb-when` sur
+Si cards et legende ne sont pas dans le meme wrapper, poser `data-vb-visible-on` sur
 chacun.
 
 Le script ne decide pas du style. Il publie l'etat, la feuille masque :
 
-- `data-vb-current="v1"` (ou `v2`) sur `<html>`
-- `data-vb-shown="true"` / `"false"` sur chaque `[data-vb-when]`
+- `data-vb-active-id="uc1"` (ou `uc2`) sur `<html>`
+- `data-vb-visible="true"` / `"false"` sur chaque `[data-vb-visible-on]`
 
-Ne pas ecrire `data-vb-shown` a la main : le script le pose au chargement et a
+Ne pas ecrire `data-vb-visible` a la main : le script le pose au chargement et a
 chaque bascule.
 
 La feuille du bundle masque les piles inactives pour qu'elles ne s'empilent
 pas :
 
 ```css
-[data-vb-when]:not([data-vb-shown='true']) { display: none; }
+[data-vb-visible-on]:not([data-vb-visible='true']) { display: none; }
 ```
 
 Un fondu se surcharge cote page (opacity, visibility) si besoin : retirer le
-`display: none` dans un Embed, puis animer `[data-vb-shown]`.
+`display: none` dans un Embed, puis animer `[data-vb-visible]`.
 
 ## 4. Le cadre d'accueil de la video (optionnel)
 
@@ -386,7 +387,7 @@ accrocher d'autres styles a la transition :
 Exemple : arrondir les angles de la video seulement une fois calee.
 
 ```css
-[data-vb-stage] [data-vb-video] {
+[data-vb-stage] [data-vb-id] {
   border-radius: calc(var(--vb-dock) * 16px);
 }
 ```
@@ -398,34 +399,39 @@ l'autre : l'attribut est le seul interrupteur.
 
 Toute l'apparition et la disparition des calques se pilote en CSS, depuis des
 valeurs posees sur la balise `<html>` — et, pour les piles de use-case, sur
-chaque `[data-vb-when]`.
+chaque `[data-vb-visible-on]`.
 
 | Nom | Valeur | Sert a |
 | --- | --- | --- |
 | `--vb-scrub` | Progression du scrub, de 0 a 1 | Tout ce qui s'interpole : opacites, deplacements, echelles |
+| `--vb-intro` / `--vb-demo` / `--vb-pins` | Phases 0–1 derivees de `--vb-scrub` | Posees par `src/styles/scene.css` |
 | `data-vb-mode` | `scrub`, `loop` ou `idle` | Tout ce qui ne s'interpole pas : `pointer-events`, `visibility` |
-| `data-vb-latched` | `true` une fois la boucle atteinte | Collapse de la piste a 100dvh ; masquer l'Intro. Reste pose en `idle` |
-| `data-vb-current` | `v1`, `v2`, … | Quel use-case est affiche ; cible CSS `:root[data-vb-current='v1']` |
-| `data-vb-shown` | `true` / `false` | Pose sur chaque `[data-vb-when]`, pas sur `<html>` |
+| `data-vb-locked` | `true` une fois la boucle atteinte | Collapse de la piste a 100dvh ; masquer l'Intro. Reste pose en `idle` |
+| `data-vb-active-id` | `uc1`, `uc2`, … | Quel use-case est affiche ; cible CSS `:root[data-vb-active-id='uc1']` |
+| `data-vb-visible` | `true` / `false` | Pose sur chaque `[data-vb-visible-on]`, pas sur `<html>` |
 | `data-vb-state` | `loading`, `ready`, `error`, `reduced` | Les styles de chargement |
 | `data-vb-compact` | `true` sous 991 px, absent sinon | Accrocher le layout empile sans dupliquer le breakpoint |
 
-Les seuils de la maquette actuelle, a poser dans un Embed puisque `calc()` n'est
-pas saisissable dans le Designer :
+Les seuils de la maquette vivent dans [`src/styles/scene.css`](../src/styles/scene.css),
+verses dans `scroll-video.css` au build. Poser les attributs dans le Designer
+(Settings > Custom attributes), **sans valeur** sauf `data-vb-switch` /
+`data-vb-visible-on` :
+
+| Attribut | Phase | Course |
+| --- | --- | --- |
+| `data-vb-intro` | titre | visible → invisible, 0–20 % |
+| `data-vb-loop` | section demo | invisible → visible, 30–60 % |
+| `data-vb-cards` | colonne de cards | glisse de 24 px avec `--vb-demo` |
+| `data-vb-switcher` | wrapper des tabs | invisible → visible, 80–100 % |
+
+Retirer l'ancien `<style>` du code personnalise `<head>` : le bundle le
+remplace. Un rename de classe Webflow ne casse plus la mise en scene.
+
+Pour masquer l'Intro une fois la piste verrouillee, rester cote page :
 
 ```css
-/* Le titre s'efface sur le premier cinquieme de la course. */
-.protocol_intro { opacity: calc(1 - var(--vb-scrub) / 0.2); }
-
-/* La section 2 se revele de 30 % a 60 %. */
-[data-vb-loop] { opacity: calc((var(--vb-scrub) - 0.3) / 0.3); }
-
-/* Les pastilles n'arrivent que sur les 20 derniers pourcents. */
-.prot-demo_pin { opacity: calc((var(--vb-scrub) - 0.8) / 0.2); }
+:root[data-vb-locked] [data-vb-intro] { display: none; }
 ```
-
-Les valeurs hors de 0–1 sont ramenees dans l'intervalle par le navigateur : une
-formule qui passe en negatif avant son seuil n'a pas besoin d'etre bornee.
 
 ## 5 bis. L'ecran de chargement (optionnel)
 
@@ -447,7 +453,7 @@ Le montage superpose ne s'applique plus. Dans le Designer, au breakpoint
 
 ```css
 @media (max-width: 991px) {
-  .protocol_intro,
+  [data-vb-intro],
   [data-vb-loop] {
     position: relative;
     opacity: 1;
@@ -457,14 +463,16 @@ Le montage superpose ne s'applique plus. Dans le Designer, au breakpoint
 ```
 
 Le script publie `data-vb-compact="true"` sur `<html>` des que le viewport
-passe sous 991 px. On peut s'en servir a la place du media query :
+passe sous 991 px. `scene.css` s'en sert deja pour forcer les opacites a 1.
+Le media query ci-dessus reste utile pour le **layout** (plus d'`absolute`)
+que le bundle ne pose pas :
 
 ```css
-:root[data-vb-compact] .protocol_intro { opacity: 1; }
+:root[data-vb-compact] [data-vb-intro] { opacity: 1; }
 ```
 
 Cote video, plus de scrub : lecture autonome du segment de boucle
-(`data-vb-transition` → `data-vb-end`) dans `[data-vb-frame]`. Les
+(`data-vb-loop-at` → `data-vb-loop-end`) dans `[data-vb-frame]`. Les
 use-cases restent cliquables. Quand `prot demo` quitte l'ecran, la video
 se met en pause.
 
@@ -523,20 +531,20 @@ sinon la page cherche un localhost que le visiteur n'a pas.
 Une fois publie, ouvrir la console :
 
 - `window.scrollVideo.stage.mode` renvoie `scrub`, `loop` ou `idle`
-- `document.documentElement.getAttribute('data-vb-latched')` vaut `true`
+- `document.documentElement.getAttribute('data-vb-locked')` vaut `true`
   une fois la boucle atteinte (piste a 100dvh), absent avant et en compact
-- `window.scrollVideo.stage.activeId` renvoie `v1` ou `v2`
-- `document.documentElement.getAttribute('data-vb-current')` doit valoir la
+- `window.scrollVideo.stage.activeId` renvoie `uc1` ou `uc2`
+- `document.documentElement.getAttribute('data-vb-active-id')` doit valoir la
   meme chose que `activeId`
 - `window.scrollVideo.stage.progress` suit la position dans la course de scrub
 - `document.documentElement.style.getPropertyValue('--vb-scrub')` doit suivre
   la meme valeur : c'est elle qui pilote la mise en scene
-- `[...document.querySelectorAll('[data-vb-video]')].map((e) => e.tagName)` doit
+- `[...document.querySelectorAll('[data-vb-id]')].map((e) => e.tagName)` doit
   renvoyer `['VIDEO', 'VIDEO']`. Un `DIV` signale que l'element Video du
   Designer a ete utilise a la place d'un HTML Embed, et le scrub ne peut pas
   fonctionner
-- un `[data-vb-when="v1"]` doit porter `data-vb-shown="true"` quand v1 est
-  actif, `"false"` sinon (et l'inverse pour v2)
+- un `[data-vb-visible-on="uc1"]` doit porter `data-vb-visible="true"` quand uc1 est
+  actif, `"false"` sinon (et l'inverse pour uc2)
 
 Si `window.scrollVideo` est indefini, `[data-vb-stage]` ou `[data-vb-scrub]`
 manque : ce sont les deux seuls elements dont le script a besoin pour demarrer,
@@ -546,5 +554,5 @@ et le detail est logue au chargement.
 pas pour le script. L'oublier n'empeche rien de tourner — la section 2 ne se
 revelera simplement jamais, faute de regle CSS accrochee a `--vb-scrub`.
 
-`data-vb-when`, lui, est lu par le script : sans lui, cards et legendes des
+`data-vb-visible-on`, lui, est lu par le script : sans lui, cards et legendes des
 deux use-cases restent toutes visibles en meme temps.

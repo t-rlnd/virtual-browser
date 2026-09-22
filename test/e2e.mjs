@@ -123,7 +123,7 @@ const main = async () => {
 
   /**
    * Lit l'etat interne, mais aussi ce qui est reellement peint : c'est la
-   * seule facon de distinguer « le Stage croit afficher v2 » de « v2 est
+   * seule facon de distinguer « le Stage croit afficher uc2 » de « uc2 est
    * effectivement a l'ecran ».
    */
   const read = (target = page) =>
@@ -131,7 +131,7 @@ const main = async () => {
       const stage = window.scrollVideo.stage;
       const element = stage.active.element;
 
-      const visible = [...document.querySelectorAll('[data-vb-video]')].find(
+      const visible = [...document.querySelectorAll('[data-vb-id]')].find(
         (candidate) => getComputedStyle(candidate).opacity === '1'
       );
 
@@ -175,15 +175,15 @@ const main = async () => {
         progress: Number(stage.progress.toFixed(3)),
         time: Number((stage.active.currentTime ?? 0).toFixed(3)),
         opacity: getComputedStyle(element).opacity,
-        visibleId: visible ? visible.dataset.vbVideo : null,
+        visibleId: visible ? visible.dataset.vbId : null,
         luminance,
-        current: document.documentElement.getAttribute('data-vb-current'),
-        when: [...document.querySelectorAll('[data-vb-when]')].map((node) => ({
-          ids: (node.getAttribute('data-vb-when') ?? '')
+        current: document.documentElement.getAttribute('data-vb-active-id'),
+        when: [...document.querySelectorAll('[data-vb-visible-on]')].map((node) => ({
+          ids: (node.getAttribute('data-vb-visible-on') ?? '')
             .trim()
             .split(/[\s,]+/)
             .filter(Boolean),
-          shown: node.getAttribute('data-vb-shown'),
+          shown: node.getAttribute('data-vb-visible'),
         })),
         // Chaque video a son propre decoupage : les attentes se calculent
         // depuis les bornes de la couche active, jamais en dur.
@@ -195,7 +195,7 @@ const main = async () => {
   const shows = (state, id) =>
     state.active === id && state.visibleId === id && state.opacity === '1' && state.luminance > 0;
 
-  /** Les calques `[data-vb-when]` suivent le use-case actif. */
+  /** Les calques `[data-vb-visible-on]` suivent le use-case actif. */
   const whenMatches = (state, id) =>
     state.current === id &&
     state.when.length > 0 &&
@@ -215,7 +215,7 @@ const main = async () => {
       const top = scrub.offsetTop;
       const height = scrub.offsetHeight;
       return {
-        latched: document.documentElement.getAttribute('data-vb-latched') === 'true',
+        latched: document.documentElement.getAttribute('data-vb-locked') === 'true',
         height,
         top,
         viewport,
@@ -249,7 +249,7 @@ const main = async () => {
   await scrollTo(0);
   let state = await read();
   await shot('01-top');
-  record(1, 'Etat initial en haut de page', state.mode === 'scrub' && shows(state, 'v1') && state.time < 0.1 && whenMatches(state, 'v1'), show(state));
+  record(1, 'Etat initial en haut de page', state.mode === 'scrub' && shows(state, 'uc1') && state.time < 0.1 && whenMatches(state, 'uc1'), show(state));
 
   // 2 — scrub vers l'avant
   await scrollTo(geometry.scrubEnd / 2);
@@ -289,7 +289,7 @@ const main = async () => {
 
   // 24 — le verrou replie la piste : plus de scroll mort au-dessus ni de reserve en dessous
   await page.waitForFunction(
-    () => document.documentElement.getAttribute('data-vb-latched') === 'true',
+    () => document.documentElement.getAttribute('data-vb-locked') === 'true',
     undefined,
     { timeout: 2_000 }
   );
@@ -305,11 +305,11 @@ const main = async () => {
   );
 
   // 6 — bascule de use-case
-  await page.click('[data-vb-usecase="v2"]');
+  await page.click('[data-vb-switch="uc2"]');
   await page.waitForTimeout(700);
   state = await read();
   await shot('06-usecase-2');
-  record(6, 'Le use-case 2 remplace la video de fond', shows(state, 'v2') && inLoop(state) && whenMatches(state, 'v2'), show(state));
+  record(6, 'Le use-case 2 remplace la video de fond', shows(state, 'uc2') && inLoop(state) && whenMatches(state, 'uc2'), show(state));
 
   // 7 — le verrou : remonter ne rend plus la main au scrub
   await scrollTo(latchedTrack.top);
@@ -318,7 +318,7 @@ const main = async () => {
   record(
     7,
     'Remonter ne relance pas le scrub une fois la boucle atteinte',
-    state.mode !== 'scrub' && shows(state, 'v2') && near(state.videoBox, state.frameBox),
+    state.mode !== 'scrub' && shows(state, 'uc2') && near(state.videoBox, state.frameBox),
     `${show(state)} ${boxes(state)}`
   );
 
@@ -355,11 +355,11 @@ const main = async () => {
   record(10, 'La boucle repart quand la section 2 revient', resumeFirst.mode === 'loop' && resumeSecond.time !== resumeFirst.time, `${show(resumeFirst)} puis currentTime=${resumeSecond.time}`);
 
   // 11 — retour au use-case 1
-  await page.click('[data-vb-usecase="v1"]');
+  await page.click('[data-vb-switch="uc1"]');
   await page.waitForTimeout(700);
   state = await read();
   await shot('11-usecase-1');
-  record(11, 'Le use-case 1 restaure la video 1', shows(state, 'v1') && whenMatches(state, 'v1'), show(state));
+  record(11, 'Le use-case 1 restaure la video 1', shows(state, 'uc1') && whenMatches(state, 'uc1'), show(state));
 
   const completeLoopCycle = async () => {
     const previousId = await page.evaluate(() => window.scrollVideo.stage.activeId);
@@ -383,7 +383,7 @@ const main = async () => {
   await completeLoopCycle();
   const afterOneCycle = await read();
   const afterOneBar = await page.evaluate(() => {
-    const bar = document.querySelector('[data-vb-usecase="v1"] [data-vb-progress]');
+    const bar = document.querySelector('[data-vb-switch="uc1"] [data-vb-progress]');
     return {
       loopProgress: window.scrollVideo.stage.loopProgress,
       width: bar ? parseFloat(bar.style.width) : null,
@@ -396,13 +396,13 @@ const main = async () => {
   record(
     23,
     'Deux tours de boucle enchainent le use-case suivant',
-    afterOneCycle.active === 'v1' &&
+    afterOneCycle.active === 'uc1' &&
       afterOneBar.loopProgress > 0.45 &&
       afterOneBar.loopProgress < 0.55 &&
       afterOneBar.width > 45 &&
       afterOneBar.width < 55 &&
-      shows(afterTwoCycles, 'v2') &&
-      whenMatches(afterTwoCycles, 'v2'),
+      shows(afterTwoCycles, 'uc2') &&
+      whenMatches(afterTwoCycles, 'uc2'),
     `apres 1 tour ${show(afterOneCycle)} barre=${afterOneBar.width}% p=${afterOneBar.loopProgress} ; apres 2 tours ${show(afterTwoCycles)}`
   );
 
@@ -446,7 +446,7 @@ const main = async () => {
   //      a la position exacte du scroll, pas en un temps fixe
   const unlockedTrack = await readTrack();
   await scrollTo(geometry.scrubEnd, 1600);
-  await page.click('[data-vb-usecase="v2"]');
+  await page.click('[data-vb-switch="uc2"]');
   await page.waitForTimeout(700);
   await scrollTo(geometry.scrubEnd / 2, 1600);
   const undocked = await read();
@@ -470,7 +470,7 @@ const main = async () => {
     16,
     'Sans verrou, le fond redevient plein ecran et le use-case reste retroactif',
     rewound.mode === 'scrub' &&
-      shows(rewound, 'v2') &&
+      shows(rewound, 'uc2') &&
       rewound.time < 0.1 &&
       rewound.dock === 0 &&
       near(rewound.videoBox, rewound.stageBox),
@@ -596,7 +596,7 @@ const main = async () => {
     const after = document.querySelector('.after');
     return {
       flagged: document.documentElement.getAttribute('data-vb-compact') === 'true',
-      latched: document.documentElement.getAttribute('data-vb-latched') === 'true',
+      latched: document.documentElement.getAttribute('data-vb-locked') === 'true',
       introOpacity: Number(getComputedStyle(intro).opacity),
       demoOpacity: Number(getComputedStyle(loop).opacity),
       introPosition: getComputedStyle(intro).position,
@@ -640,14 +640,14 @@ const main = async () => {
     `${show(compactLoop)} ${boxes(compactLoop)} dock=${compactLoop.dock} puis currentTime=${compactLoopAgain.time}`
   );
 
-  await mobile.click('[data-vb-usecase="v2"]');
+  await mobile.click('[data-vb-switch="uc2"]');
   await mobile.waitForTimeout(700);
   const compactSwitch = await read(mobile);
   await shot('c03-usecase-2', mobile);
   record(
     20,
     'Les use-cases restent cliquables en compact',
-    shows(compactSwitch, 'v2') && inLoop(compactSwitch) && whenMatches(compactSwitch, 'v2'),
+    shows(compactSwitch, 'uc2') && inLoop(compactSwitch) && whenMatches(compactSwitch, 'uc2'),
     show(compactSwitch)
   );
 

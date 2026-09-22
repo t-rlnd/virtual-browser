@@ -61,7 +61,7 @@ la section 1 laisse la video tourner dans son cadre, et la met simplement en
 pause quand la section 2 quitte l'ecran. Redescendre la relance ou elle en
 etait. C'est `latchLoop: true` dans [`src/config.js`](src/config.js).
 
-Le verrou replie aussi la piste a `100dvh` (`data-vb-latched` sur `<html>`),
+Le verrou replie aussi la piste a `100dvh` (`data-vb-locked` sur `<html>`),
 pour ne pas laisser 200vh de scroll mort. `latchLoop: false` restaure
 l'aller-retour **et** conserve la 300vh.
 
@@ -84,23 +84,26 @@ Quelques valeurs sont publiees pour que la page anime ses propres calques :
 | --- | --- | --- |
 | `<html>` | `--vb-scrub` | Progression du scrub, de 0 a 1 |
 | `<html>` | `data-vb-mode` | `scrub`, `loop` ou `idle` |
-| `<html>` | `data-vb-latched` | `true` une fois la boucle atteinte (collapse 100dvh) |
-| `<html>` | `data-vb-current` | Use-case affiche (`v1`, `v2`, …) |
+| `<html>` | `data-vb-locked` | `true` une fois la boucle atteinte (collapse 100dvh) |
+| `<html>` | `data-vb-active-id` | Use-case affiche (`uc1`, `uc2`, …) |
 | `<html>` | `data-vb-compact` | `true` sous 991 px |
-| `[data-vb-when]` | `data-vb-shown` | `true` / `false` selon que l'id courant figure dans `data-vb-when` |
+| `[data-vb-visible-on]` | `data-vb-visible` | `true` / `false` selon que l'id courant figure dans `data-vb-visible-on` |
 
 Une opacite s'interpole depuis la variable ; un `pointer-events` non, d'ou
 l'attribut. Un calque a opacite nulle reste cliquable : sans lui, les boutons
 de use-case capteraient les clics bien avant d'etre visibles.
 
 ```css
-.protocol_intro { opacity: calc(1 - var(--vb-scrub) / 0.2); }
-[data-vb-loop]  { opacity: calc((var(--vb-scrub) - 0.3) / 0.3); pointer-events: none; }
+[data-vb-intro] { opacity: var(--vb-intro); }
+[data-vb-loop]  { opacity: var(--vb-demo); pointer-events: none; }
 :root[data-vb-mode='loop'] [data-vb-loop] { pointer-events: auto; }
 ```
 
-Cards et legendes propres a un use-case portent `data-vb-when="v1"` (ou `v2`) :
-le script pose `data-vb-shown`, la feuille masque les piles inactives. Voir
+Les formules (`--vb-intro`, `--vb-demo`, `--vb-pins`) vivent dans
+[`src/styles/scene.css`](src/styles/scene.css), versees dans le bundle.
+
+Cards et legendes propres a un use-case portent `data-vb-visible-on="uc1"` (ou `uc2`) :
+le script pose `data-vb-visible`, la feuille masque les piles inactives. Voir
 [`docs/webflow-setup.md`](docs/webflow-setup.md).
 
 ## Le recadrage, pilote par le scroll
@@ -239,7 +242,7 @@ tel quel.
 ### Avec ou sans decoupage
 
 Sans decoupage, le fichier sort **entierement all-intra** : toutes les images
-sont des images cles, donc n'importe quel `data-vb-transition` fonctionne, et
+sont des images cles, donc n'importe quel `data-vb-loop-at` fonctionne, et
 le changer plus tard ne demande aucun reencodage. C'est le mode confortable,
 paye en poids — trois fois le fichier decoupe, mesure sur `video2`.
 
@@ -281,7 +284,7 @@ Il ne recopie pas les standards : la cadence et les largeurs sont lues dans
 
 | Ce qu'il exige d'un encode | Pourquoi |
 | --- | --- |
-| Plage all-intra en tete | C'est ce qui rend le seek instantane ; le script la mesure et en deduit le `data-vb-transition` maximal |
+| Plage all-intra en tete | C'est ce qui rend le seek instantane ; le script la mesure et en deduit le `data-vb-loop-at` maximal |
 | `moov` avant `mdat` | Sans faststart, le premier seek attend le fichier entier |
 | yuv420p 8 bits, level <= 4.1 | Ce que decodent Safari et les appareils anciens |
 | Aucune piste audio | Elle bloque l'autoplay et pese pour rien |
@@ -298,12 +301,12 @@ Le decoupage de chaque video se pose **sur la balise elle-meme**, en numeros
 d'image, depuis le Designer Webflow (Settings > Custom attributes) :
 
 ```html
-<video data-vb-video="v1" data-vb-file="video1" data-vb-transition="166" data-vb-end="398"></video>
-<video data-vb-video="v2" data-vb-file="video2" data-vb-transition="116" data-vb-end="247"></video>
+<video data-vb-id="uc1" data-vb-asset="video1" data-vb-loop-at="166" data-vb-loop-end="398"></video>
+<video data-vb-id="uc2" data-vb-asset="video2" data-vb-loop-at="116" data-vb-loop-end="247"></video>
 ```
 
-`data-vb-transition` est l'image ou le scrub s'arrete et la boucle commence.
-`data-vb-end` est optionnel : sans lui, la boucle va jusqu'a la fin du fichier.
+`data-vb-loop-at` est l'image ou le scrub s'arrete et la boucle commence.
+`data-vb-loop-end` est optionnel : sans lui, la boucle va jusqu'a la fin du fichier.
 
 Le reste (fondus, inertie du scrub, largeurs encodees, comportement mobile) se
 regle dans [`src/config.js`](src/config.js), ou sans rebuild via
@@ -315,7 +318,7 @@ regle dans [`src/config.js`](src/config.js), ou sans rebuild via
 </script>
 ```
 
-Attention : changer `data-vb-transition` suppose de reencoder, la plage scrubee
+Attention : changer `data-vb-loop-at` suppose de reencoder, la plage scrubee
 devant etre all-intra (`./scripts/encode.sh masters/video1.mp4:166:398 ...`).
 
 ## Structure
@@ -332,7 +335,7 @@ src/
   compact.js             visibilite de la section demo → loop / idle
   scroll.js              cablage GSAP ScrollTrigger ; collapse 100dvh apres latch
   frame.js               le fond quitte le plein ecran pour [data-vb-frame]
-  progress.js            publie --vb-scrub, data-vb-mode, data-vb-current ; data-vb-shown sur [data-vb-when]
+  progress.js            publie --vb-scrub, data-vb-mode, data-vb-active-id ; data-vb-visible sur [data-vb-visible-on]
   usecases.js            selecteur de use-case et avancee de la boucle
   main.js                initialisation et garde-fous
   env.js                 reduced-motion, save-data, largeur utile, breakpoint compact
@@ -342,6 +345,7 @@ src/
     Mp4VideoLayer.js     implementation <video> + MP4
   styles/
     scroll-video.css     styles structurels, cibles par attributs data-vb-*
+    scene.css            mise en scene (--vb-intro / --vb-demo / --vb-pins)
 demo/
   demo.js, DebugLayer.js page de demonstration sans fichiers video
   bundle.html            verification du bundle de production

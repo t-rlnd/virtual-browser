@@ -72,24 +72,14 @@
         text-align: center;
         gap: 0.75rem;
         padding: 2rem;
-        opacity: calc(1 - var(--vb-scrub, 0) / 0.2);
       }
 
-      /* Section 2 : superposee a la premiere, revelee de 0.30 a 0.60. Fond
-         transparent, la video passant derriere elle. */
+      /* Section 2 : superposee a la premiere. Fond transparent, la video
+         passant derriere elle. Opacite et pointer-events : src/styles/scene.css. */
       [data-vb-loop] {
         position: absolute;
         inset: 0;
         z-index: 2;
-        opacity: calc((var(--vb-scrub, 0) - 0.3) / 0.3);
-        /* Une opacite s'interpole, un `pointer-events` non : a opacite nulle
-           les boutons capteraient quand meme les clics. Le mode publie sur
-           <html> tranche la question. */
-        pointer-events: none;
-      }
-
-      :root[data-vb-mode='loop'] [data-vb-loop] {
-        pointer-events: auto;
       }
 
       h1 {
@@ -146,6 +136,12 @@
         gap: 1rem;
       }
 
+      [data-vb-switcher] {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
       /* Le cadre ne peint rien : la video vient se caler derriere lui. */
       [data-vb-frame] {
         aspect-ratio: 16 / 9;
@@ -188,7 +184,7 @@
         }
       }
 
-      [data-vb-usecase] {
+      [data-vb-switch] {
         appearance: none;
         border: 1px solid rgba(255, 255, 255, 0.35);
         border-radius: 14px;
@@ -201,22 +197,22 @@
         transition: opacity 200ms ease, border-color 200ms ease, transform 200ms ease;
       }
 
-      [data-vb-usecase]:hover {
+      [data-vb-switch]:hover {
         transform: translateY(-2px);
       }
 
-      [data-vb-usecase][data-vb-active='true'] {
+      [data-vb-switch][data-vb-selected='true'] {
         border-color: #ffffff;
         background: rgba(255, 255, 255, 0.14);
       }
 
-      [data-vb-usecase] strong {
+      [data-vb-switch] strong {
         display: block;
         font-size: 1.1rem;
         margin-bottom: 0.35rem;
       }
 
-      [data-vb-usecase] span {
+      [data-vb-switch] span {
         font-size: 0.9rem;
         opacity: 0.7;
       }
@@ -324,38 +320,38 @@
         <!-- Le fond persistant. Les <canvas> servent au mode debug, les <video> au mode ?real -->
         <div data-vb-stage>
           <canvas
-            data-vb-video="v1"
-            data-vb-file="video1"
-            data-vb-transition="166"
-            data-vb-end="398"
+            data-vb-id="uc1"
+            data-vb-asset="video1"
+            data-vb-loop-at="166"
+            data-vb-loop-end="398"
           ></canvas>
           <canvas
-            data-vb-video="v2"
-            data-vb-file="video2"
-            data-vb-transition="116"
-            data-vb-end="247"
+            data-vb-id="uc2"
+            data-vb-asset="video2"
+            data-vb-loop-at="116"
+            data-vb-loop-end="247"
           ></canvas>
           <video
-            data-vb-video="v1"
-            data-vb-file="video1"
-            data-vb-transition="166"
-            data-vb-end="398"
+            data-vb-id="uc1"
+            data-vb-asset="video1"
+            data-vb-loop-at="166"
+            data-vb-loop-end="398"
             muted
             playsinline
             preload="auto"
           ></video>
           <video
-            data-vb-video="v2"
-            data-vb-file="video2"
-            data-vb-transition="116"
-            data-vb-end="247"
+            data-vb-id="uc2"
+            data-vb-asset="video2"
+            data-vb-loop-at="116"
+            data-vb-loop-end="247"
             muted
             playsinline
             preload="auto"
           ></video>
         </div>
 
-        <div class="intro">
+        <div class="intro" data-vb-intro>
           <h1>Section 1</h1>
           <p class="lede">
             La video de fond est en pause : c'est la position de scroll qui ecrit son
@@ -372,25 +368,27 @@
           </p>
           <div class="layout">
             <div class="usecases">
-              <button type="button" data-vb-usecase="v1">
+              <div data-vb-switcher>
+              <button type="button" data-vb-switch="uc1">
                 <strong>Use case 1</strong>
                 <span>Illustre par la video 1</span>
                 <div class="timeblock-rail"><div data-vb-progress></div></div>
               </button>
-              <button type="button" data-vb-usecase="v2">
+              <button type="button" data-vb-switch="uc2">
                 <strong>Use case 2</strong>
                 <span>Illustre par la video 2</span>
                 <div class="timeblock-rail"><div data-vb-progress></div></div>
               </button>
-              <div class="scene">
-                <div data-vb-when="v1">
+              </div>
+              <div class="scene" data-vb-cards>
+                <div data-vb-visible-on="uc1">
                   <div class="cards">
                     <article>Card A — use-case 1</article>
                     <article>Card B — use-case 1</article>
                   </div>
                   <p class="legend">Legende du use-case 1</p>
                 </div>
-                <div data-vb-when="v2">
+                <div data-vb-visible-on="uc2">
                   <div class="cards">
                     <article>Card A — use-case 2</article>
                     <article>Card B — use-case 2</article>

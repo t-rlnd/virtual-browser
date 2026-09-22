@@ -92,9 +92,10 @@ L'outil imprime la ligne exacte. Elle se traduit par trois attributs, dans
 
 | Attribut | Valeur |
 | --- | --- |
-| `data-vb-file` | `video3` — le nom du fichier, sans largeur ni extension |
-| `data-vb-transition` | numero de l'image ou le scroll rend la main a la boucle |
-| `data-vb-end` | numero de la derniere image de la boucle |
+| `data-vb-id` | `uc3` — le meme identifiant que sur le bouton `data-vb-switch` |
+| `data-vb-asset` | `video3` — le nom du fichier, sans largeur ni extension |
+| `data-vb-loop-at` | numero de l'image ou le scroll rend la main a la boucle |
+| `data-vb-loop-end` | numero de la derniere image de la boucle |
 
 Le reste de la structure ne bouge pas. Voir
 [`webflow-setup.md`](webflow-setup.md).
@@ -111,7 +112,7 @@ Le reste de la structure ne bouge pas. Voir
 - **Recompresser les fichiers exportes.** Ils sont encodes d'une facon tres
   particuliere, qui est exactement ce qui rend le defilement fluide. N'importe
   quel reencodage la detruit.
-- **Deplacer `data-vb-transition` au-dela de la plage prevue** sans refaire
+- **Deplacer `data-vb-loop-at` au-dela de la plage prevue** sans refaire
   l'export. Au-dela, le defilement saute.
 
 En cas de doute sur un fichier, avant ou apres export :

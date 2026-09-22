@@ -61,7 +61,7 @@ unique=$(tr ' ' '\n' <<<"$durations" | sed '/^$/d' | sort -u | wc -l | tr -d ' '
 echo
 if [ "$unique" -gt 1 ]; then
   echo "Les masters n'ont pas la meme duree (${durations# }). C'est normal :"
-  echo "chaque video porte son propre data-vb-transition, la progression du"
+  echo "chaque video porte son propre data-vb-loop-at, la progression du"
   echo "scroll est mappee independamment."
 else
   echo "Les masters partagent la meme duree."
@@ -69,7 +69,7 @@ fi
 
 echo
 echo "Les durees differentes sont prevues : chaque video porte son propre"
-echo "data-vb-transition. Confronter le decoupage choisi aux standards :"
+echo "data-vb-loop-at. Confronter le decoupage choisi aux standards :"
 echo "  ./scripts/check-video.sh masters/video1.mp4:166:398 masters/video2.mp4:116:247"
 echo "puis encoder :"
 echo "  ./scripts/encode.sh masters/video1.mp4:166:398 masters/video2.mp4:116:247"

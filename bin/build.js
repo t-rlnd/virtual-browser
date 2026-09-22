@@ -33,7 +33,7 @@ const BUILD_DIRECTORY = PRODUCTION ? 'dist' : 'dev';
  */
 const ENTRY_POINTS = [
   { in: 'src/main.js', out: 'scroll-video' },
-  { in: 'src/styles/scroll-video.css', out: 'scroll-video' },
+  { in: 'src/styles/entry.css', out: 'scroll-video' },
 ];
 
 const LIVE_RELOAD = !PRODUCTION;
@@ -101,7 +101,7 @@ if (PRODUCTION) {
   }).listen(SERVE_PORT, logServedFiles);
 }
 
-/** Affiche les balises pretes a coller dans le code personnalise Webflow. */
+/** Affiche les URLs locales et les extraits a coller dans Webflow. */
 function logServedFiles() {
   const walk = (directory) =>
     readdirSync(directory, { withFileTypes: true })
@@ -110,18 +110,27 @@ function logServedFiles() {
         return entry.isDirectory() ? walk(path) : path;
       });
 
-  const rows = walk(BUILD_DIRECTORY)
+  const files = walk(BUILD_DIRECTORY)
     .filter((file) => !file.endsWith('.map'))
-    .map((file) => {
-      const location = [SERVE_ORIGIN, ...file.split(sep)].join('/');
-      return {
-        Fichier: location,
-        'A coller dans Webflow': location.endsWith('.css')
-          ? `<link href="${location}" rel="stylesheet" />`
-          : `<script defer src="${location}"></script>`,
-      };
-    });
+    .map((file) => [SERVE_ORIGIN, ...file.split(sep)].join('/'));
 
-  console.table(rows);
-  console.log(`Demonstration : ${SERVE_ORIGIN}/  ·  bundle : ${SERVE_ORIGIN}/demo/bundle.html`);
+  const css = files.find((file) => file.endsWith('.css'));
+  const js = files.find((file) => file.endsWith('.js'));
+
+  const line = (label, value) => `  ${label.padEnd(14)}${value}`;
+
+  console.log('');
+  console.log(`scroll-video   ${SERVE_ORIGIN}   (watch + live reload)`);
+  console.log('');
+  console.log(line('Demo', `${SERVE_ORIGIN}/`));
+  console.log(line('Demo MP4', `${SERVE_ORIGIN}/?real`));
+  console.log(line('Bundle', `${SERVE_ORIGIN}/demo/bundle.html`));
+  console.log('');
+  console.log('  Webflow — Page settings > Inside <head>');
+  if (css) console.log(`  <link href="${css}" rel="stylesheet" />`);
+  console.log('');
+  console.log('  Webflow — Page settings > Before </body>');
+  console.log('  (gsap et ScrollTrigger restent charges avant)');
+  if (js) console.log(`  <script defer src="${js}"></script>`);
+  console.log('');
 }

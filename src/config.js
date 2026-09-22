@@ -2,7 +2,7 @@
  * Reglages globaux de l'animation.
  *
  * Le decoupage de chaque video ne vit PAS ici : il se lit sur la balise
- * `<video>` elle-meme (`data-vb-file`, `data-vb-transition`, `data-vb-end`).
+ * `<video>` elle-meme (`data-vb-asset`, `data-vb-loop-at`, `data-vb-loop-end`).
  * Une seule source de verite, le DOM — ajouter un use-case, c'est ajouter une
  * `<video>` et un bouton dans Webflow, sans rebuild.
  *
@@ -54,7 +54,7 @@ export const CONFIG = {
   scrubSmoothing: 0.4,
 
   /** Use-case affiche au chargement, s'il existe dans le DOM. */
-  defaultActive: 'v1',
+  defaultActive: 'uc1',
 
   /**
    * En dessous de cette largeur (tablette et mobile Webflow), le scrub est
@@ -69,7 +69,7 @@ export const CONFIG = {
   /** Delai au-dela duquel on se contente des donnees deja bufferisees. */
   preloadTimeoutMs: 8000,
 
-  /** Duree de scrub supposee quand une balise oublie `data-vb-transition`. */
+  /** Duree de scrub supposee quand une balise oublie `data-vb-loop-at`. */
   fallbackScrubSeconds: 3,
 };
 
@@ -83,29 +83,29 @@ export function resolveConfig(overrides = {}) {
 }
 
 /**
- * Lit le decoupage d'une balise `[data-vb-video]`.
+ * Lit le decoupage d'une balise `[data-vb-id]`.
  *
  * Attributs, tous optionnels sauf l'identifiant :
- *  - `data-vb-video`       identifiant, le meme que `data-vb-usecase`
- *  - `data-vb-file`        racine du fichier CDN (`video3` -> video3-1280.mp4)
- *  - `data-vb-transition`  image ou le scrub s'arrete et la boucle commence
- *  - `data-vb-end`         derniere image de la boucle ; a defaut, la fin du fichier
- *  - `data-vb-fps`         cadence, sinon celle de la config
+ *  - `data-vb-id`        identifiant, le meme que `data-vb-switch`
+ *  - `data-vb-asset`     racine du fichier CDN (`video3` -> video3-1280.mp4)
+ *  - `data-vb-loop-at`   image ou le scrub s'arrete et la boucle commence
+ *  - `data-vb-loop-end`  derniere image de la boucle ; a defaut, la fin du fichier
+ *  - `data-vb-fps`       cadence, sinon celle de la config
  */
 export function describeVideo(element, config = CONFIG) {
   const fps = readNumber(element, 'data-vb-fps') ?? config.fps;
-  const transitionFrame = readNumber(element, 'data-vb-transition');
-  const endFrame = readNumber(element, 'data-vb-end');
+  const transitionFrame = readNumber(element, 'data-vb-loop-at');
+  const endFrame = readNumber(element, 'data-vb-loop-end');
 
-  // Sans `data-vb-transition`, on se rabat sur une duree de scrub par defaut.
+  // Sans `data-vb-loop-at`, on se rabat sur une duree de scrub par defaut.
   // main.js previent dans la console : c'est presque toujours un oubli.
   const transition = transitionFrame ?? Math.round(config.fallbackScrubSeconds * fps);
   const scrubEnd = transition / fps;
-  const id = element.getAttribute('data-vb-video');
+  const id = element.getAttribute('data-vb-id');
 
   return {
     id,
-    file: element.getAttribute('data-vb-file') || id,
+    file: element.getAttribute('data-vb-asset') || id,
     fps,
     transition,
     end: endFrame,
@@ -125,8 +125,8 @@ export function describeVideo(element, config = CONFIG) {
 
 /** Toutes les videos declarees dans un conteneur, dans l'ordre du DOM. */
 export function collectVideos(root, config = CONFIG) {
-  return [...root.querySelectorAll('[data-vb-video]')]
-    .filter((element) => element.getAttribute('data-vb-video'))
+  return [...root.querySelectorAll('[data-vb-id]')]
+    .filter((element) => element.getAttribute('data-vb-id'))
     .map((element) => ({ element, ...describeVideo(element, config) }));
 }
 

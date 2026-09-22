@@ -45,15 +45,9 @@
       }
       .intro {
         z-index: 1;
-        opacity: calc(1 - var(--vb-scrub, 0) / 0.2);
       }
       [data-vb-loop] {
         z-index: 2;
-        opacity: calc((var(--vb-scrub, 0) - 0.3) / 0.3);
-        pointer-events: none;
-      }
-      :root[data-vb-mode='loop'] [data-vb-loop] {
-        pointer-events: auto;
       }
       .intro,
       [data-vb-loop] {
@@ -118,26 +112,28 @@
     <section data-vb-scrub>
       <div data-vb-scrub-inner>
         <div data-vb-stage>
-          <video data-vb-video="v1" data-vb-file="video1" data-vb-transition="166" data-vb-end="398"></video>
-          <video data-vb-video="v2" data-vb-file="video2" data-vb-transition="116" data-vb-end="247"></video>
+          <video data-vb-id="uc1" data-vb-asset="video1" data-vb-loop-at="166" data-vb-loop-end="398"></video>
+          <video data-vb-id="uc2" data-vb-asset="video2" data-vb-loop-at="116" data-vb-loop-end="247"></video>
         </div>
 
-        <div class="intro"><h1>Section 1</h1></div>
+        <div class="intro" data-vb-intro><h1>Section 1</h1></div>
 
         <div data-vb-loop>
           <h1>Section 2</h1>
-          <div>
-            <button type="button" data-vb-usecase="v1">
+          <div data-vb-switcher>
+            <button type="button" data-vb-switch="uc1">
               Use case 1
               <div data-vb-progress></div>
             </button>
-            <button type="button" data-vb-usecase="v2">
+            <button type="button" data-vb-switch="uc2">
               Use case 2
               <div data-vb-progress></div>
             </button>
           </div>
-          <div data-vb-when="v1">cards v1 · legende 1</div>
-          <div data-vb-when="v2">cards v2 · legende 2</div>
+          <div data-vb-cards>
+          <div data-vb-visible-on="uc1">cards uc1 · legende 1</div>
+          <div data-vb-visible-on="uc2">cards uc2 · legende 2</div>
+          </div>
           <div data-vb-frame>
             <div class="pins"><span>1</span><span>2</span><span>3</span></div>
           </div>

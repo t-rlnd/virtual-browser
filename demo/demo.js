@@ -36,8 +36,8 @@ const layers = {};
 
 for (const video of collectVideos(stageElement, config)) {
   const { id, element, segments, fps, openEnded } = video;
-  // Le CSS cible [data-vb-video] : les canvas de debug en ont besoin aussi.
-  element.setAttribute('data-vb-video', id);
+  // Le CSS cible [data-vb-id] : les canvas de debug en ont besoin aussi.
+  element.setAttribute('data-vb-id', id);
 
   layers[id] = useRealVideos
     ? new Mp4VideoLayer({

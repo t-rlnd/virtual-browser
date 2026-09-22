@@ -11,48 +11,49 @@
  * animer sont ses freres, pas ses descendants, et n'heriteraient donc de rien.
  *
  * ```css
- * .protocol_intro { opacity: calc(1 - var(--vb-scrub) / 0.2); }
+ * [data-vb-intro] { opacity: var(--vb-intro); }
  * ```
  *
  * Le mode y est publie de la meme facon, en attribut cette fois : une opacite
  * s'interpole, un `pointer-events` non. Un calque revele par le scrub reste
  * cliquable a opacite nulle, ce qui laisserait les boutons de use-case capter
- * les clics bien avant d'etre visibles.
+ * les clics bien avant d'etre visibles. Les formules vivent dans
+ * `src/styles/scene.css`.
  *
  * ```css
  * [data-vb-loop] { pointer-events: none; }
  * :root[data-vb-mode='loop'] [data-vb-loop] { pointer-events: auto; }
  * ```
  *
- * Le use-case actif est publie de la meme maniere (`data-vb-current` sur
- * `<html>`), et reflechi sur chaque `[data-vb-when]` via `data-vb-shown`.
+ * Le use-case actif est publie de la meme maniere (`data-vb-active-id` sur
+ * `<html>`), et reflechi sur chaque `[data-vb-visible-on]` via `data-vb-visible`.
  * Le script ne decide pas de l'apparence : il pose l'etat, la feuille masque
  * les piles inactives. Voir `paintCurrent`.
  */
 
 const VARIABLE = '--vb-scrub';
 const MODE_ATTRIBUTE = 'data-vb-mode';
-const CURRENT_ATTRIBUTE = 'data-vb-current';
-const SHOWN_ATTRIBUTE = 'data-vb-shown';
+const ACTIVE_ID_ATTRIBUTE = 'data-vb-active-id';
+const VISIBLE_ATTRIBUTE = 'data-vb-visible';
 
 /** Trois decimales : en deca, l'ecriture ne change plus rien a l'ecran. */
 const PRECISION = 1000;
 
 /**
- * Pose le use-case affiche sur `<html>` et sur chaque `[data-vb-when]`.
+ * Pose le use-case affiche sur `<html>` et sur chaque `[data-vb-visible-on]`.
  *
  * Appelable sans Stage — le chemin `prefers-reduced-motion` n'en a pas, mais
  * les piles de cards doivent quand meme montrer le use-case par defaut.
  *
- * `data-vb-when="v1 v2"` (espaces ou virgules) montre l'element pour chacun.
+ * `data-vb-visible-on="uc1 uc2"` (espaces ou virgules) montre l'element pour chacun.
  */
 export function paintCurrent(activeId, { element, root, when } = {}) {
   const html = element ?? document.documentElement;
-  html.setAttribute(CURRENT_ATTRIBUTE, activeId);
+  html.setAttribute(ACTIVE_ID_ATTRIBUTE, activeId);
 
-  const items = when ?? collectWhen(root ?? document);
+  const items = when ?? collectVisibleOn(root ?? document);
   for (const item of items) {
-    item.node.setAttribute(SHOWN_ATTRIBUTE, String(item.ids.includes(activeId)));
+    item.node.setAttribute(VISIBLE_ATTRIBUTE, String(item.ids.includes(activeId)));
   }
 
   return items;
@@ -61,7 +62,7 @@ export function paintCurrent(activeId, { element, root, when } = {}) {
 export function initProgress({ stage, element, root } = {}) {
   let painted = null;
   const html = element ?? document.documentElement;
-  const when = collectWhen(root ?? document);
+  const when = collectVisibleOn(root ?? document);
 
   const paint = (value) => {
     const rounded = Math.round(value * PRECISION) / PRECISION;
@@ -88,19 +89,19 @@ export function initProgress({ stage, element, root } = {}) {
       offActive();
       html.style.removeProperty(VARIABLE);
       html.removeAttribute(MODE_ATTRIBUTE);
-      html.removeAttribute(CURRENT_ATTRIBUTE);
-      for (const item of when) item.node.removeAttribute(SHOWN_ATTRIBUTE);
+      html.removeAttribute(ACTIVE_ID_ATTRIBUTE);
+      for (const item of when) item.node.removeAttribute(VISIBLE_ATTRIBUTE);
     },
   };
 }
 
-function collectWhen(root) {
+function collectVisibleOn(root) {
   const items = [];
 
-  for (const node of root.querySelectorAll('[data-vb-when]')) {
-    const ids = parseWhen(node.getAttribute('data-vb-when'));
+  for (const node of root.querySelectorAll('[data-vb-visible-on]')) {
+    const ids = parseVisibleOn(node.getAttribute('data-vb-visible-on'));
     if (ids.length === 0) {
-      console.warn('[scroll-video] [data-vb-when] sans valeur : ignore');
+      console.warn('[scroll-video] [data-vb-visible-on] sans valeur : ignore');
       continue;
     }
     items.push({ node, ids });
@@ -109,7 +110,7 @@ function collectWhen(root) {
   return items;
 }
 
-function parseWhen(raw) {
+function parseVisibleOn(raw) {
   if (raw == null || raw.trim() === '') return [];
   return raw.trim().split(/[\s,]+/).filter(Boolean);
 }

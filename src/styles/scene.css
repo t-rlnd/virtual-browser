@@ -1,0 +1,72 @@
+/**
+ * Mise en scene accrochee a `--vb-scrub`.
+ *
+ * Le JS n'ecrit qu'une progression 0→1. Cette feuille en tire trois phases
+ * et les pose sur des attributs `data-vb-*` — aucune classe Webflow.
+ *
+ *   data-vb-intro     titre / section 1          1 → 0 sur 0–20 %
+ *   data-vb-loop      section demo               0 → 1 sur 30–60 %
+ *   data-vb-cards     colonne de cards           glisse avec --vb-demo
+ *   data-vb-switcher  wrapper des tabs           0 → 1 sur 80–100 %
+ *
+ * --vb-scrub absent (Designer) : intro visible, demo et tabs a 0.
+ * Compact : tout a 1, plus de glissement.
+ */
+
+:root {
+  --vb-intro: clamp(0, (0.2 - var(--vb-scrub, 0)) / 0.2, 1);
+  --vb-demo: clamp(0, (var(--vb-scrub, 0) - 0.3) / 0.3, 1);
+  --vb-pins: clamp(0, (var(--vb-scrub, 0) - 0.8) / 0.2, 1);
+  --vb-cards-shift: 24px;
+}
+
+[data-vb-intro] {
+  opacity: var(--vb-intro);
+}
+
+[data-vb-loop] {
+  opacity: var(--vb-demo);
+  pointer-events: none;
+}
+
+:root[data-vb-mode='loop'] [data-vb-loop] {
+  pointer-events: auto;
+}
+
+[data-vb-cards] {
+  transform: translateX(calc((var(--vb-demo) - 1) * var(--vb-cards-shift)));
+}
+
+[data-vb-switcher] {
+  opacity: var(--vb-pins);
+}
+
+:root[data-vb-compact] [data-vb-intro],
+:root[data-vb-compact] [data-vb-loop],
+:root[data-vb-compact] [data-vb-switcher] {
+  opacity: 1;
+}
+
+:root[data-vb-compact] [data-vb-loop] {
+  pointer-events: auto;
+}
+
+:root[data-vb-compact] [data-vb-cards] {
+  transform: none;
+}
+
+@media (max-width: 991px) {
+  [data-vb-intro],
+  [data-vb-loop],
+  [data-vb-switcher] {
+    opacity: 1;
+  }
+
+  [data-vb-loop] {
+    pointer-events: auto;
+  }
+
+  [data-vb-cards] {
+    transform: none;
+  }
+}

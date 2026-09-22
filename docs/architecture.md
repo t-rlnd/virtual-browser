@@ -39,7 +39,7 @@ playback.js        compact (< 991 px) ou scrub (desktop)
       │
       ├──────────────► compact.js   visibilite de [data-vb-loop] → loop / idle
       └──────────────► scroll.js    GSAP ScrollTrigger → progress + mode
-                                    (+ collapse piste / data-vb-latched)
+                                    (+ collapse piste / data-vb-locked)
       │
       ▼
 Stage.js           machine a etats : { activeId, mode, progress }
@@ -47,12 +47,12 @@ Stage.js           machine a etats : { activeId, mode, progress }
       │
       ├──────────────► layers/Mp4VideoLayer.js   seek / play / fondu sur la <video>
       ├──────────────► frame.js                  --vb-frame-* : le fond se cale dans son cadre
-      ├──────────────► progress.js               --vb-scrub, data-vb-mode, data-vb-current / [data-vb-when]
+      ├──────────────► progress.js               --vb-scrub, data-vb-mode, data-vb-active-id / [data-vb-visible-on]
       └──────────────► usecases.js               boutons actifs + barres d'avancee
 ```
 
 Le sens des fleches ne s'inverse jamais. `usecases.js` peut demander une
-bascule (`stage.setActive('v2')`), mais il n'affiche rien de lui-meme : il
+bascule (`stage.setActive('uc2')`), mais il n'affiche rien de lui-meme : il
 attend que le Stage lui renvoie l'evenement `activechange`. Le Stage peut
 aussi basculer tout seul, au bout de `loopRepeats` tours de boucle. Dans
 les deux cas l'affichage suit `activechange`, y compris si une bascule est
@@ -93,14 +93,16 @@ visibilite de `[data-vb-loop]`, et l'intro scrubee n'est pas lue. Voir
 | `src/scroll.js` | GSAP ScrollTrigger : course de scrub, verrou de boucle, collapse de la piste a 100dvh | le declenchement se fait au mauvais moment, ou remonter traverse du scroll mort |
 | `src/compact.js` | visibilite de la section demo → boucle ou pause | la video tourne hors ecran, ou pas du tout |
 | `src/frame.js` | le fond quitte le plein ecran pour `[data-vb-frame]` | le recadrage est mal place |
-| `src/progress.js` | publie `--vb-scrub`, `data-vb-mode`, `data-vb-current` sur `<html>`, et `data-vb-shown` sur chaque `[data-vb-when]` | les calques ne s'animent pas, ou les piles restent toutes visibles |
+| `src/progress.js` | publie `--vb-scrub`, `data-vb-mode`, `data-vb-active-id` sur `<html>`, et `data-vb-visible` sur chaque `[data-vb-visible-on]` | les calques ne s'animent pas, ou les piles restent toutes visibles |
 | `src/usecases.js` | boutons de use-case et barres d'avancee (`loopProgress`) | un clic ne fait rien, ou la barre rembobine |
 | `src/main.js` | assemblage, garde-fous, prechargement, deblocage iOS | rien ne demarre |
 | `src/env.js` | reduced-motion, save-data, largeur a telecharger, breakpoint compact | la mauvaise definition est servie |
 | `src/utils.js` | `clamp`, `wait`, et un emetteur d'evenements minimal | jamais, ou presque |
 | `src/layers/VideoLayer.js` | le **contrat** d'une couche d'image | on veut un autre moteur de rendu |
 | `src/layers/Mp4VideoLayer.js` | l'implementation `<video>` + MP4 | le scrub saccade, un seek ne rend rien |
+| `src/styles/entry.css` | assemble `scroll-video.css` + `scene.css` pour le bundle | le CSS de prod / dev ne sort pas | 
 | `src/styles/scroll-video.css` | styles structurels, cibles par `data-vb-*` ; ne positionne pas le stage (sauf collapse latched) | un style du fond ou d'une couche est faux |
+| `src/styles/scene.css` | mise en scene : opacites intro / demo / tabs, glissement des cards | un calque apparait au mauvais moment du scrub |
 
 ## Pourquoi une classe `VideoLayer` abstraite
 
@@ -121,17 +123,17 @@ tourner la page de demonstration sans aucun fichier video.
 Le decoupage de chaque video vit **sur la balise**, pas dans `config.js` :
 
 ```html
-<video data-vb-video="v1" data-vb-file="video1" data-vb-transition="166" data-vb-end="398"></video>
+<video data-vb-id="uc1" data-vb-asset="video1" data-vb-loop-at="166" data-vb-loop-end="398"></video>
 ```
 
 Une seule source de verite. Ajouter un troisieme use-case, c'est ajouter une
-`<video>`, un bouton et les piles `[data-vb-when]` dans le Designer Webflow —
+`<video>`, un bouton et les piles `[data-vb-visible-on]` dans le Designer Webflow —
 aucun rebuild, aucun tag. Voir
 [`decisions/0003-decoupage-sur-la-balise.md`](decisions/0003-decoupage-sur-la-balise.md).
 
 Les cards et legendes propres a un use-case vivent de la meme facon **sur la
-page**, pas dans le JS : `data-vb-when="v1"` (ou `v2`). `progress.js` pose
-`data-vb-current` sur `<html>` et `data-vb-shown` sur chaque pile ; la feuille
+page**, pas dans le JS : `data-vb-visible-on="uc1"` (ou `uc2`). `progress.js` pose
+`data-vb-active-id` sur `<html>` et `data-vb-visible` sur chaque pile ; la feuille
 masque le reste.
 
 ## Les points d'attention
@@ -155,6 +157,6 @@ sur place :
 - **`scroll.js`, le collapse a `100dvh`** — une fois le verrou arme, la piste
   de 300vh ne sert plus. La ramener a une hauteur d'ecran sans recaler
   `scrollY` decroche le sticky (on a deja parcouru plus d'un ecran). Le
-  signal est `data-vb-latched`, pas `data-vb-mode` : en idle, retendre la
+  signal est `data-vb-locked`, pas `data-vb-mode` : en idle, retendre la
   piste ferait sauter la page. Voir
   [`decisions/0005-collapse-piste-apres-latch.md`](decisions/0005-collapse-piste-apres-latch.md).

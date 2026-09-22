@@ -1,7 +1,7 @@
 import { MODES } from './Stage.js';
 
 /** Pose sur le bouton du use-case affiche. La page se stylise dessus. */
-const ACTIVE_ATTRIBUTE = 'data-vb-active';
+const SELECTED_ATTRIBUTE = 'data-vb-selected';
 
 /**
  * Selecteur de use-case.
@@ -15,10 +15,10 @@ const ACTIVE_ATTRIBUTE = 'data-vb-active';
  * de 0 a 100 % sur l'ensemble des `loopRepeats` (pas un tour isole).
  */
 export function initUseCases({ stage, root = document }) {
-  const buttons = Array.from(root.querySelectorAll('[data-vb-usecase]'));
+  const buttons = Array.from(root.querySelectorAll('[data-vb-switch]'));
 
   if (buttons.length === 0) {
-    console.warn('[scroll-video] aucun element [data-vb-usecase] trouve');
+    console.warn('[scroll-video] aucun element [data-vb-switch] trouve');
     return { destroy() {} };
   }
 
@@ -26,18 +26,18 @@ export function initUseCases({ stage, root = document }) {
 
   const sync = (activeId) => {
     for (const button of buttons) {
-      const isActive = button.dataset.vbUsecase === activeId;
-      button.setAttribute(ACTIVE_ATTRIBUTE, String(isActive));
+      const isActive = button.dataset.vbSwitch === activeId;
+      button.setAttribute(SELECTED_ATTRIBUTE, String(isActive));
       button.setAttribute('aria-pressed', String(isActive));
       button.classList.toggle('is-active', isActive);
       // La barre d'un use-case qu'on quitte ne doit pas rester figee a
       // mi-course : seule celle du use-case affiche a un sens.
-      if (!isActive) paint(bars, button.dataset.vbUsecase, 0);
+      if (!isActive) paint(bars, button.dataset.vbSwitch, 0);
     }
   };
 
   const select = (element) => {
-    const id = element.dataset.vbUsecase;
+    const id = element.dataset.vbSwitch;
     if (id) stage.setActive(id);
   };
 
@@ -125,7 +125,7 @@ export function initUseCases({ stage, root = document }) {
 /**
  * Une barre appartient au use-case qui la contient. Le cas ou elle vit
  * ailleurs dans la page reste possible en nommant le use-case dans l'attribut :
- * `data-vb-progress="v1"`.
+ * `data-vb-progress="uc1"`.
  */
 function collectBars(root) {
   const bars = new Map();
@@ -133,11 +133,11 @@ function collectBars(root) {
   for (const element of root.querySelectorAll('[data-vb-progress]')) {
     const id =
       element.getAttribute('data-vb-progress') ||
-      element.closest('[data-vb-usecase]')?.dataset.vbUsecase;
+      element.closest('[data-vb-switch]')?.dataset.vbSwitch;
 
     if (!id) {
       console.warn(
-        '[scroll-video] [data-vb-progress] hors d\'un [data-vb-usecase] et sans valeur : ignore'
+        '[scroll-video] [data-vb-progress] hors d\'un [data-vb-switch] et sans valeur : ignore'
       );
       continue;
     }

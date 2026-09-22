@@ -43,7 +43,7 @@ export async function init(config = resolveConfig(window.SCROLL_VIDEO_CONFIG)) {
     : Object.keys(layers)[0];
 
   if (!defaultActive) {
-    console.error('[scroll-video] aucune balise [data-vb-video] dans le stage');
+    console.error('[scroll-video] aucune balise [data-vb-id] dans le stage');
     setState('error');
     return null;
   }
@@ -117,7 +117,7 @@ function buildLayers(stageElement, config, width) {
   for (const video of collectVideos(stageElement, config)) {
     if (!video.declared) {
       console.warn(
-        `[scroll-video] [data-vb-video="${video.id}"] sans data-vb-transition, repli sur ${video.transition} images`
+        `[scroll-video] [data-vb-id="${video.id}"] sans data-vb-loop-at, repli sur ${video.transition} images`
       );
     }
 
@@ -184,7 +184,7 @@ function preloadOnApproach(layers, track) {
     if (started) return;
     started = true;
     observer?.disconnect();
-    for (const button of document.querySelectorAll('[data-vb-usecase]')) {
+    for (const button of document.querySelectorAll('[data-vb-switch]')) {
       button.removeEventListener('pointerenter', run);
     }
     for (const layer of layers) {
@@ -201,7 +201,7 @@ function preloadOnApproach(layers, track) {
   );
   observer.observe(track);
 
-  for (const button of document.querySelectorAll('[data-vb-usecase]')) {
+  for (const button of document.querySelectorAll('[data-vb-switch]')) {
     button.addEventListener('pointerenter', run, { passive: true });
   }
 }

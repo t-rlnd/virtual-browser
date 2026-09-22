@@ -230,7 +230,7 @@ export class Mp4VideoLayer extends VideoLayer {
   }
 
   _onLoadedMetadata() {
-    // Sans `data-vb-end`, la boucle va jusqu'a la fin du fichier. On ne le
+    // Sans `data-vb-loop-end`, la boucle va jusqu'a la fin du fichier. On ne le
     // sait qu'une fois la duree lue.
     if (this._openEnded && Number.isFinite(this.element.duration) && this.element.duration > 0) {
       this.segments.loop.end = this.element.duration;

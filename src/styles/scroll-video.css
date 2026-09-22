@@ -6,7 +6,10 @@
  *
  * Le JS ne pilote que les proprietes dynamiques (opacity, visibility,
  * z-index) ; la mise en page vit ici. Exception : une fois le verrou
- * arme, `[data-vb-scrub]` passe a `100dvh` (voir `data-vb-latched`).
+ * arme, `[data-vb-scrub]` passe a `100dvh` (voir `data-vb-locked`).
+ *
+ * La mise en scene (opacites d'intro, demo, tabs) est dans `scene.css`,
+ * assemblee avec ce fichier via `entry.css`.
  */
 
 /* --- Le fond video persistant ------------------------------------------- */
@@ -49,7 +52,7 @@
  * pas le format du viewport, un `scale` deformerait l'image la ou
  * `object-fit: cover` recadre.
  */
-[data-vb-stage] [data-vb-video] {
+[data-vb-stage] [data-vb-id] {
   position: absolute;
   left: var(--vb-frame-x);
   top: var(--vb-frame-y);
@@ -60,7 +63,7 @@
   visibility: hidden;
 }
 
-[data-vb-stage] [data-vb-video] {
+[data-vb-stage] [data-vb-id] {
   will-change: opacity;
   /* Empeche l'overlay de lecture natif d'iOS d'apparaitre. */
   pointer-events: none;
@@ -99,16 +102,16 @@
 
 /* --- Selecteur de use-case ----------------------------------------------- */
 
-[data-vb-usecase] {
+[data-vb-switch] {
   cursor: pointer;
 }
 
-/* Le designer peut surcharger : `data-vb-active` est le seul contrat impose. */
-[data-vb-usecase][data-vb-active='true'] {
+/* Le designer peut surcharger : `data-vb-selected` est le seul contrat impose. */
+[data-vb-switch][data-vb-selected='true'] {
   opacity: 1;
 }
 
-[data-vb-usecase][data-vb-active='false'] {
+[data-vb-switch][data-vb-selected='false'] {
   opacity: 0.55;
 }
 
@@ -120,11 +123,11 @@
 }
 
 /**
- * Calques propres a un use-case. Le script pose `data-vb-shown` ; sans
+ * Calques propres a un use-case. Le script pose `data-vb-visible` ; sans
  * `true` le calque ne prend pas de place — deux piles de cards ne
  * s'empilent pas. Le designer peut surcharger (fondu, superposition).
  */
-[data-vb-when]:not([data-vb-shown='true']) {
+[data-vb-visible-on]:not([data-vb-visible='true']) {
   display: none;
 }
 
@@ -136,11 +139,11 @@
 
 /**
  * Piste collapsee une fois le verrou arme. La 300vh initiale est au Designer ;
- * apres le loop elle ne sert plus (scroll mort). `data-vb-latched` reste pose
+ * apres le loop elle ne sert plus (scroll mort). `data-vb-locked` reste pose
  * en idle, contrairement a `data-vb-mode` : retendre la piste ferait sauter
  * la page. Exclu en compact, ou la hauteur est deja `auto`.
  */
-:root[data-vb-latched]:not([data-vb-compact]) [data-vb-scrub] {
+:root[data-vb-locked]:not([data-vb-compact]) [data-vb-scrub] {
   height: 100dvh;
 }
 

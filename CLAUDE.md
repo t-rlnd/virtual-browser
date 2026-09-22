@@ -80,9 +80,9 @@ scroll.js | compact.js -> Stage.js -> { Mp4VideoLayer.js, frame.js, progress.js,
 - **`frame.js`** — sort le fond du plein ecran pour le caler sur
   `[data-vb-frame]`, pilote par `dockRange` (fonction de la progression, pas
   d'une duree).
-- **`progress.js`** — publie `--vb-scrub`, `data-vb-mode` et `data-vb-current`
-  sur `<html>`, et `data-vb-shown` sur chaque `[data-vb-when]` ; la page anime
-  ses calques en CSS a partir de la.
+- **`progress.js`** — publie `--vb-scrub`, `data-vb-mode` et `data-vb-active-id`
+  sur `<html>`, et `data-vb-visible` sur chaque `[data-vb-visible-on]` ;
+  `scene.css` anime intro / demo / tabs a partir de `--vb-scrub`.
 - **`usecases.js`** — boutons de use-case. Ne modifie jamais l'affichage
   lui-meme : demande une bascule (`stage.setActive(...)`) et attend
   l'evenement `activechange` du Stage avant de refleter le changement.
@@ -101,13 +101,13 @@ iOS debloque toutes les couches sans rien restaurer lui-meme), et le drapeau
 `reached` dans `scroll.js` (la section boucle est visible des le premier
 pixel car superposee — sans garde-fou la boucle demarrerait avant le scrub).
 Le collapse a `100dvh` une fois le verrou arme vit aussi dans `scroll.js`
-(recaler `scrollY`, signal `data-vb-latched` et non `data-vb-mode`).
+(recaler `scrollY`, signal `data-vb-locked` et non `data-vb-mode`).
 
 ## Points d'attention specifiques au projet
 
 - **`latchLoop: true`** (dans `src/config.js`) : une fois la boucle
   atteinte, remonter ne rembobine plus rien, et la piste passe a `100dvh`
-  (`data-vb-latched`). `false` restaure l'aller-retour d'origine, ou le
+  (`data-vb-locked`). `false` restaure l'aller-retour d'origine, ou le
   choix de use-case redevenait retroactif. Les deux comportements sont
   couverts par les tests.
 - **MP4 servis bruts, jamais via Bunny Stream / Cloudflare Stream** : le
@@ -127,8 +127,8 @@ Le collapse a `100dvh` une fois le verrou arme vit aussi dans `scroll.js`
   geste ne se verifie que sur un appareil reel.
 - **Mode compact (< 991 px)** : plus de scrub. Les sections s'empilent
   (layout Designer), la video boucle dans `[data-vb-frame]`, pause hors
-  ecran. La page doit forcer les opacites d'intro/demo a 1, `--vb-scrub`
-  valant 1.
+  ecran. `scene.css` force les opacites d'intro/demo/tabs a 1
+  (`:root[data-vb-compact]` et `max-width: 991px`).
 
 ## Documentation interne
 

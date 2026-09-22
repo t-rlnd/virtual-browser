@@ -202,15 +202,17 @@ check_master() {
   fi
 
   local snippet_end=""
-  [ -n "$end_frame" ] && snippet_end=" data-vb-end=\"${end_frame}\""
+  [ -n "$end_frame" ] && snippet_end=" data-vb-loop-end=\"${end_frame}\""
   local name
   name=$(basename "$input")
   name="${name%.*}"
+  local id="$name"
+  case "$name" in video*) id="uc${name#video}" ;; esac
 
   # La ligne d'encodage ne se propose que sur un master reellement conforme.
   if [ -n "$scrub_frame" ] && [ "$failures" -eq "$before" ]; then
     echo "  → ./scripts/encode.sh ${input}:${scrub_frame}:${end_frame:-$frames}"
-    echo "  → <video data-vb-video=\"${name}\" data-vb-file=\"${name}\" data-vb-transition=\"${scrub_frame}\"${snippet_end}></video>"
+    echo "  → <video data-vb-id=\"${id}\" data-vb-asset=\"${name}\" data-vb-loop-at=\"${scrub_frame}\"${snippet_end}></video>"
   fi
   echo
 }
@@ -386,7 +388,7 @@ check_all_intra() {
     ok "fichier entierement all-intra (${total} images, ${seconds} s)"
   else
     ok "plage all-intra : ${run} images, soit 0 → $(printf '%.2f' "$cut") s"
-    info "data-vb-transition doit tomber dans cette plage, au plus tard a l'image ${run}"
+    info "data-vb-loop-at doit tomber dans cette plage, au plus tard a l'image ${run}"
   fi
 
   local minimum

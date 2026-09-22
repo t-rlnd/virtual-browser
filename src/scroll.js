@@ -1,6 +1,6 @@
 import { MODES } from './Stage.js';
 
-const LATCHED_ATTRIBUTE = 'data-vb-latched';
+const LOCKED_ATTRIBUTE = 'data-vb-locked';
 const COLLAPSED_HEIGHT = '100dvh';
 
 /**
@@ -80,7 +80,7 @@ export function initScroll({ stage, config, track }) {
    *  - reload deja sous la section : retrancher le delta pour que le
    *    contenu en cours de lecture ne saute pas.
    *
-   * Accroche a `data-vb-latched`, pas a `data-vb-mode` : en `idle` (piste
+   * Accroche a `data-vb-locked`, pas a `data-vb-mode` : en `idle` (piste
    * quittee) le mode changerait et la piste reprendrait 300vh, ce qui
    * ferait sauter toute la page.
    */
@@ -90,7 +90,7 @@ export function initScroll({ stage, config, track }) {
     const heightBefore = track.offsetHeight;
     const scrollBefore = window.scrollY;
 
-    html.setAttribute(LATCHED_ATTRIBUTE, 'true');
+    html.setAttribute(LOCKED_ATTRIBUTE, 'true');
     track.style.height = COLLAPSED_HEIGHT;
     collapsed = true;
 
@@ -189,7 +189,7 @@ export function initScroll({ stage, config, track }) {
 
   return {
     destroy() {
-      html.removeAttribute(LATCHED_ATTRIBUTE);
+      html.removeAttribute(LOCKED_ATTRIBUTE);
       track.style.removeProperty('height');
       collapsed = false;
       scrubTween.kill();

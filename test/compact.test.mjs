@@ -6,9 +6,9 @@ import { VideoLayer } from '../src/layers/VideoLayer.js';
 import { initCompact } from '../src/compact.js';
 import { isCompactViewport } from '../src/env.js';
 
-const CONFIG = { fadeMs: 10, jumpFadeMs: 10, defaultActive: 'v1' };
+const CONFIG = { fadeMs: 10, jumpFadeMs: 10, defaultActive: 'uc1' };
 const SEGMENTS = {
-  v1: { scrub: { start: 0, end: 3 }, loop: { start: 3, end: 6 } },
+  uc1: { scrub: { start: 0, end: 3 }, loop: { start: 3, end: 6 } },
 };
 
 class FakeLayer extends VideoLayer {
@@ -117,8 +117,8 @@ test('isCompactViewport lit max-width', () => {
 });
 
 test('en compact, la progression est figee a 1 et le segment de boucle est lu', () => {
-  const layer = new FakeLayer('v1');
-  const stage = new Stage({ layers: { v1: layer }, config: CONFIG });
+  const layer = new FakeLayer('uc1');
+  const stage = new Stage({ layers: { uc1: layer }, config: CONFIG });
   const loop = targetAt({ top: 100, bottom: 400 });
 
   stage.mount();
@@ -130,8 +130,8 @@ test('en compact, la progression est figee a 1 et le segment de boucle est lu', 
 });
 
 test('une section demo hors ecran met la video en pause', () => {
-  const layer = new FakeLayer('v1');
-  const stage = new Stage({ layers: { v1: layer }, config: CONFIG });
+  const layer = new FakeLayer('uc1');
+  const stage = new Stage({ layers: { uc1: layer }, config: CONFIG });
   const loop = targetAt({ top: 900, bottom: 1400 });
 
   stage.mount();
@@ -142,8 +142,8 @@ test('une section demo hors ecran met la video en pause', () => {
 });
 
 test('revenir dans le champ relance la boucle, en sortir la coupe', () => {
-  const layer = new FakeLayer('v1');
-  const stage = new Stage({ layers: { v1: layer }, config: CONFIG });
+  const layer = new FakeLayer('uc1');
+  const stage = new Stage({ layers: { uc1: layer }, config: CONFIG });
   const loop = targetAt({ top: 900, bottom: 1400 });
 
   stage.mount();

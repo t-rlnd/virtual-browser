@@ -14,7 +14,7 @@
 #   ./scripts/export.sh masters/video3.mp4:166:398
 #
 # Sans lui, le fichier sort **entierement all-intra** : chaque image devient
-# une image cle, donc n'importe quel `data-vb-transition` fonctionnera sans
+# une image cle, donc n'importe quel `data-vb-loop-at` fonctionnera sans
 # reencoder. C'est le choix confortable, paye en poids : mesure a trois fois
 # le fichier decoupe. Une fois le point de bascule arrete, relancer avec le
 # decoupage pour revenir au poids normal.
@@ -118,10 +118,12 @@ for argument in "$@"; do
 
   transition="${cut%%:*}"
   end="${cut##*:}"
+  id="$name"
+  case "$name" in video*) id="uc${name#video}" ;; esac
   if [ "$transition" = "$end" ]; then
-    snippets="${snippets}<video data-vb-video=\"${name}\" data-vb-file=\"${name}\" data-vb-transition=\"A_CHOISIR\"></video>\n"
+    snippets="${snippets}<video data-vb-id=\"${id}\" data-vb-asset=\"${name}\" data-vb-loop-at=\"A_CHOISIR\"></video>\n"
   else
-    snippets="${snippets}<video data-vb-video=\"${name}\" data-vb-file=\"${name}\" data-vb-transition=\"${transition}\" data-vb-end=\"${end}\"></video>\n"
+    snippets="${snippets}<video data-vb-id=\"${id}\" data-vb-asset=\"${name}\" data-vb-loop-at=\"${transition}\" data-vb-loop-end=\"${end}\"></video>\n"
   fi
 done
 

@@ -20,18 +20,18 @@ function root(elements) {
   };
 }
 
-test('data-vb-transition convertit le numero d image en bornes scrub / boucle', () => {
+test('data-vb-loop-at convertit le numero d image en bornes scrub / boucle', () => {
   const video = describeVideo(
     el({
-      'data-vb-video': 'v1',
-      'data-vb-file': 'video1',
-      'data-vb-transition': '166',
-      'data-vb-end': '398',
+      'data-vb-id': 'uc1',
+      'data-vb-asset': 'video1',
+      'data-vb-loop-at': '166',
+      'data-vb-loop-end': '398',
     }),
     resolveConfig()
   );
 
-  assert.equal(video.id, 'v1');
+  assert.equal(video.id, 'uc1');
   assert.equal(video.file, 'video1');
   assert.equal(video.transition, 166);
   assert.equal(video.end, 398);
@@ -42,9 +42,9 @@ test('data-vb-transition convertit le numero d image en bornes scrub / boucle', 
   assert.equal(video.segments.loop.end.toFixed(4), (398 / 30).toFixed(4));
 });
 
-test('sans data-vb-end, la boucle reste ouverte jusqu a la duree du fichier', () => {
+test('sans data-vb-loop-end, la boucle reste ouverte jusqu a la duree du fichier', () => {
   const video = describeVideo(
-    el({ 'data-vb-video': 'v3', 'data-vb-file': 'video3', 'data-vb-transition': '140' }),
+    el({ 'data-vb-id': 'uc3', 'data-vb-asset': 'video3', 'data-vb-loop-at': '140' }),
     resolveConfig()
   );
 
@@ -53,20 +53,20 @@ test('sans data-vb-end, la boucle reste ouverte jusqu a la duree du fichier', ()
   assert.equal(video.segments.loop.end, Number.POSITIVE_INFINITY);
 });
 
-test('sans data-vb-transition, le repli est signale et vaut fallbackScrubSeconds', () => {
+test('sans data-vb-loop-at, le repli est signale et vaut fallbackScrubSeconds', () => {
   const config = resolveConfig({ fallbackScrubSeconds: 4 });
-  const video = describeVideo(el({ 'data-vb-video': 'v4' }), config);
+  const video = describeVideo(el({ 'data-vb-id': 'uc4' }), config);
 
   assert.equal(video.declared, false);
   assert.equal(video.transition, 120); // 4 s x 30 fps
   assert.equal(video.segments.scrub.end, 4);
-  // Sans data-vb-file, l identifiant sert de nom de fichier.
-  assert.equal(video.file, 'v4');
+  // Sans data-vb-asset, l identifiant sert de nom de fichier.
+  assert.equal(video.file, 'uc4');
 });
 
 test('data-vb-fps l emporte sur la cadence globale', () => {
   const video = describeVideo(
-    el({ 'data-vb-video': 'v5', 'data-vb-transition': '120', 'data-vb-fps': '60' }),
+    el({ 'data-vb-id': 'uc5', 'data-vb-loop-at': '120', 'data-vb-fps': '60' }),
     resolveConfig()
   );
 
@@ -78,16 +78,16 @@ test('une video se declare uniquement par ses attributs', () => {
   const config = resolveConfig();
   const videos = collectVideos(
     root([
-      el({ 'data-vb-video': 'v1', 'data-vb-file': 'video1', 'data-vb-transition': '166', 'data-vb-end': '398' }),
-      el({ 'data-vb-video': 'v2', 'data-vb-file': 'video2', 'data-vb-transition': '116', 'data-vb-end': '247' }),
-      el({ 'data-vb-video': 'v3', 'data-vb-file': 'video3', 'data-vb-transition': '90', 'data-vb-end': '200' }),
+      el({ 'data-vb-id': 'uc1', 'data-vb-asset': 'video1', 'data-vb-loop-at': '166', 'data-vb-loop-end': '398' }),
+      el({ 'data-vb-id': 'uc2', 'data-vb-asset': 'video2', 'data-vb-loop-at': '116', 'data-vb-loop-end': '247' }),
+      el({ 'data-vb-id': 'uc3', 'data-vb-asset': 'video3', 'data-vb-loop-at': '90', 'data-vb-loop-end': '200' }),
     ]),
     config
   );
 
   assert.deepEqual(
     videos.map((video) => video.id),
-    ['v1', 'v2', 'v3']
+    ['uc1', 'uc2', 'uc3']
   );
   assert.equal(videos[2].segments.scrub.end, 90 / 30);
   assert.equal(sourceFor(videos[2], 1280, config).endsWith('/video3-1280.mp4'), true);

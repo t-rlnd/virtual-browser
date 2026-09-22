@@ -101,6 +101,8 @@ for argument in "$@"; do
 
   name=$(basename "$input")
   name="${name%.*}"
+  id="$name"
+  case "$name" in video*) id="uc${name#video}" ;; esac
 
   kept=$((scrub_frame / SCRUB_DIVISOR))
   density=$(awk -v h="$SCROLL_HEIGHT" -v f="$kept" 'BEGIN { printf "%.1f", h / f }')
@@ -142,7 +144,7 @@ for argument in "$@"; do
     verify "$output" "$scrub_end"
   done
 
-  snippet="${snippet}<video data-vb-video=\"${name}\" data-vb-file=\"${name}\" data-vb-transition=\"${scrub_frame}\" data-vb-end=\"${end_frame}\"></video>\n"
+  snippet="${snippet}<video data-vb-id=\"${id}\" data-vb-asset=\"${name}\" data-vb-loop-at=\"${scrub_frame}\" data-vb-loop-end=\"${end_frame}\"></video>\n"
 done
 
 echo

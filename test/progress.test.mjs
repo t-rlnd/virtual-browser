@@ -33,8 +33,8 @@ function htmlEl() {
   };
 }
 
-function whenEl(ids) {
-  const attrs = { 'data-vb-when': ids };
+function visibleOnEl(ids) {
+  const attrs = { 'data-vb-visible-on': ids };
   return {
     getAttribute(name) {
       return Object.prototype.hasOwnProperty.call(attrs, name) ? attrs[name] : null;
@@ -51,13 +51,13 @@ function whenEl(ids) {
 function rootWith(elements) {
   return {
     querySelectorAll(selector) {
-      if (selector === '[data-vb-when]') return elements;
+      if (selector === '[data-vb-visible-on]') return elements;
       return [];
     },
   };
 }
 
-function fakeStage({ activeId = 'v1', mode = 'idle', progress = 0 } = {}) {
+function fakeStage({ activeId = 'uc1', mode = 'idle', progress = 0 } = {}) {
   const listeners = new Map();
   return {
     activeId,
@@ -74,71 +74,71 @@ function fakeStage({ activeId = 'v1', mode = 'idle', progress = 0 } = {}) {
   };
 }
 
-test('paintCurrent pose data-vb-current et data-vb-shown selon l id actif', () => {
+test('paintCurrent pose data-vb-active-id et data-vb-visible selon l id actif', () => {
   const element = htmlEl();
-  const v1 = whenEl('v1');
-  const v2 = whenEl('v2');
-  const both = whenEl('v1, v2');
+  const uc1 = visibleOnEl('uc1');
+  const uc2 = visibleOnEl('uc2');
+  const both = visibleOnEl('uc1, uc2');
 
-  paintCurrent('v1', { element, root: rootWith([v1, v2, both]) });
+  paintCurrent('uc1', { element, root: rootWith([uc1, uc2, both]) });
 
-  assert.equal(element.getAttribute('data-vb-current'), 'v1');
-  assert.equal(v1.getAttribute('data-vb-shown'), 'true');
-  assert.equal(v2.getAttribute('data-vb-shown'), 'false');
-  assert.equal(both.getAttribute('data-vb-shown'), 'true');
+  assert.equal(element.getAttribute('data-vb-active-id'), 'uc1');
+  assert.equal(uc1.getAttribute('data-vb-visible'), 'true');
+  assert.equal(uc2.getAttribute('data-vb-visible'), 'false');
+  assert.equal(both.getAttribute('data-vb-visible'), 'true');
 
-  paintCurrent('v2', { element, root: rootWith([v1, v2, both]) });
+  paintCurrent('uc2', { element, root: rootWith([uc1, uc2, both]) });
 
-  assert.equal(element.getAttribute('data-vb-current'), 'v2');
-  assert.equal(v1.getAttribute('data-vb-shown'), 'false');
-  assert.equal(v2.getAttribute('data-vb-shown'), 'true');
-  assert.equal(both.getAttribute('data-vb-shown'), 'true');
+  assert.equal(element.getAttribute('data-vb-active-id'), 'uc2');
+  assert.equal(uc1.getAttribute('data-vb-visible'), 'false');
+  assert.equal(uc2.getAttribute('data-vb-visible'), 'true');
+  assert.equal(both.getAttribute('data-vb-visible'), 'true');
 });
 
-test('initProgress reflechit activechange sur html et sur [data-vb-when]', () => {
+test('initProgress reflechit activechange sur html et sur [data-vb-visible-on]', () => {
   const stage = fakeStage();
   const element = htmlEl();
-  const v1 = whenEl('v1');
-  const v2 = whenEl('v2');
+  const uc1 = visibleOnEl('uc1');
+  const uc2 = visibleOnEl('uc2');
 
   const progress = initProgress({
     stage,
     element,
-    root: rootWith([v1, v2]),
+    root: rootWith([uc1, uc2]),
   });
 
   assert.equal(element.getAttribute('data-vb-mode'), 'idle');
-  assert.equal(element.getAttribute('data-vb-current'), 'v1');
-  assert.equal(v1.getAttribute('data-vb-shown'), 'true');
-  assert.equal(v2.getAttribute('data-vb-shown'), 'false');
+  assert.equal(element.getAttribute('data-vb-active-id'), 'uc1');
+  assert.equal(uc1.getAttribute('data-vb-visible'), 'true');
+  assert.equal(uc2.getAttribute('data-vb-visible'), 'false');
 
-  stage.activeId = 'v2';
-  stage.emit('activechange', 'v2');
+  stage.activeId = 'uc2';
+  stage.emit('activechange', 'uc2');
 
-  assert.equal(element.getAttribute('data-vb-current'), 'v2');
-  assert.equal(v1.getAttribute('data-vb-shown'), 'false');
-  assert.equal(v2.getAttribute('data-vb-shown'), 'true');
+  assert.equal(element.getAttribute('data-vb-active-id'), 'uc2');
+  assert.equal(uc1.getAttribute('data-vb-visible'), 'false');
+  assert.equal(uc2.getAttribute('data-vb-visible'), 'true');
 
   progress.destroy();
-  assert.equal(element.getAttribute('data-vb-current'), null);
+  assert.equal(element.getAttribute('data-vb-active-id'), null);
   assert.equal(element.getAttribute('data-vb-mode'), null);
-  assert.equal(v1.getAttribute('data-vb-shown'), null);
-  assert.equal(v2.getAttribute('data-vb-shown'), null);
+  assert.equal(uc1.getAttribute('data-vb-visible'), null);
+  assert.equal(uc2.getAttribute('data-vb-visible'), null);
 });
 
-test('[data-vb-when] sans valeur est ignore, avec un avertissement', () => {
+test('[data-vb-visible-on] sans valeur est ignore, avec un avertissement', () => {
   const warnings = [];
   const original = console.warn;
   console.warn = (...args) => warnings.push(args.join(' '));
 
   try {
-    const empty = whenEl('');
-    const v1 = whenEl('v1');
-    paintCurrent('v1', { element: htmlEl(), root: rootWith([empty, v1]) });
-    assert.equal(empty.getAttribute('data-vb-shown'), null);
-    assert.equal(v1.getAttribute('data-vb-shown'), 'true');
+    const empty = visibleOnEl('');
+    const uc1 = visibleOnEl('uc1');
+    paintCurrent('uc1', { element: htmlEl(), root: rootWith([empty, uc1]) });
+    assert.equal(empty.getAttribute('data-vb-visible'), null);
+    assert.equal(uc1.getAttribute('data-vb-visible'), 'true');
     assert.equal(warnings.length, 1);
-    assert.match(warnings[0], /data-vb-when/);
+    assert.match(warnings[0], /data-vb-visible-on/);
   } finally {
     console.warn = original;
   }
