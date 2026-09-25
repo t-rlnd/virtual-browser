@@ -14,6 +14,7 @@ import { initPlayback } from '../src/playback.js';
 import { initFrame } from '../src/frame.js';
 import { initProgress } from '../src/progress.js';
 import { initUseCases } from '../src/usecases.js';
+import { initPause } from '../src/pause.js';
 import { isCompactViewport } from '../src/env.js';
 import { DebugLayer } from './DebugLayer.js';
 
@@ -75,6 +76,7 @@ Promise.all(Object.values(layers).map((layer) => layer.preload()))
       track: document.querySelector('[data-vb-scrub]'),
     });
     initUseCases({ stage });
+    initPause({ stage });
     document.documentElement.setAttribute('data-vb-state', 'ready');
     startHud(stage, frame);
   })

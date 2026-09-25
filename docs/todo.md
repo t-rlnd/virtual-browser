@@ -3,6 +3,7 @@
 ## En cours
 
 ## À faire
+- [ ] Dans le Designer Webflow : poser le bouton `data-vb-pause` (+ icônes `data-vb-pause-icon="pause"` / `"play"`) dans `data-vb-overlay`, puis passer head/footer sur `@v1.9.0` — P1
 - [ ] Dans le Designer Webflow : tablette/mobile (< 991 px), intro et demo en relative empilées, opacités à 1, piste en hauteur auto (plus de sticky 300vh) — P1
 - [ ] Remettre les deux URL jsDelivr (retirer `http://localhost:3000`) dans le site Webflow avant toute publication en production — P1
 - [ ] Comparer `latchLoop: false` face à `latchLoop: true` (validé) sur le site Webflow — juger la remontée (progress, titre, dock, rétroactivité du use-case) — P2

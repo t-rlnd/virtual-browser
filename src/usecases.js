@@ -1,4 +1,5 @@
 import { MODES } from './Stage.js';
+import { bindPress } from './utils.js';
 
 /** Pose sur le bouton du use-case affiche. La page se stylise dessus. */
 const SELECTED_ATTRIBUTE = 'data-vb-selected';
@@ -36,33 +37,17 @@ export function initUseCases({ stage, root = document }) {
     }
   };
 
+  // Un clic sur un use-case vaut demande de lecture : s'il etait en pause, on
+  // relance avant de basculer. Dans l'ordre inverse, la couche entrante
+  // demarrerait avant d'avoir ete calee sur le debut de sa boucle.
   const select = (element) => {
     const id = element.dataset.vbSwitch;
-    if (id) stage.setActive(id);
+    if (!id) return;
+    stage.setPaused(false);
+    stage.setActive(id);
   };
 
-  const onClick = (event) => {
-    event.preventDefault();
-    select(event.currentTarget);
-  };
-
-  const onKeydown = (event) => {
-    if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') return;
-    event.preventDefault();
-    select(event.currentTarget);
-  };
-
-  for (const button of buttons) {
-    button.addEventListener('click', onClick);
-
-    // Webflow produit rarement de vrais <button> : on complete ce qui manque
-    // pour que le clavier fonctionne.
-    if (button.tagName !== 'BUTTON') {
-      if (!button.hasAttribute('role')) button.setAttribute('role', 'button');
-      if (!button.hasAttribute('tabindex')) button.setAttribute('tabindex', '0');
-      button.addEventListener('keydown', onKeydown);
-    }
-  }
+  const unbinds = buttons.map((button) => bindPress(button, select));
 
   // --- Avancee de la boucle -------------------------------------------------
 
@@ -114,10 +99,7 @@ export function initUseCases({ stage, root = document }) {
       offActive();
       offMode();
       stop();
-      for (const button of buttons) {
-        button.removeEventListener('click', onClick);
-        button.removeEventListener('keydown', onKeydown);
-      }
+      for (const unbind of unbinds) unbind();
     },
   };
 }

@@ -39,3 +39,35 @@ export class Emitter {
     }
   }
 }
+
+/**
+ * Rend un element activable a la souris et au clavier. Webflow produit
+ * rarement de vrais <button> : on complete ce qui manque (role, focus,
+ * Entree/Espace). Renvoie la fonction qui retire les ecouteurs.
+ */
+export function bindPress(element, onPress) {
+  const onClick = (event) => {
+    event.preventDefault();
+    onPress(event.currentTarget);
+  };
+
+  const onKeydown = (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') return;
+    event.preventDefault();
+    onPress(event.currentTarget);
+  };
+
+  element.addEventListener('click', onClick);
+
+  const native = element.tagName === 'BUTTON';
+  if (!native) {
+    if (!element.hasAttribute('role')) element.setAttribute('role', 'button');
+    if (!element.hasAttribute('tabindex')) element.setAttribute('tabindex', '0');
+    element.addEventListener('keydown', onKeydown);
+  }
+
+  return () => {
+    element.removeEventListener('click', onClick);
+    if (!native) element.removeEventListener('keydown', onKeydown);
+  };
+}

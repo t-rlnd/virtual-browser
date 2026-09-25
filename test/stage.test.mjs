@@ -407,3 +407,102 @@ test('loopProgress rembobine a chaque tour si la boucle est infinie', async () =
   uc1.time = 4.5;
   assert.equal(stage.loopProgress, 0.5);
 });
+
+test('la pause fige la boucle sans toucher au compteur de tours', async () => {
+  const { stage, uc1, uc2 } = makeStage();
+  const events = [];
+  stage.on('pausechange', (paused) => events.push(paused));
+  stage.mount();
+  await stage.setMode(MODES.LOOP);
+
+  uc1.completeCycle();
+  uc1.time = 4.5;
+  stage.setPaused(true);
+
+  assert.equal(uc1.looping, null);
+  assert.equal(stage.loopProgress, 0.75);
+
+  // La reprise repart de la meme image : c'est la couche qui decide de ne
+  // pas recaler, le Stage ne fait que relancer la boucle.
+  stage.setPaused(false);
+  assert.deepEqual(uc1.named('playLoop').at(-1), ['playLoop', 3, 6]);
+  assert.equal(uc1.time, 4.5);
+
+  // Un seul tour manquait avant la bascule : le compteur a survecu a la pause.
+  assert.equal(uc1.completeCycle(), false);
+  await settle(stage);
+  assert.equal(stage.activeId, 'uc2');
+  assert.ok(uc2.looping);
+  assert.deepEqual(events, [true, false]);
+});
+
+test('setPaused identique a l etat courant est sans effet', async () => {
+  const { stage, uc1 } = makeStage();
+  const events = [];
+  stage.on('pausechange', (paused) => events.push(paused));
+  stage.mount();
+  await stage.setMode(MODES.LOOP);
+  const plays = uc1.named('playLoop').length;
+
+  stage.setPaused(false);
+
+  assert.deepEqual(events, []);
+  assert.equal(uc1.named('playLoop').length, plays);
+});
+
+test('hors boucle, la pause est memorisee et l entree en boucle reste figee', async () => {
+  const { stage, uc1 } = makeStage();
+  stage.mount();
+  await stage.setMode(MODES.SCRUB);
+
+  stage.setPaused(true);
+  stage.setProgress(0.5);
+  assert.deepEqual(uc1.named('seek').at(-1), ['seek', 1.5]);
+
+  await stage.setMode(MODES.LOOP);
+  assert.equal(uc1.looping, null);
+  assert.equal(uc1.named('playLoop').length, 0);
+  assert.ok(uc1.visible);
+});
+
+test('la pause survit a une sortie de la section', async () => {
+  const { stage, uc1 } = makeStage();
+  stage.mount();
+  await stage.setMode(MODES.LOOP);
+
+  stage.setPaused(true);
+  await stage.setMode(MODES.IDLE);
+  await stage.setMode(MODES.LOOP);
+
+  assert.equal(stage.paused, true);
+  assert.equal(uc1.looping, null);
+});
+
+test('refresh en pause ne relance pas la lecture', async () => {
+  const { stage, uc1 } = makeStage();
+  stage.mount();
+  await stage.setMode(MODES.LOOP);
+  stage.setPaused(true);
+  const plays = uc1.named('playLoop').length;
+
+  stage.refresh();
+
+  assert.equal(uc1.named('playLoop').length, plays);
+  assert.equal(uc1.looping, null);
+});
+
+test('une bascule en pause affiche le debut de la boucle, fige', async () => {
+  const { stage, uc1, uc2 } = makeStage();
+  stage.mount();
+  await stage.setMode(MODES.LOOP);
+  stage.setPaused(true);
+
+  await stage.setActive('uc2');
+  await settle(stage);
+
+  assert.equal(stage.activeId, 'uc2');
+  assert.equal(uc2.time, 2);
+  assert.ok(uc2.visible);
+  assert.equal(uc2.looping, null);
+  assert.equal(uc1.visible, false);
+});

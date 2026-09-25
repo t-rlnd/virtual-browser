@@ -57,12 +57,13 @@ function rootWith(elements) {
   };
 }
 
-function fakeStage({ activeId = 'uc1', mode = 'idle', progress = 0 } = {}) {
+function fakeStage({ activeId = 'uc1', mode = 'idle', progress = 0, paused = false } = {}) {
   const listeners = new Map();
   return {
     activeId,
     mode,
     progress,
+    paused,
     on(event, callback) {
       if (!listeners.has(event)) listeners.set(event, new Set());
       listeners.get(event).add(callback);
@@ -142,4 +143,21 @@ test('[data-vb-visible-on] sans valeur est ignore, avec un avertissement', () =>
   } finally {
     console.warn = original;
   }
+});
+
+test('initProgress publie data-vb-paused sur html', () => {
+  const stage = fakeStage();
+  const element = htmlEl();
+  const progress = initProgress({ stage, element, root: rootWith([]) });
+
+  assert.equal(element.getAttribute('data-vb-paused'), 'false');
+
+  stage.emit('pausechange', true);
+  assert.equal(element.getAttribute('data-vb-paused'), 'true');
+
+  stage.emit('pausechange', false);
+  assert.equal(element.getAttribute('data-vb-paused'), 'false');
+
+  progress.destroy();
+  assert.equal(element.getAttribute('data-vb-paused'), null);
 });

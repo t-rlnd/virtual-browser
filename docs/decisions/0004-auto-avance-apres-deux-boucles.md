@@ -41,3 +41,13 @@ Infinity` restaure l'ancien comportement.
 - La barre `[data-vb-progress]` couvre la serie de tours (0 → 100 % au
   dernier), pas un tour isole. En `loopRepeats: Infinity`, elle rembobine
   encore a chaque passage.
+
+## Mise à jour — 2026-09-25
+
+- `loopRepeats` passe de 2 à **4** par défaut (demande client), directement
+  dans `src/config.js`.
+- Ajout d'un bouton Pause/Play (`[data-vb-pause]`, `src/pause.js`). La
+  pause est une 4e variable du Stage (`paused`) : figée, la couche n'achève
+  aucun tour, donc l'auto-avance attend sans logique dédiée, et le compteur
+  est conservé à la reprise. Un clic de use-case lève la pause ; la pause
+  survit à une sortie de la section.

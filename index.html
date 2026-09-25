@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Fond video pilote au scroll — demo</title>
 
-    <link rel="stylesheet" href="/src/styles/scroll-video.css" />
+    <link rel="stylesheet" href="/src/styles/entry.css" />
     <style>
       :root {
         color-scheme: dark;
@@ -217,6 +217,20 @@
         opacity: 0.7;
       }
 
+      /* Pause/Play : l'icone affichee est choisie par scene.css. */
+      .pause {
+        appearance: none;
+        align-self: flex-start;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 999px;
+        background: rgba(8, 12, 20, 0.55);
+        color: inherit;
+        font: inherit;
+        font-size: 0.85rem;
+        padding: 0.4rem 0.9rem;
+        cursor: pointer;
+      }
+
       /* Rail de la barre d'avancee : c'est l'enfant qui grandit. */
       .timeblock-rail {
         margin-top: 0.75rem;
@@ -378,6 +392,10 @@
                 <strong>Use case 2</strong>
                 <span>Illustre par la video 2</span>
                 <div class="timeblock-rail"><div data-vb-progress></div></div>
+              </button>
+              <button type="button" class="pause" data-vb-pause aria-label="Mettre la video en pause">
+                <span data-vb-pause-icon="pause" aria-hidden="true">&#10074;&#10074; Pause</span>
+                <span data-vb-pause-icon="play" aria-hidden="true">&#9654; Lecture</span>
               </button>
               </div>
               <div class="scene" data-vb-cards>

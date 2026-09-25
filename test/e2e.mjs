@@ -379,7 +379,9 @@ const main = async () => {
     );
   };
 
-  // 18 — auto-avance : deux tours du segment boucle enchainent le use-case suivant
+  // 18 — auto-avance : `loopRepeats` tours du segment boucle enchainent le
+  //      use-case suivant. Le nombre est lu sur la config reelle, jamais en dur.
+  const repeats = await page.evaluate(() => window.scrollVideo.stage.config.loopRepeats);
   await completeLoopCycle();
   const afterOneCycle = await read();
   const afterOneBar = await page.evaluate(() => {
@@ -389,21 +391,65 @@ const main = async () => {
       width: bar ? parseFloat(bar.style.width) : null,
     };
   });
+  for (let cycle = 1; cycle < repeats - 1; cycle += 1) await completeLoopCycle();
+  const beforeLastCycle = await read();
   await completeLoopCycle();
   await page.waitForTimeout(400);
-  const afterTwoCycles = await read();
+  const afterAllCycles = await read();
+  const oneCycle = 1 / repeats;
   await shot('23-auto-avance');
   record(
     23,
-    'Deux tours de boucle enchainent le use-case suivant',
+    `${repeats} tours de boucle enchainent le use-case suivant`,
     afterOneCycle.active === 'uc1' &&
-      afterOneBar.loopProgress > 0.45 &&
-      afterOneBar.loopProgress < 0.55 &&
-      afterOneBar.width > 45 &&
-      afterOneBar.width < 55 &&
-      shows(afterTwoCycles, 'uc2') &&
-      whenMatches(afterTwoCycles, 'uc2'),
-    `apres 1 tour ${show(afterOneCycle)} barre=${afterOneBar.width}% p=${afterOneBar.loopProgress} ; apres 2 tours ${show(afterTwoCycles)}`
+      Math.abs(afterOneBar.loopProgress - oneCycle) < 0.05 &&
+      Math.abs(afterOneBar.width - oneCycle * 100) < 5 &&
+      beforeLastCycle.active === 'uc1' &&
+      shows(afterAllCycles, 'uc2') &&
+      whenMatches(afterAllCycles, 'uc2'),
+    `apres 1 tour ${show(afterOneCycle)} barre=${afterOneBar.width}% p=${afterOneBar.loopProgress} ; avant le dernier ${show(beforeLastCycle)} ; apres ${repeats} tours ${show(afterAllCycles)}`
+  );
+
+  // 25 — pause : la video et l'auto-avance sont figees ; un clic sur un
+  //      use-case vaut demande de lecture et leve la pause
+  await page.click('[data-vb-pause]');
+  const pausedFirst = await read();
+  // Un tour complet ne doit rien enchainer tant que la pause tient.
+  await page.evaluate(() => {
+    const layer = window.scrollVideo.stage.active;
+    layer.hardSeek(layer.segments.loop.end - 0.0001);
+  });
+  await page.waitForTimeout(600);
+  const pausedSecond = await read();
+  const pausedUi = await page.evaluate(() => ({
+    html: document.documentElement.getAttribute('data-vb-paused'),
+    pressed: document.querySelector('[data-vb-pause]').getAttribute('aria-pressed'),
+    icons: [...document.querySelectorAll('[data-vb-pause-icon]')].map(
+      (node) => `${node.getAttribute('data-vb-pause-icon')}:${getComputedStyle(node).display}`
+    ),
+  }));
+  await shot('25-pause');
+  await page.click('[data-vb-switch="uc1"]');
+  await page.waitForTimeout(700);
+  const resumedFirst = await read();
+  await page.waitForTimeout(500);
+  const resumedSecond = await read();
+  const resumedUi = await page.evaluate(() =>
+    document.documentElement.getAttribute('data-vb-paused')
+  );
+  record(
+    25,
+    'Pause fige video et auto-avance ; un clic use-case relance la lecture',
+    pausedFirst.active === 'uc2' &&
+      pausedSecond.active === 'uc2' &&
+      pausedUi.html === 'true' &&
+      pausedUi.pressed === 'true' &&
+      pausedUi.icons.includes('pause:none') &&
+      !pausedUi.icons.includes('play:none') &&
+      shows(resumedFirst, 'uc1') &&
+      resumedUi === 'false' &&
+      resumedSecond.time !== resumedFirst.time,
+    `en pause ${show(pausedSecond)} ui=${JSON.stringify(pausedUi)} ; apres clic ${show(resumedSecond)} paused=${resumedUi}`
   );
 
   // 13 — le fond vient se caler sur [data-vb-frame] pendant la boucle

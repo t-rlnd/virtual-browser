@@ -25,6 +25,9 @@
  * :root[data-vb-mode='loop'] [data-vb-loop] { pointer-events: auto; }
  * ```
  *
+ * La pause suit le meme chemin (`data-vb-paused="true|false"` sur `<html>`) :
+ * c'est la feuille qui choisit l'icone Pause ou Play du bouton.
+ *
  * Le use-case actif est publie de la meme maniere (`data-vb-active-id` sur
  * `<html>`), et reflechi sur chaque `[data-vb-visible-on]` via `data-vb-visible`.
  * Le script ne decide pas de l'apparence : il pose l'etat, la feuille masque
@@ -34,6 +37,7 @@
 const VARIABLE = '--vb-scrub';
 const MODE_ATTRIBUTE = 'data-vb-mode';
 const ACTIVE_ID_ATTRIBUTE = 'data-vb-active-id';
+const PAUSED_ATTRIBUTE = 'data-vb-paused';
 const VISIBLE_ATTRIBUTE = 'data-vb-visible';
 
 /** Trois decimales : en deca, l'ecriture ne change plus rien a l'ecran. */
@@ -72,24 +76,29 @@ export function initProgress({ stage, element, root } = {}) {
   };
 
   const mark = (mode) => html.setAttribute(MODE_ATTRIBUTE, mode);
+  const markPaused = (paused) => html.setAttribute(PAUSED_ATTRIBUTE, String(paused));
   const markCurrent = (activeId) => paintCurrent(activeId, { element: html, when });
 
   const offProgress = stage.on('progress', paint);
   const offMode = stage.on('modechange', ({ mode }) => mark(mode));
   const offActive = stage.on('activechange', markCurrent);
+  const offPaused = stage.on('pausechange', markPaused);
 
   paint(stage.progress);
   mark(stage.mode);
   markCurrent(stage.activeId);
+  markPaused(Boolean(stage.paused));
 
   return {
     destroy() {
       offProgress();
       offMode();
       offActive();
+      offPaused();
       html.style.removeProperty(VARIABLE);
       html.removeAttribute(MODE_ATTRIBUTE);
       html.removeAttribute(ACTIVE_ID_ATTRIBUTE);
+      html.removeAttribute(PAUSED_ATTRIBUTE);
       for (const item of when) item.node.removeAttribute(VISIBLE_ATTRIBUTE);
     },
   };
