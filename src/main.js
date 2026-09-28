@@ -5,6 +5,7 @@ import { initPlayback } from './playback.js';
 import { initFrame } from './frame.js';
 import { initProgress, paintCurrent } from './progress.js';
 import { initUseCases } from './usecases.js';
+import { initPause } from './pause.js';
 import { pickWidth, prefersReducedMotion, isCompactViewport } from './env.js';
 
 const STATE_ATTRIBUTE = 'data-vb-state';
@@ -76,6 +77,7 @@ export async function init(config = resolveConfig(window.SCROLL_VIDEO_CONFIG)) {
 
   const playback = initPlayback({ stage, config, track });
   const useCases = initUseCases({ stage });
+  const pause = initPause({ stage });
 
   setState('ready');
 
@@ -89,6 +91,7 @@ export async function init(config = resolveConfig(window.SCROLL_VIDEO_CONFIG)) {
     destroy() {
       playback.destroy();
       useCases.destroy();
+      pause.destroy();
       frame.destroy();
       progress.destroy();
       stage.destroy();

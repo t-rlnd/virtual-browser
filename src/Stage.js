@@ -12,10 +12,10 @@ export const MODES = {
 /**
  * Machine a etats du fond video.
  *
- * Trois variables suffisent a decrire l'experience : quelle couche est active,
- * dans quel mode elle se trouve, et ou en est le scroll. Le scroll et les clics
- * ne font que muter cet etat ; c'est ici qu'on en deduit ce que les couches
- * doivent faire.
+ * Quatre variables suffisent a decrire l'experience : quelle couche est active,
+ * dans quel mode elle se trouve, ou en est le scroll, et si le visiteur a mis
+ * la boucle en pause. Le scroll et les clics ne font que muter cet etat ;
+ * c'est ici qu'on en deduit ce que les couches doivent faire.
  *
  * C'est ce decouplage qui rend la retroactivite gratuite : changer `activeId`
  * ne touche ni `mode` ni `progress`, donc remonter vers la section 1 apres un
@@ -32,6 +32,11 @@ export class Stage extends Emitter {
     this.activeId = config.defaultActive;
     this.mode = MODES.IDLE;
     this.progress = 0;
+
+    // Pause demandee par le visiteur. Independante du mode, comme `activeId` :
+    // elle survit a une sortie de la section et ne concerne que la boucle
+    // (le scrub reste pilote par le scroll).
+    this.paused = false;
 
     // Tours du segment boucle deja joues sur la couche active. Remis a zero
     // a chaque entree en LOOP et a chaque bascule de use-case.
@@ -110,6 +115,23 @@ export class Stage extends Emitter {
     if (mode === MODES.SCRUB) return this._enterScrub(previous);
     if (mode === MODES.LOOP) return this._enterLoop();
     return this._enterIdle();
+  }
+
+  /**
+   * Fige ou relance la boucle. Le compteur de tours n'est pas touche : figee,
+   * la couche n'acheve aucun tour, donc l'auto-avance attend d'elle-meme, et
+   * la reprise repart de la meme image avec la meme avancee de barre.
+   */
+  setPaused(paused) {
+    paused = Boolean(paused);
+    if (paused === this.paused) return;
+
+    this.paused = paused;
+    this.emit('pausechange', paused);
+
+    if (this.mode !== MODES.LOOP) return;
+    if (paused) this.active.pause();
+    else this._playActiveLoop();
   }
 
   /**
@@ -221,7 +243,15 @@ export class Stage extends Emitter {
     for (const layer of Object.values(this.layers)) layer.pause();
   }
 
+  /**
+   * Seul point d'entree de la lecture en boucle : la garde de pause couvre
+   * donc l'entree en boucle, la bascule de use-case et le deblocage iOS.
+   */
   _playActiveLoop(layer = this.active) {
+    if (this.paused) {
+      layer.pause();
+      return;
+    }
     const { start, end } = layer.segments.loop;
     layer.playLoop(start, end, () => this._onLoopCycle(layer.id));
   }

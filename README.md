@@ -2,8 +2,9 @@
 
 Un unique fond video traverse deux sections **superposees** dans un meme
 conteneur colle : il est **scrube par le scroll** sur la premiere, puis
-**boucle en autonomie** (deux tours, puis le use-case suivant) sur la
-seconde, ou un clic permet d'echanger la video avant la fin de la boucle.
+**boucle en autonomie** (quatre tours, puis le use-case suivant) sur la
+seconde, ou un clic permet d'echanger la video avant la fin de la boucle, et
+un bouton de mettre la boucle en pause.
 
 Les deux sections ne se succedent pas, elles s'empilent : c'est la progression
 du scrub qui fait disparaitre le titre, apparaitre les use-cases et venir la
@@ -16,7 +17,7 @@ ci-dessous).
 
 Sous **991 px** (tablette et mobile Webflow), ce montage est coupe : les
 deux sections s'empilent, la video boucle directement dans son cadre
-(deux tours, puis le use-case suivant), et il n'y a plus de course de
+(quatre tours, puis le use-case suivant), et il n'y a plus de course de
 scroll. Voir
 [`docs/webflow-setup.md`](docs/webflow-setup.md#5-ter-tablette-et-mobile-sous-991-px).
 
@@ -28,7 +29,7 @@ scroll. Voir
 | Mode | Quand | Ce que fait la video active |
 | --- | --- | --- |
 | `scrub` | Jusqu'a la fin de la course de scrub | En pause, son `currentTime` est ecrit par la position de scroll sur 00:00 → 00:03 |
-| `loop` | Des que le scrub s'acheve, puis tant que la piste reste visible | Lecture autonome, 2 tours du segment 00:03 → 00:06, puis le use-case suivant ; un clic bascule tout de suite |
+| `loop` | Des que le scrub s'acheve, puis tant que la piste reste visible | Lecture autonome, 4 tours du segment 00:03 → 00:06, puis le use-case suivant ; un clic bascule tout de suite ; `[data-vb-pause]` fige la boucle |
 | `idle` | Piste entierement sortie de l'ecran | Tout en pause, rien ne se decode |
 
 ## La geometrie de la piste
@@ -67,8 +68,9 @@ l'aller-retour **et** conserve la 300vh.
 
 Cliquer sur un use-case change uniquement **quelle** video est active : ni le
 mode ni la progression ne bougent. Sans clic, la boucle s'arrete apres
-`loopRepeats` tours (2 par defaut) et enchaine le use-case suivant, dans
-l'ordre du DOM, puis revient au premier.
+`loopRepeats` tours (4 par defaut) et enchaine le use-case suivant, dans
+l'ordre du DOM, puis revient au premier. Le bouton `[data-vb-pause]` fige la
+video et l'auto-avance ; un clic de use-case relance la lecture.
 
 `latchLoop: false` restaure l'aller-retour d'origine — remonter rembobine la
 video. C'est ce qui rendait le choix de use-case **retroactif** : apres avoir

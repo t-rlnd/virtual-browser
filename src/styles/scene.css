@@ -13,6 +13,10 @@
  * autant de blocs que voulu (tabs, legendes, details) les fait apparaitre
  * ensemble. Attention aux imbrications, les opacites se multiplient.
  *
+ * Bouton Pause/Play : `data-vb-pause` sur le bouton, `data-vb-pause-icon`
+ * ("pause" / "play") sur ses deux icones. Seule celle qui correspond a l'action
+ * disponible s'affiche, d'apres `data-vb-paused` pose sur <html>.
+ *
  * --vb-scrub absent (Designer) : intro visible, demo et calques tardifs a 0.
  * Compact : tout a 1, plus de glissement.
  */
@@ -43,6 +47,16 @@
 
 [data-vb-overlay] {
   opacity: var(--vb-overlay);
+}
+
+:root[data-vb-paused='true'] [data-vb-pause-icon='pause'],
+:root:not([data-vb-paused='true']) [data-vb-pause-icon='play'] {
+  display: none;
+}
+
+/* Mouvement reduit : une image fixe, rien a mettre en pause. */
+:root[data-vb-state='reduced'] [data-vb-pause] {
+  display: none;
 }
 
 :root[data-vb-compact] [data-vb-intro],

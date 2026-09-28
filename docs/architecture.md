@@ -42,13 +42,14 @@ playback.js        compact (< 991 px) ou scrub (desktop)
                                     (+ collapse piste / data-vb-locked)
       │
       ▼
-Stage.js           machine a etats : { activeId, mode, progress }
+Stage.js           machine a etats : { activeId, mode, progress, paused }
       │            n'ecrit jamais dans le DOM, ne parle qu'aux couches
       │
       ├──────────────► layers/Mp4VideoLayer.js   seek / play / fondu sur la <video>
       ├──────────────► frame.js                  --vb-frame-* : le fond se cale dans son cadre
-      ├──────────────► progress.js               --vb-scrub, data-vb-mode, data-vb-active-id / [data-vb-visible-on]
-      └──────────────► usecases.js               boutons actifs + barres d'avancee
+      ├──────────────► progress.js               --vb-scrub, data-vb-mode, data-vb-active-id, data-vb-paused / [data-vb-visible-on]
+      ├──────────────► usecases.js               boutons actifs + barres d'avancee
+      └──────────────► pause.js                  bouton Pause/Play (aria-pressed)
 ```
 
 Le sens des fleches ne s'inverse jamais. `usecases.js` peut demander une
@@ -58,24 +59,30 @@ aussi basculer tout seul, au bout de `loopRepeats` tours de boucle. Dans
 les deux cas l'affichage suit `activechange`, y compris si une bascule est
 annulee en vol.
 
-## Les trois etats du Stage
+## Les quatre etats du Stage
 
-Tout le comportement tient dans ces trois variables :
+Tout le comportement tient dans ces quatre variables :
 
 | Variable | Ce qu'elle dit | Qui la change |
 | --- | --- | --- |
 | `progress` | ou en est le scroll dans la piste, de 0 a 1 | `scroll.js` |
 | `mode` | `scrub`, `loop` ou `idle` | `scroll.js` |
 | `activeId` | quelle video est affichee | `usecases.js` (au clic) ; `Stage` (fin de boucle) |
+| `paused` | la boucle est figee par le visiteur | `pause.js` (bouton) ; `usecases.js` (un clic de use-case la leve) |
 
 Elles sont **independantes**. Changer `activeId` ne touche ni au mode ni a la
 progression : c'est ce qui rend la bascule de use-case gratuite a implementer,
 et retroactive quand `latchLoop` est a `false`.
 
+`paused` ne vaut qu'en `loop` (le scrub reste pilote par le scroll) mais
+survit aux changements de mode : sortir de la section puis revenir laisse la
+boucle figee. Le compteur de tours n'est pas touche — figee, la couche
+n'acheve aucun tour, donc l'auto-avance attend d'elle-meme.
+
 | Mode | La couche active |
 | --- | --- |
 | `scrub` | en pause, son `currentTime` est ecrit par la progression |
-| `loop` | lecture autonome, `loopRepeats` tours (defaut 2) puis le use-case suivant |
+| `loop` | lecture autonome, `loopRepeats` tours (defaut 4) puis le use-case suivant ; figee si `paused` |
 | `idle` | en pause, rien ne se decode |
 
 Sous 991 px (`compactMaxWidth`), `scroll.js` n'est jamais branche : la
@@ -93,11 +100,12 @@ visibilite de `[data-vb-loop]`, et l'intro scrubee n'est pas lue. Voir
 | `src/scroll.js` | GSAP ScrollTrigger : course de scrub, verrou de boucle, collapse de la piste a 100dvh | le declenchement se fait au mauvais moment, ou remonter traverse du scroll mort |
 | `src/compact.js` | visibilite de la section demo → boucle ou pause | la video tourne hors ecran, ou pas du tout |
 | `src/frame.js` | le fond quitte le plein ecran pour `[data-vb-frame]` | le recadrage est mal place |
-| `src/progress.js` | publie `--vb-scrub`, `data-vb-mode`, `data-vb-active-id` sur `<html>`, et `data-vb-visible` sur chaque `[data-vb-visible-on]` | les calques ne s'animent pas, ou les piles restent toutes visibles |
+| `src/progress.js` | publie `--vb-scrub`, `data-vb-mode`, `data-vb-active-id`, `data-vb-paused` sur `<html>`, et `data-vb-visible` sur chaque `[data-vb-visible-on]` | les calques ne s'animent pas, ou les piles restent toutes visibles |
 | `src/usecases.js` | boutons de use-case et barres d'avancee (`loopProgress`) | un clic ne fait rien, ou la barre rembobine |
+| `src/pause.js` | bouton `[data-vb-pause]` : bascule `stage.paused`, reflete `aria-pressed` | la pause ne repond pas |
 | `src/main.js` | assemblage, garde-fous, prechargement, deblocage iOS | rien ne demarre |
 | `src/env.js` | reduced-motion, save-data, largeur a telecharger, breakpoint compact | la mauvaise definition est servie |
-| `src/utils.js` | `clamp`, `wait`, et un emetteur d'evenements minimal | jamais, ou presque |
+| `src/utils.js` | `clamp`, `wait`, `bindPress` (clic + clavier) et un emetteur d'evenements minimal | jamais, ou presque |
 | `src/layers/VideoLayer.js` | le **contrat** d'une couche d'image | on veut un autre moteur de rendu |
 | `src/layers/Mp4VideoLayer.js` | l'implementation `<video>` + MP4 | le scrub saccade, un seek ne rend rien |
 | `src/styles/entry.css` | assemble `scroll-video.css` + `scene.css` pour le bundle | le CSS de prod / dev ne sort pas | 

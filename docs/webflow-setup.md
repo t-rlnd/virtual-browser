@@ -31,9 +31,12 @@ body
 │       └── div  "Use cases"    data-vb-loop           absolute · inset 0 · z-index 2
 │           ├── div             data-vb-overlay        tabs · opacite --vb-overlay
 │           │   ├── div / button  data-vb-switch="uc1" fond transparent
-│           │   │   └── div       data-vb-progress     largeur 0 → 100 % sur les 2 tours
-│           │   └── div / button  data-vb-switch="uc2"
-│           │       └── div       data-vb-progress
+│           │   │   └── div       data-vb-progress     largeur 0 → 100 % sur les 4 tours
+│           │   ├── div / button  data-vb-switch="uc2"
+│           │   │   └── div       data-vb-progress
+│           │   └── div / button  data-vb-pause        Pause/Play (optionnel)
+│           │       ├── icone     data-vb-pause-icon="pause"
+│           │       └── icone     data-vb-pause-icon="play"
 │           ├── div             data-vb-cards          colonne · glisse avec --vb-demo
 │           │   ├── div           data-vb-visible-on="uc1"  cards + legende use-case 1
 │           │   └── div           data-vb-visible-on="uc2"  cards + legende use-case 2
@@ -267,7 +270,7 @@ cote classes :
 
 Un element portant `data-vb-progress` **a l'interieur** d'un bouton voit sa
 largeur ecrite a chaque image, de `0%` au debut de la serie de tours a `100%`
-a la fin du dernier (`loopRepeats`, 2 par defaut). Elle ne rembobine plus a
+a la fin du dernier (`loopRepeats`, 4 par defaut). Elle ne rembobine plus a
 chaque passage : a mi-serie elle est a 50 %. C'est la position reelle de la
 video, etagee par le Stage, qui est lue, pas un minuteur : la barre reste
 juste meme si le decodage prend du retard.
@@ -294,6 +297,35 @@ section sortie de l'ecran).
 En plus de la largeur, la valeur brute est publiee en variable CSS
 `--vb-progress` (0 a 1) sur le meme element, de quoi piloter autre chose sans
 repasser par le JS.
+
+### Le bouton Pause/Play (optionnel)
+
+Un element portant `data-vb-pause` (sans valeur) met la boucle en pause ou la
+relance. En pause, la video est figee **et** l'auto-avance aussi : la barre
+d'avancee s'arrete ou elle en est, et la reprise repart de la meme image.
+
+```
+div / button          data-vb-pause
+├── icone             data-vb-pause-icon="pause"    affichee pendant la lecture
+└── icone             data-vb-pause-icon="play"     affichee pendant la pause
+```
+
+- N'importe quel element : `Button`, `Link block`, `Div block` (le script
+  complete `role` / `tabindex` / clavier comme pour les use-cases).
+- Les deux icones (SVG, image, texte) sont dans le bouton ; la bascule entre
+  elles est livree par le bundle, **aucun CSS a ecrire**.
+- Bouton fait d'icones seules : le script pose `aria-label="Mettre la video
+  en pause"` s'il n'en a pas. Un `aria-label` pose dans le Designer est garde.
+- L'etat est reflete par `aria-pressed="true|false"` sur le bouton et par
+  `data-vb-paused="true|false"` sur `<html>` (styler un etat en pause :
+  `:root[data-vb-paused='true'] …`).
+- Cliquer sur un use-case pendant la pause relance la lecture.
+- La pause est gardee si le visiteur sort de la section et y revient.
+- Masque automatiquement en `prefers-reduced-motion` (image fixe, rien a
+  mettre en pause).
+
+Le placer dans `data-vb-overlay` pour qu'il apparaisse avec les tabs, et donc
+qu'il ne soit cliquable qu'en mode boucle.
 
 ### Cards, legendes, calques propres a un use-case
 
@@ -408,6 +440,7 @@ chaque `[data-vb-visible-on]`.
 | `data-vb-mode` | `scrub`, `loop` ou `idle` | Tout ce qui ne s'interpole pas : `pointer-events`, `visibility` |
 | `data-vb-locked` | `true` une fois la boucle atteinte | Collapse de la piste a 100dvh ; masquer l'Intro. Reste pose en `idle` |
 | `data-vb-active-id` | `uc1`, `uc2`, … | Quel use-case est affiche ; cible CSS `:root[data-vb-active-id='uc1']` |
+| `data-vb-paused` | `true` / `false` | Boucle mise en pause par le visiteur ; choisit l'icone de `[data-vb-pause]` |
 | `data-vb-visible` | `true` / `false` | Pose sur chaque `[data-vb-visible-on]`, pas sur `<html>` |
 | `data-vb-state` | `loading`, `ready`, `error`, `reduced` | Les styles de chargement |
 | `data-vb-compact` | `true` sous 991 px, absent sinon | Accrocher le layout empile sans dupliquer le breakpoint |

@@ -7,8 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Fond video pilote au scroll pour Webflow (pas de framework, JS vanilla + GSAP
 ScrollTrigger). Un unique fond video traverse deux sections superposees dans
 un meme conteneur colle : scrub par le scroll sur la premiere, boucle en
-autonomie (2 tours puis le use-case suivant) sur la seconde, avec bascule
-manuelle a tout moment. Le scroll n'ecrit qu'une progression 0→1
+autonomie (4 tours puis le use-case suivant) sur la seconde, avec bascule
+manuelle et pause/lecture a tout moment. Le scroll n'ecrit qu'une progression 0→1
 (`--vb-scrub`) et tout — timecode video, position du cadre, apparition des
 calques — en decoule.
 
@@ -57,7 +57,7 @@ numeros d'image (`fichier.mp4:start:end`), pas en secondes.
 Flux de donnees a sens unique, jamais inverse :
 
 ```
-scroll.js | compact.js -> Stage.js -> { Mp4VideoLayer.js, frame.js, progress.js, usecases.js }
+scroll.js | compact.js -> Stage.js -> { Mp4VideoLayer.js, frame.js, progress.js, usecases.js, pause.js }
 ```
 
 - **`playback.js`** — choisit le cablage : `scroll.js` au-dessus de 991 px,
@@ -66,11 +66,12 @@ scroll.js | compact.js -> Stage.js -> { Mp4VideoLayer.js, frame.js, progress.js,
   `progress` (0→1) et en `mode`.
 - **`compact.js`** — pas de scrub : progression figee a 1, boucle dans le
   cadre, pause quand `[data-vb-loop]` quitte l'ecran.
-- **`Stage.js`** — machine a etats pure `{ activeId, mode, progress }`.
+- **`Stage.js`** — machine a etats pure `{ activeId, mode, progress, paused }`.
   N'ecrit jamais dans le DOM, ne parle qu'aux couches. Les trois variables
   sont independantes (changer `activeId` ne touche ni au mode ni a la
   progression). En `loop`, compte les tours et enchaine le use-case suivant
-  apres `loopRepeats` (defaut 2).
+  apres `loopRepeats` (defaut 4). `paused` fige la boucle sans toucher au
+  compteur (donc gele aussi l'auto-avance) et survit aux changements de mode.
 - **`layers/VideoLayer.js`** — contrat abstrait d'une couche d'image
   (`seek`, `playLoop`, `show`, `hide`). `playLoop` notifie chaque fin de
   tour via `onCycle`. `layers/Mp4VideoLayer.js` l'implemente
@@ -80,14 +81,18 @@ scroll.js | compact.js -> Stage.js -> { Mp4VideoLayer.js, frame.js, progress.js,
 - **`frame.js`** — sort le fond du plein ecran pour le caler sur
   `[data-vb-frame]`, pilote par `dockRange` (fonction de la progression, pas
   d'une duree).
-- **`progress.js`** — publie `--vb-scrub`, `data-vb-mode` et `data-vb-active-id`
-  sur `<html>`, et `data-vb-visible` sur chaque `[data-vb-visible-on]` ;
+- **`progress.js`** — publie `--vb-scrub`, `data-vb-mode`, `data-vb-active-id`
+  et `data-vb-paused` sur `<html>`, et `data-vb-visible` sur chaque `[data-vb-visible-on]` ;
   `scene.css` anime intro / demo / tabs a partir de `--vb-scrub`.
 - **`usecases.js`** — boutons de use-case. Ne modifie jamais l'affichage
   lui-meme : demande une bascule (`stage.setActive(...)`) et attend
-  l'evenement `activechange` du Stage avant de refleter le changement.
+  l'evenement `activechange` du Stage avant de refleter le changement. Un
+  clic leve la pause avant de basculer (`setPaused(false)` puis `setActive`).
+- **`pause.js`** — bouton `[data-vb-pause]` : bascule `stage.setPaused(...)`,
+  reflete `aria-pressed` au retour de `pausechange`. Les icones
+  `[data-vb-pause-icon]` sont choisies par `scene.css`.
 - **`config.js`** — reglages globaux (`CONFIG`) + lecture des attributs
-  `data-vb-*` d'une balise `<video>`. `loopRepeats` (defaut 2) borne la
+  `data-vb-*` d'une balise `<video>`. `loopRepeats` (defaut 4) borne la
   boucle avant l'auto-avance. Le decoupage par video (fichier, image de
   transition, fin de boucle) vit **sur la balise dans le DOM**, pas dans ce
   fichier — source de verite unique, ajouter un use-case ne demande aucun
