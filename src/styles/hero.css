@@ -1,0 +1,18 @@
+/**
+ * Section Heros (`[data-vb-hero]`, voir src/hero.js).
+ *
+ * La mise en page reste dans le Designer, y compris l'empilement des textes
+ * (les `[data-vb-hero-step]` dans la meme cellule de grille). Ne vit ici que
+ * l'etat des textes avant que le script ne prenne la main.
+ */
+
+/* Avant le script (ou sans lui) : seule la premiere etape est lisible. */
+[data-vb-hero-step]:not([data-vb-hero-step='0']) {
+  visibility: hidden;
+}
+
+[data-vb-hero-video] {
+  object-fit: cover;
+  /* Empeche l'overlay de lecture natif d'iOS d'apparaitre. */
+  pointer-events: none;
+}

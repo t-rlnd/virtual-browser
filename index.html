@@ -37,6 +37,55 @@
        * Designer Webflow. La feuille de style du script ne pose que le fond,
        * plus le collapse apres verrou.
        */
+      /**
+       * Section Heros : piste de 400vh, soit 300vh de course et 100vh par
+       * texte. Le conteneur colle porte la video et la pile de textes.
+       */
+      [data-vb-hero] {
+        position: relative;
+        height: 400vh;
+      }
+
+      [data-vb-hero-inner] {
+        position: sticky;
+        top: 0;
+        height: 100dvh;
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+      }
+
+      [data-vb-hero-video] {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+      }
+
+      /* Empilement des textes : fait dans le Designer sur le site reel. */
+      [data-vb-hero-copy] {
+        display: grid;
+      }
+      [data-vb-hero-step] {
+        grid-area: 1 / 1;
+      }
+      [data-vb-hero-copy] {
+        position: relative;
+        z-index: 1;
+        max-width: 44rem;
+        padding: 0 1rem;
+        text-align: center;
+      }
+
+      [data-vb-hero-copy] h1,
+      [data-vb-hero-copy] .h1 {
+        margin: 0 0 1rem;
+        font-size: clamp(2.25rem, 6vw, 4.5rem);
+        font-weight: 700;
+        line-height: 1.05;
+      }
+
       [data-vb-scrub] {
         position: relative;
         z-index: 1;
@@ -324,6 +373,32 @@
     </div>
 
     <!--
+      Section Heros : video scrubbee sur toute la piste, trois textes empiles
+      au meme endroit qui basculent a 1/3 et 2/3.
+    -->
+    <section data-vb-hero>
+      <div data-vb-hero-inner>
+        <canvas data-vb-hero-video></canvas>
+        <video data-vb-hero-video data-vb-asset="hero" muted playsinline preload="auto"></video>
+
+        <div data-vb-hero-copy>
+          <div data-vb-hero-step="0">
+            <h1>Le navigateur qui travaille pour vous</h1>
+            <p class="lede">Premier texte, de 0 a 1/3 de la video. Le titre reste en place.</p>
+          </div>
+          <div data-vb-hero-step="1">
+            <div class="h1">Chaque onglet devient un agent</div>
+            <p class="lede">Deuxieme texte, de 1/3 a 2/3. Il remplace le premier ligne par ligne.</p>
+          </div>
+          <div data-vb-hero-step="2">
+            <div class="h1">Vous gardez la main</div>
+            <p class="lede">Troisieme texte, de 2/3 a la fin, avant la suite de la page.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!--
       Une seule piste de 300vh, un seul conteneur colle, et dedans trois
       calques empiles : le fond video, le titre, puis la section des use-cases.
       Ce sont les opacites qui font passer de l'un a l'autre, pas le flux.
@@ -435,6 +510,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/SplitText.min.js"></script>
     <script type="module" src="/demo/demo.js"></script>
   </body>
 </html>

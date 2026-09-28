@@ -102,6 +102,8 @@ const main = async () => {
     const travel = scrub.offsetHeight - viewport;
 
     return {
+      // Le Heros peut preceder Protocol : le scrub ne part pas forcement de 0.
+      scrubStart: scrub.offsetTop,
       // Le scrub s'acheve une reserve avant la fin de la course : c'est la que
       // la boucle prend la main, section 2 encore sous les yeux.
       scrubEnd: scrub.offsetTop + travel - viewport * reserve,
@@ -206,6 +208,10 @@ const main = async () => {
     await target.waitForTimeout(settle);
   };
 
+  /** Position de scroll a une fraction du scrub de Protocol. */
+  const scrubAt = (fraction) =>
+    geometry.scrubStart + (geometry.scrubEnd - geometry.scrubStart) * fraction;
+
   /** Geometrie de la piste, a relire apres le collapse (la 300vh initiale est perimee). */
   const readTrack = (target = page) =>
     target.evaluate(() => {
@@ -245,6 +251,72 @@ const main = async () => {
   const show = (state) =>
     `mode=${state.mode} active=${state.active} affiche=${state.visibleId} current=${state.current} progress=${state.progress} currentTime=${state.time} luminance=${state.luminance}`;
 
+  /**
+   * 26 a 28 — Section Heros. Trois textes empiles qui basculent a 1/3 et 2/3
+   * de la piste ; le titre ne doit pas bouger d'un pixel, et la video suit.
+   */
+  const heroTrack = await page.evaluate(() => {
+    const root = document.querySelector('[data-vb-hero]');
+    return root ? { top: root.offsetTop, travel: root.offsetHeight - window.innerHeight } : null;
+  });
+
+  if (heroTrack) {
+    const heroAt = async (fraction) => {
+      await scrollTo(heroTrack.top + heroTrack.travel * fraction, 1600);
+      return page.evaluate(() => {
+        const root = document.querySelector('[data-vb-hero]');
+        const shown = [...root.querySelectorAll('[data-vb-hero-step]')].filter(
+          (step) => getComputedStyle(step).visibility !== 'hidden'
+        );
+        const title = shown[0]?.querySelector('h1, .h1')?.getBoundingClientRect();
+        return {
+          active: root.getAttribute('data-vb-hero-active'),
+          shown: shown.map((step) => step.getAttribute('data-vb-hero-step')),
+          hidden: [...root.querySelectorAll('[data-vb-hero-step][aria-hidden="true"]')].length,
+          titleTop: title ? Math.round(title.top) : null,
+          time: window.scrollVideoHero?.layer?.currentTime ?? null,
+        };
+      });
+    };
+
+    const samples = [];
+    for (const fraction of [0.15, 0.5, 0.85]) samples.push(await heroAt(fraction));
+    await shot('26-heros');
+
+    record(
+      26,
+      'Heros : le texte bascule a 1/3 et 2/3, un seul bloc visible a la fois',
+      samples.map((sample) => sample.active).join() === '0,1,2' &&
+        samples.every((sample, index) => sample.shown.join() === String(index) && sample.hidden === 2),
+      samples.map((sample) => `active=${sample.active} visibles=[${sample.shown}]`).join(' | ')
+    );
+
+    record(
+      27,
+      'Heros : le titre reste a la meme place d une etape a l autre',
+      samples.every((sample) => sample.titleTop !== null && Math.abs(sample.titleTop - samples[0].titleTop) <= 1),
+      `titre.top = ${samples.map((sample) => sample.titleTop).join(' / ')}`
+    );
+
+    record(
+      28,
+      'Heros : la video avance avec le scroll',
+      samples.every((sample) => sample.time !== null) &&
+        samples[0].time < samples[1].time &&
+        samples[1].time < samples[2].time,
+      `currentTime = ${samples.map((sample) => sample.time?.toFixed(3)).join(' / ')}`
+    );
+
+    // Retour arriere : l'etape 0 revient, par la meme animation inversee.
+    const back = await heroAt(0.05);
+    record(
+      29,
+      'Heros : remonter ramene le premier texte',
+      back.active === '0' && back.shown.join() === '0',
+      `active=${back.active} visibles=[${back.shown}]`
+    );
+  }
+
   // 1 — etat initial
   await scrollTo(0);
   let state = await read();
@@ -252,7 +324,7 @@ const main = async () => {
   record(1, 'Etat initial en haut de page', state.mode === 'scrub' && shows(state, 'uc1') && state.time < 0.1 && whenMatches(state, 'uc1'), show(state));
 
   // 2 — scrub vers l'avant
-  await scrollTo(geometry.scrubEnd / 2);
+  await scrollTo(scrubAt(0.5));
   const middle = await read();
   await shot('02-scrub-milieu');
   record(2, 'Le scroll fait avancer le timecode', middle.time > 0.5 && scrubbedTo(middle, middle.progress), show(middle));
@@ -494,7 +566,7 @@ const main = async () => {
   await scrollTo(geometry.scrubEnd, 1600);
   await page.click('[data-vb-switch="uc2"]');
   await page.waitForTimeout(700);
-  await scrollTo(geometry.scrubEnd / 2, 1600);
+  await scrollTo(scrubAt(0.5), 1600);
   const undocked = await read();
   const expected = dockFor(undocked.progress);
   await shot('15-verrou-relache');
@@ -537,7 +609,7 @@ const main = async () => {
   const staging = [];
 
   for (const fraction of [0, 0.15, 0.35, 0.5, 0.7, 0.9]) {
-    await scrollTo(geometry.scrubEnd * fraction, 1200);
+    await scrollTo(scrubAt(fraction), 1200);
     const sample = await page.evaluate(() => {
       const opacity = (selector) => {
         const node = document.querySelector(selector);

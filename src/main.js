@@ -7,6 +7,8 @@ import { initProgress, paintCurrent } from './progress.js';
 import { initUseCases } from './usecases.js';
 import { initPause } from './pause.js';
 import { pickWidth, prefersReducedMotion, isCompactViewport } from './env.js';
+import { installUnlock } from './unlock.js';
+import { startHero } from './hero.js';
 
 const STATE_ATTRIBUTE = 'data-vb-state';
 
@@ -19,7 +21,9 @@ export async function init(config = resolveConfig(window.SCROLL_VIDEO_CONFIG)) {
   const track = document.querySelector('[data-vb-scrub]');
 
   if (!stageElement || !track) {
-    console.warn(
+    // Une page peut ne porter que le Heros : l'absence de Protocol n'y est
+    // pas un oubli, inutile d'alerter.
+    if (!document.querySelector('[data-vb-hero]')) console.warn(
       '[scroll-video] [data-vb-stage] ou [data-vb-scrub] introuvable, animation desactivee'
     );
     setState('error');
@@ -58,7 +62,7 @@ export async function init(config = resolveConfig(window.SCROLL_VIDEO_CONFIG)) {
 
   // Arme le deblocage iOS avant tout chargement : sur iOS le decodeur reste
   // inerte tant qu'aucune lecture n'a ete autorisee, et les seeks ne rendent rien.
-  installUnlock(stage, layers);
+  installUnlock(Object.values(layers), () => stage.refresh());
 
   try {
     await layers[config.defaultActive].preload();
@@ -154,25 +158,6 @@ function showPoster(stageElement, config, width) {
 }
 
 /**
- * Le tout premier geste peut survenir avant que la source ne soit chargee,
- * auquel cas play() echoue. Les ecouteurs restent donc en place jusqu'a un
- * deblocage reellement reussi.
- */
-function installUnlock(stage, layers) {
-  const events = ['pointerdown', 'touchstart', 'keydown'];
-
-  const unlock = async () => {
-    const unlocked = await Promise.all(Object.values(layers).map((layer) => layer.unlock()));
-    stage.refresh();
-    if (unlocked.every(Boolean)) {
-      for (const event of events) window.removeEventListener(event, unlock);
-    }
-  };
-
-  for (const event of events) window.addEventListener(event, unlock, { passive: true });
-}
-
-/**
  * La seconde video pese autant que la premiere, et un visiteur qui n'atteint
  * jamais la section 2 n'en a aucun usage. On ne la charge donc qu'a l'approche
  * de la piste, ou des qu'un use-case est survole — ce qui arrive toujours avant
@@ -209,8 +194,22 @@ function preloadOnApproach(layers, track) {
   }
 }
 
+/**
+ * Heros et Protocol demarrent chacun de leur cote : l'un ne doit pas attendre
+ * le chargement de l'autre, ni tomber si l'autre est absent de la page.
+ */
+function boot() {
+  const config = resolveConfig(window.SCROLL_VIDEO_CONFIG);
+  startHero(config)
+    .then((hero) => {
+      window.scrollVideoHero = hero;
+    })
+    .catch((error) => console.error('[scroll-video]', error));
+  init(config);
+}
+
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => init(), { once: true });
+  document.addEventListener('DOMContentLoaded', boot, { once: true });
 } else {
-  init();
+  boot();
 }

@@ -11,6 +11,10 @@
 
 set -euo pipefail
 
+# Nombres toujours au format point decimal : sous une locale francaise, printf
+# et awk ecriraient "20,0333", que ffmpeg refuse.
+export LC_ALL=C
+
 if ! command -v ffprobe >/dev/null 2>&1; then
   echo "ffprobe est introuvable. Installation : brew install ffmpeg" >&2
   exit 1
