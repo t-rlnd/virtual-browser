@@ -3,7 +3,7 @@
 ## En cours
 
 ## À faire
-- [ ] Héros dans le Designer Webflow (structure `docs/webflow-setup.md` §0), ajouter SplitText au footer, puis `pnpm build` + tag — P1
+- [ ] Webflow : passer head/footer sur `@v1.10.0` (avec la ligne SplitText) une fois le tag poussé — P1
 - [ ] Dans le Designer Webflow : poser le bouton `data-vb-pause` (+ icônes `data-vb-pause-icon="pause"` / `"play"`) dans `data-vb-overlay`, puis passer head/footer sur `@v1.9.0` — P1
 - [ ] Dans le Designer Webflow : tablette/mobile (< 991 px), intro et demo en relative empilées, opacités à 1, piste en hauteur auto (plus de sticky 300vh) — P1
 - [ ] Remettre les deux URL jsDelivr (retirer `http://localhost:3000`) dans le site Webflow avant toute publication en production — P1
@@ -11,6 +11,7 @@
 - [ ] Réévaluer `jumpFadeMs` avec les vraies vidéos (clignement 150 ms vs cut sec vs rembobinage accéléré au passage loop → scrub) — P3
 
 ## Fait
+- [x] Héros posé dans le Designer Webflow et vérifié en `?dev`
 - [x] Vidéo Héros 1920 encodée (1 image sur 3, CRF 28) et téléversée sur Bunny, vérifiée par `check-cdn.sh`
 - [x] Attributs `data-vb-*` alignés sur le markup Webflow (`data-vb-id`, `data-vb-switch`, `data-vb-visible-on`, ids `uc1`/`uc2`)
 - [x] Dans le Designer Webflow : dupliquer cards et légende, poser `data-vb-visible-on="uc1"` / `"uc2"` sur chaque wrapper
