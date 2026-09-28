@@ -97,7 +97,12 @@ scroll.js | compact.js -> Stage.js -> { Mp4VideoLayer.js, frame.js, progress.js,
   transition, fin de boucle) vit **sur la balise dans le DOM**, pas dans ce
   fichier — source de verite unique, ajouter un use-case ne demande aucun
   rebuild.
-- **`main.js`** — assemblage, garde-fous, prechargement, deblocage iOS.
+- **`main.js`** — assemblage, garde-fous, prechargement. Demarre le Heros
+  et Protocol independamment (`boot()`).
+- **`hero.js`** — section Heros, hors Stage : ScrollTrigger sur
+  `[data-vb-hero]` → `Mp4VideoLayer.seek` + etape de texte a 1/3 et 2/3,
+  bascule ligne par ligne via SplitText. Voir ADR 0007.
+- **`unlock.js`** — deblocage iOS au premier geste, partage par les deux.
 
 Trois points non evidents, commentes sur place dans le code :
 `Mp4VideoLayer._drainSeek` (un seul seek en vol a la fois, sinon Safari

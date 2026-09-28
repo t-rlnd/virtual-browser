@@ -55,6 +55,83 @@ piste 300vh
     └── reserve  100vh   la video boucle dans son cadre  (loopReserve: 1)
 ```
 
+## 0. La section Heros (en haut de page)
+
+Independante de Protocol : une page peut porter l'une, l'autre ou les deux.
+Une video scrubbee par le scroll derriere un titre **fixe**, dont le texte
+change a 1/3 et 2/3 de la video.
+
+```
+body
+├── section  "Hero"             data-vb-hero            la piste · height: 400vh · relative
+│   └── div                     data-vb-hero-inner      sticky · top 0 · 100dvh · overflow hidden
+│       ├── HTML Embed : <video data-vb-hero-video data-vb-asset="hero"
+│       │                       muted playsinline preload="auto"></video>
+│       │                                               absolute · inset 0 · 100 % × 100 % · z-index 0
+│       ├── div  "Voile"        (optionnel, degrade pour la lisibilite)  z-index 1
+│       └── div                 data-vb-hero-copy       z-index 2
+│           ├── div             data-vb-hero-step="0"
+│           │   ├── H1          classe "hero-title"
+│           │   └── Paragraph
+│           ├── div             data-vb-hero-step="1"
+│           │   ├── div         classe "hero-title"     (pas un 2e H1)
+│           │   └── Paragraph
+│           └── div             data-vb-hero-step="2"
+│               ├── div         classe "hero-title"
+│               └── Paragraph
+├── div  "Protocol"             data-vb-scrub           ...
+```
+
+**Les textes vivent dans le conteneur colle, pas dans des sous-sections.**
+Dans une sous-section, ils defileraient avec elle. Empiles dans la meme
+cellule de grille (la feuille du bundle s'en charge), le bloc prend la
+hauteur du plus long des trois : le titre reste au pixel pres a la meme
+place, quelle que soit la longueur de chaque texte.
+
+**Un seul vrai H1**, a l'etape 0, pour le SEO. Les etapes 1 et 2 portent
+une `div` avec **la meme classe** que le H1 : meme taille, meme graisse,
+**memes marges** — un H1 garde ses marges par defaut la ou une div n'en a
+pas, et le titre sauterait de quelques pixels a chaque bascule.
+
+### La hauteur de piste
+
+Le Heros occupe 100vh a l'ecran ; la course de scroll vaut
+`hauteur de piste - 100vh`, partagee en trois :
+
+| Piste | Course | Par texte |
+| --- | --- | --- |
+| 300vh | 200vh | ~67vh, rapide : un coup de molette peut sauter un texte |
+| **400vh** | 300vh | **100vh, un ecran de scroll par message** (recommande) |
+| 500vh | 400vh | ~133vh, pose |
+
+C'est le seul reglage de rythme, modifiable dans le Designer sans rebuild.
+
+### La video
+
+- HTML Embed obligatoire (pas l'element Video du Designer), **sans `src`** :
+  le script choisit la largeur et pose l'URL Bunny
+  (`<base>/hero-1280.mp4`, poster `hero-1280-poster.jpg`).
+- `data-vb-asset` : racine du fichier sur Bunny, `hero` par defaut.
+- `data-vb-hero-end` (optionnel) : image ou le scrub s'arrete. A defaut,
+  toute la video est parcourue.
+- Tablette et mobile : le scrub est conserve (pas de mode compact ici).
+
+### Ce que le script publie
+
+Sur `[data-vb-hero]` :
+
+- `data-vb-hero-active="0|1|2"` : l'etape affichee, pour styler autre chose
+  que les textes (un indicateur de progression, par exemple).
+- `data-vb-hero-state` : `loading`, `ready`, `reduced` ou `error`.
+
+Les etapes masquees recoivent `aria-hidden="true"`. Avant le chargement du
+script, seule l'etape 0 est visible.
+
+La bascule decoupe titre et paragraphe en lignes (SplitText, charge par
+`footer.html`) : les lignes sortantes glissent vers le haut, les entrantes
+arrivent par le bas avec un leger decalage. En remontant, le sens s'inverse.
+Le decalage se regle par `hero.staggerMs` dans la config (60 ms).
+
 ## 1. Le fond video
 
 Un unique bloc `div` avec l'attribut `data-vb-stage`, laisse **sans valeur**.
@@ -535,7 +612,7 @@ jsDelivr, les videos de Bunny. A retenir pour la maintenance :
 
 Le second cas est le piege : changer le CDN video impose de republier le code.
 
-L'ordre du footer compte : `gsap`, puis `ScrollTrigger`, puis `scroll-video.js`.
+L'ordre du footer compte : `gsap`, puis `ScrollTrigger` et `SplitText`, puis `scroll-video.js`.
 
 ## 8. Developper contre le site, sans republier
 
@@ -564,6 +641,10 @@ la feuille et le script viendraient de deux versions differentes.
 ## Verifier que tout est branche
 
 Une fois publie, ouvrir la console :
+
+- Heros : `window.scrollVideoHero.step` renvoie 0, 1 ou 2 selon le scroll,
+  et `document.querySelector('[data-vb-hero]').dataset.vbHeroState` vaut
+  `ready`. `error` signale le plus souvent un MP4 absent de Bunny.
 
 - `window.scrollVideo.stage.mode` renvoie `scrub`, `loop` ou `idle`
 - `document.documentElement.getAttribute('data-vb-locked')` vaut `true`
