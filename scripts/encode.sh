@@ -31,6 +31,10 @@
 
 set -euo pipefail
 
+# Nombres toujours au format point decimal : sous une locale francaise, printf
+# et awk ecriraient "20,0333", que ffmpeg refuse.
+export LC_ALL=C
+
 WIDTHS="${WIDTHS:-750 1280 1920}"
 CRF="${CRF:-24}"
 SCRUB_DIVISOR="${SCRUB_DIVISOR:-1}"
