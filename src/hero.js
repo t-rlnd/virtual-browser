@@ -211,7 +211,11 @@ function createTexts({ gsap, SplitText, steps, stagger, animate }) {
   const setVisible = (index, visible) => {
     const step = steps[index];
     if (!step) return;
-    gsap.set(step, { autoAlpha: visible ? 1 : 0 });
+    // Style direct plutot que `gsap.set` : plusieurs `set` du meme element dans
+    // un meme tick peuvent etre differes par GSAP, et le dernier ne pas gagner.
+    // `visible` explicite, pas '' : la feuille de style masque les etapes 1+
+    // avant le script.
+    step.style.visibility = visible ? 'visible' : 'hidden';
     // Les blocs masques restent dans le DOM (ils donnent sa hauteur a la
     // pile) : on les retire de l'arbre d'accessibilite.
     if (visible) step.removeAttribute('aria-hidden');
