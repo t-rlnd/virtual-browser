@@ -83,10 +83,12 @@ body
 ```
 
 **Les textes vivent dans le conteneur colle, pas dans des sous-sections.**
-Dans une sous-section, ils defileraient avec elle. Empiles dans la meme
-cellule de grille (la feuille du bundle s'en charge), le bloc prend la
-hauteur du plus long des trois : le titre reste au pixel pres a la meme
-place, quelle que soit la longueur de chaque texte.
+Dans une sous-section, ils defileraient avec elle. Les empiler **dans le
+Designer** : `[data-vb-hero-copy]` en `display: grid`, et les trois
+`[data-vb-hero-step]` places dans la meme cellule (colonne 1, ligne 1). Le
+bloc prend alors la hauteur du plus long des trois : le titre reste au pixel
+pres a la meme place, quelle que soit la longueur de chaque texte. La
+feuille du bundle ne s'en charge pas.
 
 **Un seul vrai H1**, a l'etape 0, pour le SEO. Les etapes 1 et 2 portent
 une `div` avec **la meme classe** que le H1 : meme taille, meme graisse,

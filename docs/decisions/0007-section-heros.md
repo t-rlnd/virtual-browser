@@ -21,7 +21,7 @@ depuis une boucle rAF permanente, avec un verrou de seek à durée fixe
   `dist/scroll-video.js` : aucun nouveau script à coller, et une page
   peut porter l'un, l'autre ou les deux.
 - **Les textes vivent dans le conteneur collé**, empilés dans la même
-  cellule de grille. La pile prend la hauteur du plus long : le titre ne
+  cellule de grille — posée dans le Designer, pas par la feuille du bundle. La pile prend la hauteur du plus long : le titre ne
   bouge jamais. Pas de sous-sections pour découper la piste : les seuils
   se calculent sur la progression.
 - **Scrub conservé sous 991 px**, contrairement à Protocol

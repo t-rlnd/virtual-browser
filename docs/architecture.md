@@ -111,7 +111,7 @@ visibilite de `[data-vb-loop]`, et l'intro scrubee n'est pas lue. Voir
 | `src/layers/VideoLayer.js` | le **contrat** d'une couche d'image | on veut un autre moteur de rendu |
 | `src/layers/Mp4VideoLayer.js` | l'implementation `<video>` + MP4 | le scrub saccade, un seek ne rend rien |
 | `src/styles/entry.css` | assemble `scroll-video.css` + `scene.css` + `hero.css` pour le bundle | le CSS de prod / dev ne sort pas |
-| `src/styles/hero.css` | empilement des textes du Heros, etat avant script | deux textes du Heros apparaissent ensemble au chargement |
+| `src/styles/hero.css` | etat des textes du Heros avant script (l'empilement est dans le Designer) | deux textes du Heros apparaissent ensemble au chargement |
 | `src/styles/scroll-video.css` | styles structurels, cibles par `data-vb-*` ; ne positionne pas le stage (sauf collapse latched) | un style du fond ou d'une couche est faux |
 | `src/styles/scene.css` | mise en scene : opacites intro / demo / tabs, glissement des cards | un calque apparait au mauvais moment du scrub |
 

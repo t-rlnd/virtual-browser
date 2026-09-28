@@ -1,22 +1,10 @@
 /**
  * Section Heros (`[data-vb-hero]`, voir src/hero.js).
  *
- * La mise en page (hauteur de piste, sticky, typo) reste dans le Designer.
- * Ne vit ici que ce qui tient au fonctionnement : l'empilement des textes et
- * leur etat avant que le script ne prenne la main.
+ * La mise en page reste dans le Designer, y compris l'empilement des textes
+ * (les `[data-vb-hero-step]` dans la meme cellule de grille). Ne vit ici que
+ * l'etat des textes avant que le script ne prenne la main.
  */
-
-/**
- * Les blocs de texte partagent la meme cellule de grille : la pile prend la
- * hauteur du plus long, le titre ne saute donc jamais d'une etape a l'autre.
- */
-[data-vb-hero-copy] {
-  display: grid;
-}
-
-[data-vb-hero-step] {
-  grid-area: 1 / 1;
-}
 
 /* Avant le script (ou sans lui) : seule la premiere etape est lisible. */
 [data-vb-hero-step]:not([data-vb-hero-step='0']) {
