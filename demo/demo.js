@@ -20,7 +20,10 @@ import { describeHero } from '../src/config.js';
 import { initHero } from '../src/hero.js';
 import { DebugLayer } from './DebugLayer.js';
 
-const useRealVideos = new URLSearchParams(location.search).has('real');
+const params = new URLSearchParams(location.search);
+const useRealVideos = params.has('real');
+// `?real&width=1920` force une largeur, pour juger une definition a l'oeil.
+const width = Number(params.get('width')) || 1280;
 
 const config = resolveConfig({
   base: useRealVideos ? '/public/assets' : undefined,
@@ -55,7 +58,7 @@ if (heroRoot) {
         id: 'hero',
         element: heroVideo,
         segments: description.segments,
-        src: sourceFor(description, 1280, config),
+        src: sourceFor(description, width, config),
         fps: description.fps,
       })
     : new DebugLayer({
@@ -84,7 +87,7 @@ for (const video of collectVideos(stageElement, config)) {
         id,
         element,
         segments,
-        src: sourceFor(video, 1280, config),
+        src: sourceFor(video, width, config),
         fps,
         openEnded,
       })
