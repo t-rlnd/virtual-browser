@@ -143,6 +143,9 @@ Le collapse a `100dvh` une fois le verrou arme vit aussi dans `scroll.js`
 ## Documentation interne
 
 - `docs/architecture.md` — organisation du code (a lire avant `src/`)
+- `docs/glossaire.md` — vocabulaire du projet (scrub, all-intra, sticky…)
+- `docs/videos.md` — pipeline d'encodage et standards verifies par `check-video.sh`
+- `docs/tests.md` — tests unitaires, e2e, bundle
 - `docs/webflow-setup.md` — structure a construire dans le Designer Webflow
 - `docs/hosting.md` — Bunny (medias) + jsDelivr (code)
 - `docs/nouvelle-video.md` — a transmettre tel quel au client fournissant un master
