@@ -9,6 +9,39 @@ Le scroll ecrit **un seul nombre** — une progression de 0 a 1 — et tout le
 reste en decoule : le timecode de la video, la position du fond, l'apparition
 des calques de la page.
 
+## Si tu découvres le code
+
+Une image pour se repérer : le projet fonctionne comme un **plateau de
+tournage**.
+
+- `scroll.js` est l'**assistant** qui regarde le scroll et annonce « on en est
+  à 40 % », « on passe en boucle ».
+- `Stage.js` est le **réalisateur** : il tient le script (l'état courant) et
+  donne les ordres. Il ne touche jamais lui-même au décor (le DOM).
+- Les **couches** (`Mp4VideoLayer`) sont les caméras : elles exécutent
+  (« va à 2,4 s », « joue en boucle »).
+- `progress.js`, `usecases.js`, `pause.js`, `frame.js` sont les
+  **accessoiristes** : ils écoutent les annonces du réalisateur et mettent à
+  jour la page (attributs, variables CSS, boutons).
+
+Ordre de lecture conseillé :
+
+1. [`src/config.js`](../src/config.js) — les réglages, tous commentés.
+2. [`src/Stage.js`](../src/Stage.js) — le cœur : quatre variables et leurs
+   transitions.
+3. [`src/scroll.js`](../src/scroll.js) — comment le scroll devient une
+   progression.
+4. [`src/main.js`](../src/main.js) — comment tout est branché au démarrage.
+5. Le reste à la demande, via le tableau
+   [Le rôle de chaque fichier](#le-role-de-chaque-fichier).
+
+Le vocabulaire (scrub, seek, all-intra…) est dans le
+[glossaire](glossaire.md).
+
+La section Héros (`hero.js`) est **à part** : elle ne passe pas par le Stage
+(pas de boucle, pas de use-case) et se lit seule. Voir
+[`decisions/0007-section-heros.md`](decisions/0007-section-heros.md).
+
 ## Stack
 
 - JS vanilla (ES modules), pas de framework.
@@ -128,6 +161,11 @@ machine a etats ni au scroll.
 Ce n'est pas theorique : [`demo/DebugLayer.js`](../demo/DebugLayer.js) en est
 deja une, qui dessine un compteur dans un `<canvas>`. C'est elle qui fait
 tourner la page de demonstration sans aucun fichier video.
+
+Les mesures actuelles (seek median de 2 a 5 ms, voir [`tests.md`](tests.md))
+rendent cette migration improbable ; elle reste ouverte si iOS se comporte
+autrement. C'est aussi pour elle que les `<video>` portent `crossOrigin` :
+sans lui, un canvas lisant des pixels venus du CDN serait illisible.
 
 ## Ce qui est dans le DOM, et pas dans le code
 

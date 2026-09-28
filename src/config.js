@@ -15,7 +15,7 @@ export const CONFIG = {
 
   /**
    * Hauteur d'ecran laissee libre en fin de piste, ou la video boucle dans son
-   * cadre. 1 = 100vh de boucle. Voir "La geometrie de la piste" dans le README.
+   * cadre. 1 = 100vh de boucle. Voir "Vue d'ensemble" dans docs/webflow-setup.md.
    */
   loopReserve: 1,
 
