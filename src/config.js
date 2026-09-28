@@ -71,6 +71,13 @@ export const CONFIG = {
 
   /** Duree de scrub supposee quand une balise oublie `data-vb-loop-at`. */
   fallbackScrubSeconds: 3,
+
+  /**
+   * Section Heros (`[data-vb-hero]`), independante du fond Protocol.
+   *  - `steps`       nombre de textes ; les bascules tombent a 1/steps, 2/steps...
+   *  - `staggerMs`   decalage entre deux lignes qui entrent (ou sortent)
+   */
+  hero: { steps: 3, staggerMs: 60 },
 };
 
 /** Fusionne les surcharges avec les valeurs par defaut. */
@@ -79,6 +86,7 @@ export function resolveConfig(overrides = {}) {
     ...CONFIG,
     ...overrides,
     dockRange: { ...CONFIG.dockRange, ...(overrides.dockRange ?? {}) },
+    hero: { ...CONFIG.hero, ...(overrides.hero ?? {}) },
   };
 }
 
@@ -128,6 +136,33 @@ export function collectVideos(root, config = CONFIG) {
   return [...root.querySelectorAll('[data-vb-id]')]
     .filter((element) => element.getAttribute('data-vb-id'))
     .map((element) => ({ element, ...describeVideo(element, config) }));
+}
+
+/**
+ * Lit la balise `<video data-vb-hero-video>` de la section Heros.
+ *
+ *  - `data-vb-asset`     racine du fichier CDN, `hero` par defaut
+ *  - `data-vb-hero-end`  image ou le scrub s'arrete ; a defaut, la fin du fichier
+ *  - `data-vb-fps`       cadence, sinon celle de la config
+ *
+ * Sans `data-vb-hero-end`, `segments.scrub.end` vaut null : hero.js le
+ * complete avec la duree reelle une fois les metadonnees lues.
+ */
+export function describeHero(element, config = CONFIG) {
+  const fps = readNumber(element, 'data-vb-fps') ?? config.fps;
+  const endFrame = readNumber(element, 'data-vb-hero-end');
+
+  return {
+    id: 'hero',
+    file: element.getAttribute('data-vb-asset') || 'hero',
+    fps,
+    declared: endFrame != null,
+    segments: {
+      scrub: { start: 0, end: endFrame == null ? null : endFrame / fps },
+      // Le Heros ne boucle jamais, mais le contrat VideoLayer attend ce segment.
+      loop: { start: 0, end: 0 },
+    },
+  };
 }
 
 /** URL du MP4 d'un descripteur renvoye par `describeVideo`. */

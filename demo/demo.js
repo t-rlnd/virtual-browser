@@ -16,6 +16,8 @@ import { initProgress } from '../src/progress.js';
 import { initUseCases } from '../src/usecases.js';
 import { initPause } from '../src/pause.js';
 import { isCompactViewport } from '../src/env.js';
+import { describeHero } from '../src/config.js';
+import { initHero } from '../src/hero.js';
 import { DebugLayer } from './DebugLayer.js';
 
 const useRealVideos = new URLSearchParams(location.search).has('real');
@@ -34,6 +36,43 @@ if (useRealVideos) {
 }
 
 const layers = {};
+
+// --- Heros ------------------------------------------------------------------
+// Meme logique que Protocol : canvas de test par defaut, vrai MP4 avec ?real.
+const heroRoot = document.querySelector('[data-vb-hero]');
+
+if (heroRoot) {
+  for (const element of heroRoot.querySelectorAll(useRealVideos ? 'canvas' : 'video')) {
+    element.remove();
+  }
+
+  const heroVideo = heroRoot.querySelector('[data-vb-hero-video]');
+  const hero = initHero({ root: heroRoot, config });
+  const description = describeHero(heroVideo, config);
+
+  const heroLayer = useRealVideos
+    ? new Mp4VideoLayer({
+        id: 'hero',
+        element: heroVideo,
+        segments: description.segments,
+        src: sourceFor(description, 1280, config),
+        fps: description.fps,
+      })
+    : new DebugLayer({
+        id: 'hero',
+        element: heroVideo,
+        segments: { ...description.segments, scrub: { start: 0, end: 6 } },
+        duration: 6,
+      });
+
+  heroLayer.preload().then(() => {
+    if (heroLayer.segments.scrub.end == null) heroLayer.segments.scrub.end = heroVideo.duration;
+    hero.attachLayer(heroLayer);
+    heroRoot.setAttribute('data-vb-hero-state', 'ready');
+  });
+
+  window.scrollVideoHero = hero;
+}
 
 for (const video of collectVideos(stageElement, config)) {
   const { id, element, segments, fps, openEnded } = video;

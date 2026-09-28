@@ -4,6 +4,7 @@ import { clamp } from '../src/utils.js';
 const PALETTE = {
   v1: { from: '#0b1f3a', to: '#2f7fd8', accent: '#7cc6ff' },
   v2: { from: '#3a0b23', to: '#d82f6b', accent: '#ff9ec2' },
+  hero: { from: '#0b3a2a', to: '#2fd89a', accent: '#9effd2' },
 };
 
 /**
