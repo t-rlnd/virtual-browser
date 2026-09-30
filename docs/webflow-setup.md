@@ -64,7 +64,7 @@ change a 1/3 et 2/3 de la video.
 ```
 body
 ├── section  "Hero"             data-vb-hero            la piste · height: 400vh · relative
-│   └── div                     data-vb-hero-inner      sticky · top 0 · 100dvh · overflow hidden
+│   └── div                     data-vb-hero-inner      sticky · top 0 · 100dvh · overflow hidden · background-color
 │       ├── HTML Embed : <video data-vb-hero-video data-vb-asset="hero"
 │       │                       muted playsinline preload="auto"></video>
 │       │                                               absolute · inset 0 · 100 % × 100 % · z-index 0
@@ -94,6 +94,25 @@ feuille du bundle ne s'en charge pas.
 une `div` avec **la meme classe** que le H1 : meme taille, meme graisse,
 **memes marges** — un H1 garde ses marges par defaut la ou une div n'en a
 pas, et le titre sauterait de quelques pixels a chaque bascule.
+
+### La couleur de fond du conteneur colle (Safari iOS)
+
+**Tout bloc `sticky` ou `fixed` plein ecran doit porter une
+`background-color`**, proche du bas de son visuel (ici
+`[data-vb-hero-inner]`, fond actuel : `--grey--950`).
+
+Sur iOS 26, Safari affiche normalement le contenu derriere sa barre
+flottante du bas, avec un fondu. Mais des qu'un element `sticky`/`fixed`
+touche le bord de l'ecran, il le remplace par une **bande unie** de la
+`background-color` de cet element. Il ne lit ni l'image ni la video : sans
+couleur de fond, il se rabat sur le fond du `body`, d'ou une bande blanche
+sous la barre. Ni `dvh`/`lvh` ni le bandeau cookies n'y changent rien
+(pistes testees et ecartees). Test rapide : une `background-color: red`
+temporaire doit colorer la bande.
+
+La bande reste unie quoi qu'on fasse ; la couleur sert seulement a ce
+qu'elle se fonde dans l'image. Meme regle pour tout futur bloc colle plein
+ecran (le stage Protocol n'est pas concerne sous 991 px : il y est empile).
 
 ### La hauteur de piste
 
