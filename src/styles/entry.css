@@ -1,3 +1,5 @@
+@import 'lenis/dist/lenis.css';
+@import './smooth.css';
 @import './scroll-video.css';
 @import './scene.css';
 @import './hero.css';

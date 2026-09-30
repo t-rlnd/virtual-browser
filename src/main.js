@@ -9,6 +9,7 @@ import { initPause } from './pause.js';
 import { pickWidth, prefersReducedMotion, isCompactViewport } from './env.js';
 import { installUnlock } from './unlock.js';
 import { startHero } from './hero.js';
+import { startSmooth } from './smooth.js';
 
 const STATE_ATTRIBUTE = 'data-vb-state';
 
@@ -21,12 +22,12 @@ export async function init(config = resolveConfig(window.SCROLL_VIDEO_CONFIG)) {
   const track = document.querySelector('[data-vb-scrub]');
 
   if (!stageElement || !track) {
-    // Une page peut ne porter que le Heros : l'absence de Protocol n'y est
-    // pas un oubli, inutile d'alerter.
-    if (!document.querySelector('[data-vb-hero]')) console.warn(
-      '[scroll-video] [data-vb-stage] ou [data-vb-scrub] introuvable, animation desactivee'
+    // Le bundle est charge sur tout le site : une page sans Protocol est le
+    // cas normal, pas un oubli. On ne signale qu'une structure incomplete.
+    if (stageElement || track) console.warn(
+      '[scroll-video] [data-vb-stage] et [data-vb-scrub] vont ensemble, Protocol desactive'
     );
-    setState('error');
+    setState('absent');
     return null;
   }
 
@@ -195,11 +196,19 @@ function preloadOnApproach(layers, track) {
 }
 
 /**
+ * Point d'entree unique, charge sur toutes les pages du site. Chaque module
+ * ne s'active que si sa structure existe dans le DOM :
+ *  - smooth scroll (Lenis) : partout ;
+ *  - Heros : si `[data-vb-hero]` ;
+ *  - Protocol : si `[data-vb-stage]` + `[data-vb-scrub]`.
  * Heros et Protocol demarrent chacun de leur cote : l'un ne doit pas attendre
  * le chargement de l'autre, ni tomber si l'autre est absent de la page.
  */
 function boot() {
   const config = resolveConfig(window.SCROLL_VIDEO_CONFIG);
+  // Avant les ScrollTrigger : ils doivent etre crees une fois Lenis branche
+  // sur le ticker GSAP.
+  startSmooth(config);
   startHero(config)
     .then((hero) => {
       window.scrollVideoHero = hero;

@@ -19,7 +19,7 @@
  */
 import { chromium, firefox, webkit } from 'playwright';
 import { mkdir, readdir, readFile } from 'node:fs/promises';
-import { basename, join } from 'node:path';
+import { join } from 'node:path';
 
 const URL = process.env.SITE_URL ?? 'https://virtual-browser.webflow.io/';
 const BUNDLE = process.env.BUNDLE ?? 'dev';
@@ -28,13 +28,17 @@ if (!(BUNDLE in BUNDLE_DIRECTORIES)) {
   throw new Error(`BUNDLE=${BUNDLE} inconnu, attendu : ${Object.keys(BUNDLE_DIRECTORIES).join(', ')}`);
 }
 
-/** Remplace le bundle Netlify par le fichier local du meme nom. */
+/**
+ * Remplace le bundle Netlify par le fichier local. Par extension et non par
+ * nom : le site publie peut encore pointer sur un ancien nom (scroll-video.*).
+ */
 async function routeBundle(page) {
   const directory = BUNDLE_DIRECTORIES[BUNDLE];
   if (!directory) return;
   await page.route('https://virtual-browser.netlify.app/**', async (route) => {
-    const name = basename(new globalThis.URL(route.request().url()).pathname);
-    const contentType = name.endsWith('.css') ? 'text/css' : 'application/javascript';
+    const isCss = new globalThis.URL(route.request().url()).pathname.endsWith('.css');
+    const name = isCss ? 'index.css' : 'index.js';
+    const contentType = isCss ? 'text/css' : 'application/javascript';
     try {
       await route.fulfill({ body: await readFile(join(directory, name)), contentType });
     } catch {

@@ -140,7 +140,7 @@ Deux hébergeurs, un par type de fichier :
 | Quoi | Où | Pourquoi |
 | --- | --- | --- |
 | Vidéos MP4 et posters | **Bunny** (CDN) | Lourds, n'ont rien à faire dans git |
-| Code (`dist/scroll-video.js` + `.css`) | **Netlify**, déployé depuis `dist/` à chaque push | URL fixe, rien à changer dans Webflow |
+| Code (`dist/index.js` + `.css`) | **Netlify**, déployé depuis `dist/` à chaque push | URL fixe, rien à changer dans Webflow |
 
 Deux règles à ne jamais enfreindre :
 
@@ -182,7 +182,9 @@ commenté. Les plus utiles :
 | `latchLoop` | `true` | Une fois la boucle atteinte, remonter ne rembobine plus |
 | `fadeMs` | `250` | Durée du fondu entre deux use-cases (ms) |
 | `dockRange` | `0.05 → 0.65` | Moment du scroll où la vidéo se cale dans son cadre |
-| `scrubSmoothing` | `0.4` | Inertie du scrub (0 = collé au scroll) |
+| `scrubSmoothing` | `0.1` | Inertie du scrub (0 = collé au scroll) ; faible car Lenis lisse déjà |
+| `smooth` | `true` | Smooth scroll Lenis sur tout le site (coupé en reduced-motion) |
+| `lenis` | `{ lerp: 0.1 }` | Options Lenis : `lerp` plus petit = plus glissé |
 | `compactMaxWidth` | `991` | Largeur sous laquelle Protocol passe en mode mobile |
 
 On peut les surcharger **sans rebuild**, depuis Webflow, avant le script :

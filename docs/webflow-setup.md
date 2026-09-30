@@ -521,11 +521,11 @@ chaque `[data-vb-visible-on]`.
 | `data-vb-active-id` | `uc1`, `uc2`, … | Quel use-case est affiche ; cible CSS `:root[data-vb-active-id='uc1']` |
 | `data-vb-paused` | `true` / `false` | Boucle mise en pause par le visiteur ; choisit l'icone de `[data-vb-pause]` |
 | `data-vb-visible` | `true` / `false` | Pose sur chaque `[data-vb-visible-on]`, pas sur `<html>` |
-| `data-vb-state` | `loading`, `ready`, `error`, `reduced` | Les styles de chargement |
+| `data-vb-state` | `loading`, `ready`, `error`, `reduced`, `absent` (page sans Protocol) | Les styles de chargement |
 | `data-vb-compact` | `true` sous 991 px, absent sinon | Accrocher le layout empile sans dupliquer le breakpoint |
 
 Les seuils de la maquette vivent dans [`src/styles/scene.css`](../src/styles/scene.css),
-verses dans `scroll-video.css` au build. Poser les attributs dans le Designer
+verses dans `index.css` au build. Poser les attributs dans le Designer
 (Settings > Custom attributes), **sans valeur** sauf `data-vb-switch` /
 `data-vb-visible-on` :
 
@@ -600,9 +600,15 @@ derriere.
 
 ## 7. Le code personnalise
 
-Coller [`webflow/head.html`](../webflow/head.html) dans **Page settings > Inside
-`<head>` tag** et [`webflow/footer.html`](../webflow/footer.html) dans **Before
-`</body>` tag**. Les deux fichiers sont deja renseignes.
+Coller [`webflow/head.html`](../webflow/head.html) dans **Site settings > Custom
+code > Head code** et [`webflow/footer.html`](../webflow/footer.html) dans
+**Footer code** : un seul bundle pour tout le site. Il demarre le smooth
+scroll (Lenis) partout, et n'active le Heros et Protocol que sur les pages
+qui portent leur structure. Retirer les anciens snippets des Page settings de
+la home, sinon le bundle serait charge deux fois.
+
+Un bloc qui doit garder son propre scroll interne (modale, liste deroulante)
+prend l'attribut `data-lenis-prevent`, sinon Lenis capture la molette.
 
 Ils pointent sur deux origines distinctes : le bundle vient de Netlify, les
 videos de Bunny. A retenir pour la maintenance :
@@ -618,7 +624,7 @@ head.html contient aussi, en dur, la regle qui masque les textes 2 et 3 du
 Heros avant le chargement de la feuille : sans elle, les trois textes
 apparaissent superposes un instant.
 
-L'ordre du footer compte : `gsap`, puis `ScrollTrigger` et `SplitText`, puis `scroll-video.js`.
+L'ordre du footer compte : `gsap`, puis `ScrollTrigger` et `SplitText`, puis `index.js`.
 
 ## 8. Developper contre le site, sans republier
 

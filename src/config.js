@@ -50,8 +50,22 @@ export const CONFIG = {
    */
   dockRange: { start: 0.05, end: 0.65 },
 
-  /** Inertie de GSAP sur le scrub. 0 = collage strict au scroll. */
-  scrubSmoothing: 0.4,
+  /**
+   * Inertie de GSAP sur le scrub. 0 = collage strict au scroll. Faible car
+   * Lenis lisse deja le scroll lui-meme : 0.4 d'origine, additionne a Lenis,
+   * donnait un scrub mou, en retard sur la molette.
+   */
+  scrubSmoothing: 0.1,
+
+  /** Smooth scroll Lenis sur tout le site (coupe en prefers-reduced-motion). */
+  smooth: true,
+
+  /**
+   * Options passees telles quelles a Lenis (voir github.com/darkroomengineering/lenis).
+   * `lerp` : part de la distance restante parcourue a chaque image ; plus
+   * petit = plus glisse, plus grand = plus sec.
+   */
+  lenis: { lerp: 0.1 },
 
   /** Use-case affiche au chargement, s'il existe dans le DOM. */
   defaultActive: 'uc1',
@@ -87,6 +101,7 @@ export function resolveConfig(overrides = {}) {
     ...overrides,
     dockRange: { ...CONFIG.dockRange, ...(overrides.dockRange ?? {}) },
     hero: { ...CONFIG.hero, ...(overrides.hero ?? {}) },
+    lenis: { ...CONFIG.lenis, ...(overrides.lenis ?? {}) },
   };
 }
 

@@ -1,5 +1,6 @@
 <!--
-  A coller dans Webflow : Page settings > Before </body> tag
+  A coller dans Webflow : Site settings > Custom code > Footer code (toutes
+  les pages, voir head.html)
 
   L'ordre compte : gsap, puis ScrollTrigger et SplitText, puis le script
   d'animation qui les lit depuis window. SplitText decoupe les textes du
@@ -21,8 +22,8 @@
 
     var script = document.createElement('script');
     script.src = dev
-      ? 'http://localhost:3000/dev/scroll-video.js'
-      : 'https://virtual-browser.netlify.app/scroll-video.js';
+      ? 'http://localhost:3000/dev/index.js'
+      : 'https://virtual-browser.netlify.app/index.js';
     // Preserve l'ordre d'execution si un autre script est injecte de la meme
     // facon plus tard : sans ca, le premier arrive est le premier servi.
     script.async = false;

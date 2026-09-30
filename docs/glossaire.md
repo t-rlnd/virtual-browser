@@ -52,7 +52,8 @@ Les mots du projet, du plus courant au plus technique.
 | **Couche / layer** | Un objet qui sait afficher une vidéo (`seek`, `playLoop`, `show`, `hide`). `Mp4VideoLayer` le fait avec `<video>`. |
 | **Machine à états** | Un objet qui ne connaît qu'un petit nombre d'états et les règles pour passer de l'un à l'autre. Le Stage en est une. |
 | **Événement** | Message émis par le Stage (`activechange`, `pausechange`…) que d'autres fichiers écoutent pour se mettre à jour. |
-| **Bundle** | Le fichier unique produit par esbuild à partir de tous les fichiers de `src/` : `dist/scroll-video.js` (+ `.css`). |
+| **Bundle** | Le fichier unique produit par esbuild à partir de tous les fichiers de `src/` : `dist/index.js` (+ `.css`), chargé sur tout le site. |
+| **Lenis** | Bibliothèque de smooth scroll : la molette ne fait plus sauter la page, elle glisse jusqu'à sa cible. |
 | **esbuild** | L'outil qui fabrique le bundle. |
 | **GSAP / ScrollTrigger / SplitText** | Bibliothèque d'animation. ScrollTrigger mesure le scroll, SplitText découpe un texte en lignes. Chargées séparément dans Webflow, pas incluses dans le bundle. |
 | **CDN** | Réseau de serveurs qui distribue des fichiers vite, partout. Ici : Bunny pour les vidéos, Netlify pour le code. |

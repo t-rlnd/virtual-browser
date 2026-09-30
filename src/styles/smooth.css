@@ -1,0 +1,9 @@
+/**
+ * Smooth scroll (Lenis, voir src/smooth.js). La feuille officielle de Lenis
+ * est importee juste avant ; seul ajout : neutraliser un `scroll-behavior:
+ * smooth` pose dans Webflow, qui animerait chaque pas de Lenis une seconde
+ * fois.
+ */
+html.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}

@@ -3,7 +3,8 @@
 ## En cours
 
 ## À faire
-- [ ] Webflow : recoller head.html et footer.html (URL Netlify + règle anti-flash du Héros) — P1
+- [ ] Webflow : retirer head/footer des Page settings de la home, coller webflow/head.html et footer.html dans les Site settings (bundle index.* + Lenis) — P1
+- [ ] Ajuster au ressenti `scrubSmoothing` (0.1) et `lenis.lerp` (0.1) sur le site — P2
 - [ ] Dans le Designer Webflow : poser le bouton `data-vb-pause` (+ icônes `data-vb-pause-icon="pause"` / `"play"`) dans `data-vb-overlay` — P1
 - [ ] Dans le Designer Webflow : tablette/mobile (< 991 px), intro et demo en relative empilées, opacités à 1, piste en hauteur auto (plus de sticky 300vh) — P1
 - [ ] Comparer `latchLoop: false` face à `latchLoop: true` (validé) sur le site Webflow — juger la remontée (progress, titre, dock, rétroactivité du use-case) — P2
