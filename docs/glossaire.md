@@ -49,7 +49,7 @@ Les mots du projet, du plus courant au plus technique.
 | Terme | Sens |
 | --- | --- |
 | **Stage** | Le « cerveau » de Protocol (`src/Stage.js`) : il garde l'état courant et donne les ordres aux vidéos. |
-| **Couche / layer** | Un objet qui sait afficher une vidéo (`seek`, `playLoop`, `show`, `hide`). `Mp4VideoLayer` le fait avec `<video>`, `DebugLayer` avec un `<canvas>`. |
+| **Couche / layer** | Un objet qui sait afficher une vidéo (`seek`, `playLoop`, `show`, `hide`). `Mp4VideoLayer` le fait avec `<video>`. |
 | **Machine à états** | Un objet qui ne connaît qu'un petit nombre d'états et les règles pour passer de l'un à l'autre. Le Stage en est une. |
 | **Événement** | Message émis par le Stage (`activechange`, `pausechange`…) que d'autres fichiers écoutent pour se mettre à jour. |
 | **Bundle** | Le fichier unique produit par esbuild à partir de tous les fichiers de `src/` : `dist/scroll-video.js` (+ `.css`). |

@@ -1,6 +1,6 @@
 # Netlify ne publie que le bundle de production : dist/ (versionne, construit
 # en local par `pnpm build`). Sans cette ligne, Netlify servait la racine du
-# depot : page de demo, sources, docs et package.json compris.
+# depot : sources, docs et package.json compris.
 #
 # Pas de commande de build : dist/ est deja a jour dans le commit pousse, ce
 # qui evite d'installer pnpm/esbuild cote Netlify.
@@ -16,3 +16,10 @@
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
     Access-Control-Allow-Origin = "*"
+
+# Ancien chemin (/dist/...), encore colle dans Webflow avant le passage a
+# publish = "dist" : sert le meme fichier pour ne rien casser au deploiement.
+[[redirects]]
+  from = "/dist/*"
+  to = "/:splat"
+  status = 200

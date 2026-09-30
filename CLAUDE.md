@@ -23,19 +23,21 @@ pnpm dev                  # esbuild en watch + serveur local sur http://localhos
 pnpm build                # build de production -> dist/ (verse dans git, publie par Netlify)
 
 pnpm test                 # attributs data-vb-* et machine a etats, sans navigateur
-pnpm test:e2e             # parcours complet sur canvas de test (DebugLayer)
-REAL=1 pnpm test:e2e      # meme parcours sur les vrais MP4 encodes
+pnpm test:e2e             # parcours complet sur virtual-browser.webflow.io, bundle dev/ injecte
 BROWSER=webkit pnpm test:e2e   # moteur de rendu ; webkit = risque du scrub (decodeur Safari)
 
-pnpm build && pnpm test:bundle  # rejoue e2e contre le bundle construit (dernier filet avant tag)
+pnpm build && pnpm test:bundle  # meme parcours avec dist/ (dernier filet avant push)
+BUNDLE=prod pnpm test:e2e       # le bundle reellement en ligne, sans interception
 ```
 
-`pnpm test:e2e` et `test:bundle` exigent `pnpm dev` lance dans un autre
-terminal. Un test unique : `node --test test/stage.test.mjs`.
+Pas de page HTML dans ce depot : le HTML vit dans Webflow, le depot ne
+livre que la surcouche JS/CSS. Le e2e tourne donc sur le site Webflow publie
+et remplace les requetes vers Netlify par le bundle local (`page.route`).
+`pnpm test:e2e` exige `pnpm dev` lance (pour tenir `dev/` a jour). Un test
+unique : `node --test test/stage.test.mjs`.
 
-En dev, ajouter `?real` a l'URL pour charger les vrais MP4 au lieu du
-`DebugLayer` (canvas sans fichier video). Le mode watch ecrit dans `dev/`
-(non versionne) ; `dist/` est le seul artefact de build versionne.
+Le mode watch ecrit dans `dev/` (non versionne) ; `dist/` est le seul
+artefact de build versionne.
 
 ### Scripts video (hors watch/build)
 
@@ -75,9 +77,8 @@ scroll.js | compact.js -> Stage.js -> { Mp4VideoLayer.js, frame.js, progress.js,
 - **`layers/VideoLayer.js`** — contrat abstrait d'une couche d'image
   (`seek`, `playLoop`, `show`, `hide`). `playLoop` notifie chaque fin de
   tour via `onCycle`. `layers/Mp4VideoLayer.js` l'implemente
-  avec `<video>` + MP4 ; `demo/DebugLayer.js` l'implemente avec un
-  `<canvas>` sans fichier video, pour prouver que le contrat tient sans
-  dependre d'un decodeur video.
+  avec `<video>` + MP4 (seule implementation ; un rendu `<canvas>` pourrait
+  en etre une seconde).
 - **`frame.js`** — sort le fond du plein ecran pour le caler sur
   `[data-vb-frame]`, pilote par `dockRange` (fonction de la progression, pas
   d'une duree).

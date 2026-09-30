@@ -27,5 +27,7 @@ d'accueil, sources, docs et `package.json` accessibles publiquement.
   contrepartie de l'absence de build cote Netlify.
 - Retour arriere via l'historique des deploiements Netlify ou `git revert`,
   plus via un numero de version dans Webflow.
-- La demo (`index.html`, `demo/`) ne vit plus qu'en local (`pnpm dev`).
+- La page de demo (`index.html`, `demo/`) est supprimee : le HTML vit dans
+  Webflow, le depot ne livre que JS/CSS. Les tests e2e tournent sur le site
+  Webflow publie, avec le bundle local injecte.
 - Bunny reste inchange pour les medias.

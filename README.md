@@ -68,14 +68,9 @@ pnpm install
 pnpm dev
 ```
 
-Puis ouvrir **http://localhost:3000**.
-
-- La page de démo tourne **sans aucun fichier vidéo** : un `<canvas>` dessine
-  un compteur à la place (`demo/DebugLayer.js`). Un panneau affiche l'état en
-  direct.
-- Ajouter **`?real`** à l'URL pour charger les vrais MP4 depuis le CDN
-  (`?real&width=1920` force une définition).
-- Chaque sauvegarde reconstruit le code et recharge la page.
+Pas de page de démo : le HTML vit dans Webflow, ce dépôt ne livre que le
+JS/CSS. On développe directement contre le site publié (section suivante).
+Chaque sauvegarde reconstruit le code dans `dev/`.
 
 ### Tester sur le vrai site Webflow, sans republier
 
@@ -217,7 +212,6 @@ src/            le code livré dans le bundle      → docs/architecture.md
   hero.js         la section Héros
   layers/         pilotage des <video>
   styles/         CSS livré avec le script
-demo/           page de démo locale (sans vidéo) et page de test du bundle
 test/           tests unitaires (*.test.mjs) et parcours navigateur (e2e.mjs)
 scripts/        encodage et mise en ligne des vidéos (ffmpeg, Bunny)
 bin/            outillage : build, serveur local, rechargement auto

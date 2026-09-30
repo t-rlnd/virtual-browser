@@ -97,8 +97,8 @@ export async function startHero(config) {
 }
 
 /**
- * Cablage scroll -> video + textes. Separe de `startHero` pour que la demo
- * puisse y brancher une couche de test (DebugLayer) a la place du MP4.
+ * Cablage scroll -> video + textes. Separe de `startHero` pour qu'une autre
+ * implementation de `VideoLayer` puisse s'y brancher a la place du MP4.
  *
  * `layer` peut arriver plus tard via `attachLayer` : la video se cale alors
  * sur la position de scroll du moment.

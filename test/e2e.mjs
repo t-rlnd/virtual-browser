@@ -1,20 +1,47 @@
 /**
- * Verification de bout en bout de la page de demonstration.
+ * Verification de bout en bout sur le vrai site Webflow publie.
  *
  * Complementaire aux tests unitaires du Stage : ceux-ci valident la machine a
- * etats en isolation, celui-ci valide le cablage reel au scroll, que seul un
- * vrai moteur de rendu peut exercer.
+ * etats en isolation, celui-ci valide le cablage reel au scroll, sur le DOM
+ * construit dans le Designer et les vrais MP4, que seul un vrai moteur de
+ * rendu peut exercer.
  *
- * Prerequis : pnpm dev
- * Usage     : pnpm test:e2e  ·  BROWSER=webkit REAL=1 pnpm test:e2e
+ * Le site charge le bundle depuis Netlify ; le test intercepte ces requetes
+ * et sert a la place le bundle local choisi par BUNDLE :
+ *   dev  (defaut)  dev/   ecrit par `pnpm dev` (a lancer a cote)
+ *   dist           dist/  ecrit par `pnpm build` (ce qui partira en ligne)
+ *   prod           aucune interception : le bundle reellement en ligne
+ *
+ * Pas de `?dev` : un navigateur refuse qu'une page publique charge
+ * localhost, d'ou l'interception.
+ *
+ * Usage : pnpm test:e2e  ·  BROWSER=webkit pnpm test:e2e  ·  pnpm test:bundle
  */
 import { chromium, firefox, webkit } from 'playwright';
-import { mkdir, readdir } from 'node:fs/promises';
-import { join } from 'node:path';
+import { mkdir, readdir, readFile } from 'node:fs/promises';
+import { basename, join } from 'node:path';
 
-/** REAL=1 exerce les vraies balises <video> plutot que les canvas de test. */
-const REAL = process.env.REAL === '1';
-const URL = (process.env.DEMO_URL ?? 'http://localhost:3000/') + (REAL ? '?real' : '');
+const URL = process.env.SITE_URL ?? 'https://virtual-browser.webflow.io/';
+const BUNDLE = process.env.BUNDLE ?? 'dev';
+const BUNDLE_DIRECTORIES = { dev: 'dev', dist: 'dist', prod: null };
+if (!(BUNDLE in BUNDLE_DIRECTORIES)) {
+  throw new Error(`BUNDLE=${BUNDLE} inconnu, attendu : ${Object.keys(BUNDLE_DIRECTORIES).join(', ')}`);
+}
+
+/** Remplace le bundle Netlify par le fichier local du meme nom. */
+async function routeBundle(page) {
+  const directory = BUNDLE_DIRECTORIES[BUNDLE];
+  if (!directory) return;
+  await page.route('https://virtual-browser.netlify.app/**', async (route) => {
+    const name = basename(new globalThis.URL(route.request().url()).pathname);
+    const contentType = name.endsWith('.css') ? 'text/css' : 'application/javascript';
+    try {
+      await route.fulfill({ body: await readFile(join(directory, name)), contentType });
+    } catch {
+      await route.fulfill({ status: 404, body: `${directory}/${name} absent` });
+    }
+  });
+}
 
 /**
  * BROWSER=webkit est le seul moyen local d'approcher Safari, ou se concentre
@@ -24,7 +51,7 @@ const URL = (process.env.DEMO_URL ?? 'http://localhost:3000/') + (REAL ? '?real'
  */
 const ENGINES = { chromium, firefox, webkit };
 const ENGINE = process.env.BROWSER ?? 'chromium';
-const SHOTS = REAL ? '.artifacts/real' : '.artifacts';
+const SHOTS = `.artifacts/${BUNDLE}`;
 const BROWSERS = ['.playwright', process.env.PLAYWRIGHT_BROWSERS_PATH].filter(Boolean);
 
 /**
@@ -74,6 +101,7 @@ const main = async () => {
     ENGINE === 'chromium' ? { executablePath: await findHeadlessShell() } : {}
   );
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  await routeBundle(page);
 
   page.on('console', (message) => {
     if (message.type() === 'error' || message.type() === 'warning') {
@@ -268,7 +296,8 @@ const main = async () => {
         const shown = [...root.querySelectorAll('[data-vb-hero-step]')].filter(
           (step) => getComputedStyle(step).visibility !== 'hidden'
         );
-        const title = shown[0]?.querySelector('h1, .h1')?.getBoundingClientRect();
+        // Premier enfant du bloc : h1 pour l'etape 0, p pour les suivantes.
+        const title = shown[0]?.firstElementChild?.getBoundingClientRect();
         return {
           active: root.getAttribute('data-vb-hero-active'),
           shown: shown.map((step) => step.getAttribute('data-vb-hero-step')),
@@ -564,7 +593,9 @@ const main = async () => {
   //      a la position exacte du scroll, pas en un temps fixe
   const unlockedTrack = await readTrack();
   await scrollTo(geometry.scrubEnd, 1600);
-  await page.click('[data-vb-switch="uc2"]');
+  // Clic programmatique : sans verrou, l'intro (opacite 0 mais toujours en
+  // place dans le layout Webflow) recouvre encore les boutons a cet endroit.
+  await page.$eval('[data-vb-switch="uc2"]', (button) => button.click());
   await page.waitForTimeout(700);
   await scrollTo(scrubAt(0.5), 1600);
   const undocked = await read();
@@ -620,9 +651,9 @@ const main = async () => {
           getComputedStyle(document.documentElement).getPropertyValue('--vb-scrub')
         ),
         progress: window.scrollVideo.stage.progress,
-        intro: opacity('.intro'),
+        intro: opacity('[data-vb-intro]'),
         demo: opacity('[data-vb-loop]'),
-        pins: opacity('.pins'),
+        pins: opacity('[data-vb-overlay]'),
       };
     });
 
@@ -692,6 +723,7 @@ const main = async () => {
    * parcours desktop (y compris du rechargement `latchLoop: false`).
    */
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await routeBundle(mobile);
   mobile.on('console', (message) => {
     if (message.type() === 'error' || message.type() === 'warning') {
       consoleMessages.push(`[compact ${message.type()}] ${message.text()}`);
@@ -710,8 +742,7 @@ const main = async () => {
 
   const compactGeo = await mobile.evaluate(() => {
     const loop = document.querySelector('[data-vb-loop]');
-    const intro = document.querySelector('.intro');
-    const after = document.querySelector('.after');
+    const intro = document.querySelector('[data-vb-intro]');
     return {
       flagged: document.documentElement.getAttribute('data-vb-compact') === 'true',
       latched: document.documentElement.getAttribute('data-vb-locked') === 'true',
@@ -721,7 +752,6 @@ const main = async () => {
       demoPosition: getComputedStyle(loop).position,
       loopTop: loop.getBoundingClientRect().top + window.scrollY,
       pageBottom: Math.max(0, document.body.scrollHeight - window.innerHeight),
-      afterTop: after.getBoundingClientRect().top + window.scrollY,
     };
   });
 
@@ -803,7 +833,7 @@ const main = async () => {
   const failures = results.filter((result) => !result.ok);
   console.log(
     `\n${results.length - failures.length}/${results.length} etapes validees` +
-      `  (${ENGINE}${REAL ? ', MP4 reels' : ''})`
+      `  (${ENGINE}, bundle ${BUNDLE})`
   );
   process.exit(failures.length === 0 ? 0 : 1);
 };
