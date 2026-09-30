@@ -20,7 +20,7 @@ const PRODUCTION = process.env.NODE_ENV === 'production';
 
 /**
  * Les deux modes n'ecrivent pas au meme endroit, et ce n'est pas un detail :
- * `dist/` est versionne et sert de source a jsDelivr. Si le mode watch y
+ * `dist/` est versionne et publie tel quel par Netlify. Si le mode watch y
  * ecrivait, un `git add` distrait publierait un bundle de developpement —
  * sourcemap et client de live reload compris, ce dernier ouvrant chez chaque
  * visiteur une connexion vers un localhost qui n'existe pas.

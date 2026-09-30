@@ -47,7 +47,7 @@ En `REAL=1`, une étape de plus mesure le temps d'un seek : au-delà de 33 ms
 | WebKit | 2 ms | 5 ms |
 | Chromium | 5 ms | 9 ms |
 
-## 3. Avant de publier un tag
+## 3. Avant de pousser un nouveau dist/
 
 Rejouer le parcours sur le **bundle construit** (`dist/`), c'est-à-dire ce qui
 sera réellement en ligne :

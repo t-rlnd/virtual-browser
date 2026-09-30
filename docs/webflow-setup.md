@@ -604,25 +604,29 @@ Coller [`webflow/head.html`](../webflow/head.html) dans **Page settings > Inside
 `<head>` tag** et [`webflow/footer.html`](../webflow/footer.html) dans **Before
 `</body>` tag**. Les deux fichiers sont deja renseignes.
 
-Ils pointent sur deux origines distinctes : le bundle vient de GitHub via
-jsDelivr, les videos de Bunny. A retenir pour la maintenance :
+Ils pointent sur deux origines distinctes : le bundle vient de Netlify, les
+videos de Bunny. A retenir pour la maintenance :
 
 | Ce qui change | Ou le modifier | Effet de bord |
 | --- | --- | --- |
-| Le code | tag `@vX.Y.Z` dans head.html **et** footer.html | rebuild + commit de `dist/` + tag git |
-| Le domaine Bunny | `base` dans [`src/config.js`](../src/config.js) | l URL est compilee dans le bundle : rebuild et nouveau tag obligatoires |
+| Le code | rien dans Webflow | rebuild + commit de `dist/` + push (Netlify redeploie) |
+| Le domaine Bunny | `base` dans [`src/config.js`](../src/config.js) | l URL est compilee dans le bundle : rebuild et push obligatoires |
 
 Le second cas est le piege : changer le CDN video impose de republier le code.
+
+head.html contient aussi, en dur, la regle qui masque les textes 2 et 3 du
+Heros avant le chargement de la feuille : sans elle, les trois textes
+apparaissent superposes un instant.
 
 L'ordre du footer compte : `gsap`, puis `ScrollTrigger` et `SplitText`, puis `scroll-video.js`.
 
 ## 8. Developper contre le site, sans republier
 
 Les deux snippets choisissent leur origine a l'execution : `?dev` a la fin de
-l'URL charge `pnpm dev` (localhost:3000), toute autre URL charge jsDelivr.
+l'URL charge `pnpm dev` (localhost:3000), toute autre URL charge Netlify.
 
 ```
-https://virtual-browser.webflow.io/            jsDelivr, ce que voit le visiteur
+https://virtual-browser.webflow.io/            Netlify, ce que voit le visiteur
 https://virtual-browser.webflow.io/?dev        le bundle en cours d'ecriture
 ```
 

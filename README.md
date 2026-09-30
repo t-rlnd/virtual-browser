@@ -8,7 +8,7 @@ Pas de framework : du JavaScript « vanilla », [GSAP ScrollTrigger](https://gsa
 pour écouter le scroll, et [esbuild](https://esbuild.github.io/) pour produire
 un fichier unique à charger dans Webflow.
 
-> Un mot inconnu (scrub, all-intra, sticky, jsDelivr…) ? Voir le
+> Un mot inconnu (scrub, all-intra, sticky, CDN…) ? Voir le
 > [glossaire](docs/glossaire.md).
 
 ---
@@ -83,7 +83,7 @@ Les snippets Webflow savent charger ton code local : avec `pnpm dev` lancé,
 ouvre le site publié en ajoutant **`?dev`** à l'URL.
 
 ```
-https://virtual-browser.webflow.io/        ce que voit le visiteur (jsDelivr)
+https://virtual-browser.webflow.io/        ce que voit le visiteur (Netlify)
 https://virtual-browser.webflow.io/?dev    ton code local (localhost:3000)
 ```
 
@@ -145,15 +145,15 @@ Deux hébergeurs, un par type de fichier :
 | Quoi | Où | Pourquoi |
 | --- | --- | --- |
 | Vidéos MP4 et posters | **Bunny** (CDN) | Lourds, n'ont rien à faire dans git |
-| Code (`dist/scroll-video.js` + `.css`) | **GitHub**, servi par **jsDelivr** | Versionné avec le code source, chaque version a son tag |
+| Code (`dist/scroll-video.js` + `.css`) | **Netlify**, déployé depuis `dist/` à chaque push | URL fixe, rien à changer dans Webflow |
 
 Deux règles à ne jamais enfreindre :
 
 - **MP4 bruts uniquement**, jamais Bunny Stream ni Cloudflare Stream : le
   streaming adaptatif rend la position dans la vidéo imprécise et casse le
   scrub.
-- **jsDelivr toujours sur un tag** (`@v1.10.0`), jamais sur `@main` (cache de
-  7 jours).
+- **`dist/` reconstruit avant chaque push** : Netlify publie ce dossier tel
+  quel, sans build.
 
 Détails : [`docs/hosting.md`](docs/hosting.md).
 
@@ -165,16 +165,14 @@ Détails : [`docs/hosting.md`](docs/hosting.md).
 pnpm test                          # tests rapides
 pnpm build                         # produit dist/
 pnpm test:bundle                   # rejoue le parcours sur dist/ (pnpm dev lancé à côté)
-git add dist && git commit -m "build: v1.11.0"
-git tag v1.11.0 && git push --tags
+git add dist && git commit -m "build: ..."
+git push                           # Netlify redéploie dist/
 ```
 
-Puis, dans Webflow, remplacer le numéro de version dans **les deux** snippets
-([`webflow/head.html`](webflow/head.html) et
-[`webflow/footer.html`](webflow/footer.html)) et publier.
+Rien à changer dans Webflow : l'URL du bundle ne porte pas de version.
 
 Pourquoi `dist/` est versionné alors que c'est un fichier généré : c'est
-précisément ce fichier que jsDelivr va lire sur GitHub.
+précisément ce dossier que Netlify publie, sans rien construire.
 
 ---
 
@@ -202,7 +200,7 @@ On peut les surcharger **sans rebuild**, depuis Webflow, avant le script :
 
 Changer une valeur **par défaut** (y compris `base`, l'adresse du CDN vidéo)
 se fait dans `config.js` : elle est alors compilée dans le bundle, donc rebuild
-et nouveau tag.
+et push.
 
 Le **rythme** du scroll ne se règle pas ici mais dans le Designer : c'est la
 hauteur de la piste (300vh pour Protocol, 400vh pour le Héros).
@@ -224,7 +222,7 @@ test/           tests unitaires (*.test.mjs) et parcours navigateur (e2e.mjs)
 scripts/        encodage et mise en ligne des vidéos (ffmpeg, Bunny)
 bin/            outillage : build, serveur local, rechargement auto
 webflow/        les deux snippets à coller dans Webflow
-dist/           le bundle de production (versionné, servi par jsDelivr)
+dist/           le bundle de production (versionné, publié par Netlify)
 docs/           toute la documentation
 ```
 

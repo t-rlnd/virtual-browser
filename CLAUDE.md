@@ -20,7 +20,7 @@ il explique *qui fait quoi*. Le README explique *ce que fait* l'animation.
 ```bash
 pnpm install
 pnpm dev                  # esbuild en watch + serveur local sur http://localhost:3000
-pnpm build                # build de production -> dist/ (verse dans git, sert via jsDelivr)
+pnpm build                # build de production -> dist/ (verse dans git, publie par Netlify)
 
 pnpm test                 # attributs data-vb-* et machine a etats, sans navigateur
 pnpm test:e2e             # parcours complet sur canvas de test (DebugLayer)
@@ -123,10 +123,12 @@ Le collapse a `100dvh` une fois le verrou arme vit aussi dans `scroll.js`
 - **MP4 servis bruts, jamais via Bunny Stream / Cloudflare Stream** : le
   streaming adaptatif (HLS) rend `currentTime` imprecis et casse le scrub.
   Voir [`docs/hosting.md`](docs/hosting.md) et
-  [`docs/decisions/0001-hebergement-bunny-jsdelivr.md`](docs/decisions/0001-hebergement-bunny-jsdelivr.md).
+  [`docs/decisions/0001-hebergement-bunny-jsdelivr.md`](docs/decisions/0001-hebergement-bunny-jsdelivr.md) (partie code remplacee par 0008).
 - **Deux hebergeurs separes** : MP4/posters sur Bunny (hors depot), bundle
-  `dist/` sur GitHub via jsDelivr (verse dans le depot, tague). Ne jamais
-  pointer jsDelivr sur `@main` (cache 7 jours) — toujours un tag.
+  `dist/` sur Netlify (`virtual-browser.netlify.app`, verse dans le depot,
+  redeploye a chaque push, sans build ni tag). `netlify.toml` ne publie que
+  `dist/` : demo, sources et docs ne sont jamais en ligne. Toujours
+  `pnpm build` + commit de `dist/` avant de pousser. Voir ADR 0008.
 - **Versionner le prefixe des medias** (`scroll-video/v1/` -> `v2/`) plutot
   que purger le cache CDN, pour un deploiement atomique.
 - **`crossOrigin`** sur les balises `<video>` est deliberement pose : sans
@@ -147,7 +149,7 @@ Le collapse a `100dvh` une fois le verrou arme vit aussi dans `scroll.js`
 - `docs/videos.md` — pipeline d'encodage et standards verifies par `check-video.sh`
 - `docs/tests.md` — tests unitaires, e2e, bundle
 - `docs/webflow-setup.md` — structure a construire dans le Designer Webflow
-- `docs/hosting.md` — Bunny (medias) + jsDelivr (code)
+- `docs/hosting.md` — Bunny (medias) + Netlify (code)
 - `docs/nouvelle-video.md` — a transmettre tel quel au client fournissant un master
 - `docs/todo.md` — todo interne du projet (ouvrir via le skill `/todo`)
 - `docs/decisions/` — ADR ; `docs/history/` — journal — geres via le skill `/doc-code`
