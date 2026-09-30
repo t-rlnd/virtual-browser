@@ -17,8 +17,29 @@
     Cache-Control = "public, max-age=0, must-revalidate"
     Access-Control-Allow-Origin = "*"
 
-# Ancien chemin (/dist/...), encore colle dans Webflow avant le passage a
-# publish = "dist" : sert le meme fichier pour ne rien casser au deploiement.
+# Anciennes URL encore collees dans Webflow (/dist/..., scroll-video.*) :
+# servent le bundle actuel pour ne rien casser au deploiement. Status 200 =
+# reecriture transparente, pas de redirection visible.
+[[redirects]]
+  from = "/scroll-video.js"
+  to = "/index.js"
+  status = 200
+
+[[redirects]]
+  from = "/scroll-video.css"
+  to = "/index.css"
+  status = 200
+
+[[redirects]]
+  from = "/dist/scroll-video.js"
+  to = "/index.js"
+  status = 200
+
+[[redirects]]
+  from = "/dist/scroll-video.css"
+  to = "/index.css"
+  status = 200
+
 [[redirects]]
   from = "/dist/*"
   to = "/:splat"

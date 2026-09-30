@@ -47,7 +47,8 @@ La section Héros (`hero.js`) est **à part** : elle ne passe pas par le Stage
 - JS vanilla (ES modules), pas de framework.
 - GSAP 3 + ScrollTrigger (+ SplitText pour le Heros) charges depuis jsDelivr, lus sur `window` — jamais
   bundle (voir `bin/build.js` et `webflow/footer.html`).
-- esbuild : bundle `dist/scroll-video.js` + `.css` ; serveur local avec
+- Lenis (smooth scroll), bundle depuis npm, cale sur le ticker GSAP.
+- esbuild : bundle unique `dist/index.js` + `.css`, charge sur tout le site ; serveur local avec
   requetes Range (`bin/serve-media.js`).
 - Playwright pour les parcours e2e (Chromium / WebKit / Firefox).
 - ffmpeg via `scripts/` pour l'encodage all-intra.
@@ -136,14 +137,15 @@ visibilite de `[data-vb-loop]`, et l'intro scrubee n'est pas lue. Voir
 | `src/progress.js` | publie `--vb-scrub`, `data-vb-mode`, `data-vb-active-id`, `data-vb-paused` sur `<html>`, et `data-vb-visible` sur chaque `[data-vb-visible-on]` | les calques ne s'animent pas, ou les piles restent toutes visibles |
 | `src/usecases.js` | boutons de use-case et barres d'avancee (`loopProgress`) | un clic ne fait rien, ou la barre rembobine |
 | `src/pause.js` | bouton `[data-vb-pause]` : bascule `stage.paused`, reflete `aria-pressed` | la pause ne repond pas |
-| `src/main.js` | assemblage, garde-fous, prechargement ; demarre Heros et Protocol independamment | rien ne demarre |
+| `src/main.js` | assemblage, garde-fous, prechargement ; demarre Lenis, puis Heros et Protocol independamment, chacun seulement si sa structure est dans la page | rien ne demarre |
+| `src/smooth.js` | smooth scroll Lenis sur tout le site, synchronise avec le ticker GSAP et ScrollTrigger ; `jumpTo` pour les sauts instantanes | le scroll saccade, un recalage est annule |
 | `src/hero.js` | section Heros : ScrollTrigger sur `[data-vb-hero]` → seek de la video + etape de texte (1/3, 2/3), bascule ligne par ligne via SplitText | un texte du Heros change au mauvais moment, ou le titre saute |
 | `src/unlock.js` | deblocage iOS au premier geste, partage par Protocol et le Heros | la video reste figee sur iPhone |
 | `src/env.js` | reduced-motion, save-data, largeur a telecharger, breakpoint compact | la mauvaise definition est servie |
 | `src/utils.js` | `clamp`, `wait`, `bindPress` (clic + clavier) et un emetteur d'evenements minimal | jamais, ou presque |
 | `src/layers/VideoLayer.js` | le **contrat** d'une couche d'image | on veut un autre moteur de rendu |
 | `src/layers/Mp4VideoLayer.js` | l'implementation `<video>` + MP4 | le scrub saccade, un seek ne rend rien |
-| `src/styles/entry.css` | assemble `scroll-video.css` + `scene.css` + `hero.css` pour le bundle | le CSS de prod / dev ne sort pas |
+| `src/styles/entry.css` | assemble `lenis.css` + `smooth.css` + `scroll-video.css` + `scene.css` + `hero.css` en `index.css` | le CSS de prod / dev ne sort pas |
 | `src/styles/hero.css` | etat des textes du Heros avant script (l'empilement est dans le Designer) | deux textes du Heros apparaissent ensemble au chargement |
 | `src/styles/scroll-video.css` | styles structurels, cibles par `data-vb-*` ; ne positionne pas le stage (sauf collapse latched) | un style du fond ou d'une couche est faux |
 | `src/styles/scene.css` | mise en scene : opacites intro / demo / tabs, glissement des cards | un calque apparait au mauvais moment du scrub |

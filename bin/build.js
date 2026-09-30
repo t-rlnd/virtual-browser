@@ -29,11 +29,12 @@ const BUILD_DIRECTORY = PRODUCTION ? 'dist' : 'dev';
 
 /**
  * Deux entrees pour un meme nom de sortie : le JS et la feuille de style
- * partent de sources distinctes mais s'appellent tous deux scroll-video.
+ * partent de sources distinctes mais s'appellent tous deux index (un seul
+ * bundle pour tout le site, voir src/main.js).
  */
 const ENTRY_POINTS = [
-  { in: 'src/main.js', out: 'scroll-video' },
-  { in: 'src/styles/entry.css', out: 'scroll-video' },
+  { in: 'src/main.js', out: 'index' },
+  { in: 'src/styles/entry.css', out: 'index' },
 ];
 
 const LIVE_RELOAD = !PRODUCTION;
@@ -123,10 +124,10 @@ function logServedFiles() {
   console.log('');
   console.log(line('Site', 'https://virtual-browser.webflow.io/?dev'));
   console.log('');
-  console.log('  Webflow — Page settings > Inside <head>');
+  console.log('  Webflow — Site settings > Custom code > Head');
   if (css) console.log(`  <link href="${css}" rel="stylesheet" />`);
   console.log('');
-  console.log('  Webflow — Page settings > Before </body>');
+  console.log('  Webflow — Site settings > Custom code > Footer');
   console.log('  (gsap et ScrollTrigger restent charges avant)');
   if (js) console.log(`  <script defer src="${js}"></script>`);
   console.log('');

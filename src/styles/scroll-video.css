@@ -88,6 +88,7 @@
 
 :root[data-vb-state='ready'] [data-vb-loader],
 :root[data-vb-state='error'] [data-vb-loader],
+:root[data-vb-state='absent'] [data-vb-loader],
 :root[data-vb-state='reduced'] [data-vb-loader] {
   opacity: 0;
   pointer-events: none;

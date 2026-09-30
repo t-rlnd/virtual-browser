@@ -98,8 +98,12 @@ scroll.js | compact.js -> Stage.js -> { Mp4VideoLayer.js, frame.js, progress.js,
   transition, fin de boucle) vit **sur la balise dans le DOM**, pas dans ce
   fichier — source de verite unique, ajouter un use-case ne demande aucun
   rebuild.
-- **`main.js`** — assemblage, garde-fous, prechargement. Demarre le Heros
-  et Protocol independamment (`boot()`).
+- **`main.js`** — point d'entree unique du bundle `index.js`, charge sur tout
+  le site. `boot()` demarre Lenis, puis le Heros et Protocol independamment,
+  chacun seulement si sa structure est dans la page.
+- **`smooth.js`** — smooth scroll Lenis, cale sur le ticker GSAP et
+  `ScrollTrigger.update`. Tout saut instantane de la page passe par
+  `jumpTo()` (sinon Lenis ramene la page vers sa cible en cours). Voir ADR 0009.
 - **`hero.js`** — section Heros, hors Stage : ScrollTrigger sur
   `[data-vb-hero]` → `Mp4VideoLayer.seek` + etape de texte a 1/3 et 2/3,
   bascule ligne par ligne via SplitText. Voir ADR 0007.

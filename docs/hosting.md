@@ -5,7 +5,7 @@ Deux hebergeurs, separes par nature de fichier :
 | Quoi | Ou | Pourquoi la |
 | --- | --- | --- |
 | MP4 et posters | Bunny (Storage + Pull Zone) | Volumineux, binaires, n'ont rien a faire dans un depot git |
-| `scroll-video.js` / `.css` | Netlify (`virtual-browser.netlify.app`), deploye depuis `dist/` | Deploiement automatique a chaque push, URL fixe |
+| `index.js` / `.css` | Netlify (`virtual-browser.netlify.app`), deploye depuis `dist/` | Deploiement automatique a chaque push, URL fixe |
 
 Le bundle est **commite** dans `dist/` : c'est ce dossier, et lui seul, que
 Netlify publie. C'est la seule raison pour laquelle un artefact de build est
@@ -82,8 +82,14 @@ redeploie. [`netlify.toml`](../netlify.toml) limite la publication a `dist/`
 `dist/` doit donc etre reconstruit et commite avant de pousser.
 
 ```
-https://virtual-browser.netlify.app/scroll-video.js
-https://virtual-browser.netlify.app/scroll-video.css
+https://virtual-browser.netlify.app/index.js
+https://virtual-browser.netlify.app/index.css
+```
+
+Les anciennes URL (`/scroll-video.*`, `/dist/...`) restent servies par des
+reecritures dans `netlify.toml`, le temps que Webflow soit a jour.
+
+```
 ```
 
 Publier une mise a jour du code :

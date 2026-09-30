@@ -1,4 +1,5 @@
 import { MODES } from './Stage.js';
+import { jumpTo } from './smooth.js';
 
 const LOCKED_ATTRIBUTE = 'data-vb-locked';
 const COLLAPSED_HEIGHT = '100dvh';
@@ -97,9 +98,9 @@ export function initScroll({ stage, config, track }) {
     const shrink = heightBefore - track.offsetHeight;
 
     if (keepTrackInView) {
-      window.scrollTo(0, track.offsetTop);
+      jumpTo(track.offsetTop);
     } else if (shrink > 0 && scrollBefore > track.offsetTop) {
-      window.scrollTo(0, Math.max(track.offsetTop, scrollBefore - shrink));
+      jumpTo(Math.max(track.offsetTop, scrollBefore - shrink));
     }
 
     // `enterLoop` est appele depuis `onLeave` : refresh() ici reentrerait
