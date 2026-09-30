@@ -3,20 +3,18 @@
   (ou Site settings > Custom code > Head si l'animation existe sur plusieurs pages)
 
   Deux origines, deux roles :
-    cdn.jsdelivr.net              le bundle JS/CSS, servi depuis le depot GitHub
+    virtual-browser.netlify.app     le bundle JS/CSS, deploye depuis dist/ a chaque push
     temp-virtual-browser.b-cdn.net  les MP4 et les posters, servis depuis Bunny
 
-  Le numero de version (@v1.10.0) est un tag git. Publier une mise a jour du
-  code = pousser un nouveau tag, puis changer ce numero ici ET dans
-  footer.html. Tant qu'il ne change pas, jsDelivr sert le fichier depuis son
-  cache permanent.
+  Pas de numero de version : l'URL est fixe, un push sur main suffit a
+  publier (Netlify force la revalidation, voir netlify.toml).
 
   Ajouter `?dev` a l'URL bascule sur `pnpm dev` (localhost:3000) : le site
   publie sert alors le bundle en cours d'ecriture, sans republier la page.
-  Sans `?dev`, c'est toujours jsDelivr — un visiteur ne voit jamais localhost.
+  Sans `?dev`, c'est toujours Netlify — un visiteur ne voit jamais localhost.
 -->
 
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+<link rel="preconnect" href="https://virtual-browser.netlify.app" crossorigin />
 <link rel="preconnect" href="https://temp-virtual-browser.b-cdn.net" crossorigin />
 
 <script>
@@ -30,7 +28,7 @@
     link.rel = 'stylesheet';
     link.href = window.VB_DEV
       ? 'http://localhost:3000/dev/scroll-video.css'
-      : 'https://cdn.jsdelivr.net/gh/t-rlnd/virtual-browser@v1.10.0/dist/scroll-video.css';
+      : 'https://virtual-browser.netlify.app/scroll-video.css';
     document.head.appendChild(link);
   })();
 </script>
@@ -47,5 +45,14 @@
     justify-content: center;
     color: #fff;
     font-family: inherit;
+  }
+
+  /* Textes du Heros : seule la premiere etape est lisible avant le script.
+     Double de hero.css, mais ecrit en dur ici : la feuille ci-dessus, inseree
+     par script, ne bloque pas le rendu, d'ou un flash des trois textes
+     superposes. `visibility` et non `display` : SplitText doit pouvoir
+     mesurer les lignes. */
+  [data-vb-hero-step]:not([data-vb-hero-step='0']) {
+    visibility: hidden;
   }
 </style>

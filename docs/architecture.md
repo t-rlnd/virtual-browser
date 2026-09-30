@@ -57,7 +57,7 @@ La section Héros (`hero.js`) est **à part** : elle ne passe pas par le Stage
 | Surface | Fichier |
 | --- | --- |
 | Runtime Webflow | `src/main.js` → `boot()` : `startHero()` + `init()`, colle via `webflow/head.html` + `webflow/footer.html` |
-| Demo locale | `index.html` + `demo/demo.js` (`DebugLayer`) ; `?real` charge les MP4 |
+| Tests e2e | `test/e2e.mjs` sur le site Webflow publie, bundle local injecte |
 | Build / serveur | `bin/build.js` (`pnpm dev` / `pnpm build`) |
 | Tests unitaires | `test/*.test.mjs` (`pnpm test`) — attributs, Stage, mode compact |
 | Parcours e2e | `test/e2e.mjs` (`pnpm test:e2e`, `test:bundle`) |
@@ -158,9 +158,9 @@ jour a un rendu `<canvas>` alimente par une sequence d'images ne demanderait
 donc qu'une seconde implementation de ce contrat, sans toucher ni a la
 machine a etats ni au scroll.
 
-Ce n'est pas theorique : [`demo/DebugLayer.js`](../demo/DebugLayer.js) en est
-deja une, qui dessine un compteur dans un `<canvas>`. C'est elle qui fait
-tourner la page de demonstration sans aucun fichier video.
+Une telle implementation (`DebugLayer`, compteur dessine dans un `<canvas>`)
+a existe pour la page de demo locale, retiree depuis : le HTML vit dans
+Webflow.
 
 Les mesures actuelles (seek median de 2 a 5 ms, voir [`tests.md`](tests.md))
 rendent cette migration improbable ; elle reste ouverte si iOS se comporte

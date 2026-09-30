@@ -1,7 +1,7 @@
 # Separer l'hebergement video (Bunny) du code (GitHub/jsDelivr)
 
 - Date : 2026-08-19
-- Statut : Adopte
+- Statut : Remplace (partie code) par [0008](0008-bundle-sur-netlify.md) — la partie Bunny reste en vigueur
 
 ## Contexte
 

@@ -5,8 +5,6 @@
   d'animation qui les lit depuis window. SplitText decoupe les textes du
   Heros en lignes ; sans lui, ils basculent d'un bloc.
 
-  Le tag de version doit rester identique a celui de head.html.
-
   `?dev` bascule sur `pnpm dev` (localhost:3000), voir head.html.
 -->
 
@@ -24,7 +22,7 @@
     var script = document.createElement('script');
     script.src = dev
       ? 'http://localhost:3000/dev/scroll-video.js'
-      : 'https://cdn.jsdelivr.net/gh/t-rlnd/virtual-browser@v1.10.0/dist/scroll-video.js';
+      : 'https://virtual-browser.netlify.app/scroll-video.js';
     // Preserve l'ordre d'execution si un autre script est injecte de la meme
     // facon plus tard : sans ca, le premier arrive est le premier servi.
     script.async = false;

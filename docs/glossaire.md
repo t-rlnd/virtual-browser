@@ -49,14 +49,14 @@ Les mots du projet, du plus courant au plus technique.
 | Terme | Sens |
 | --- | --- |
 | **Stage** | Le « cerveau » de Protocol (`src/Stage.js`) : il garde l'état courant et donne les ordres aux vidéos. |
-| **Couche / layer** | Un objet qui sait afficher une vidéo (`seek`, `playLoop`, `show`, `hide`). `Mp4VideoLayer` le fait avec `<video>`, `DebugLayer` avec un `<canvas>`. |
+| **Couche / layer** | Un objet qui sait afficher une vidéo (`seek`, `playLoop`, `show`, `hide`). `Mp4VideoLayer` le fait avec `<video>`. |
 | **Machine à états** | Un objet qui ne connaît qu'un petit nombre d'états et les règles pour passer de l'un à l'autre. Le Stage en est une. |
 | **Événement** | Message émis par le Stage (`activechange`, `pausechange`…) que d'autres fichiers écoutent pour se mettre à jour. |
 | **Bundle** | Le fichier unique produit par esbuild à partir de tous les fichiers de `src/` : `dist/scroll-video.js` (+ `.css`). |
 | **esbuild** | L'outil qui fabrique le bundle. |
 | **GSAP / ScrollTrigger / SplitText** | Bibliothèque d'animation. ScrollTrigger mesure le scroll, SplitText découpe un texte en lignes. Chargées séparément dans Webflow, pas incluses dans le bundle. |
-| **CDN** | Réseau de serveurs qui distribue des fichiers vite, partout. Ici : Bunny pour les vidéos, jsDelivr pour le code. |
-| **jsDelivr** | CDN gratuit qui sert directement les fichiers d'un dépôt GitHub public. |
-| **Tag** | Étiquette git posée sur un commit (`v1.10.0`). jsDelivr sert une version précise grâce à lui. |
+| **CDN** | Réseau de serveurs qui distribue des fichiers vite, partout. Ici : Bunny pour les vidéos, Netlify pour le code. |
+| **Netlify** | Hébergeur branché sur le dépôt GitHub : publie `dist/` à chaque push. |
+| **jsDelivr** | CDN qui sert les paquets npm (GSAP) ; servait aussi le bundle avant Netlify. |
 | **e2e** | Test « de bout en bout » : un vrai navigateur (Playwright) ouvre la page, scrolle, clique et vérifie. |
 | **ADR** | « Architecture Decision Record » : une fiche qui explique une décision et pourquoi (`docs/decisions/`). |

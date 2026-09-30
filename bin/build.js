@@ -20,7 +20,7 @@ const PRODUCTION = process.env.NODE_ENV === 'production';
 
 /**
  * Les deux modes n'ecrivent pas au meme endroit, et ce n'est pas un detail :
- * `dist/` est versionne et sert de source a jsDelivr. Si le mode watch y
+ * `dist/` est versionne et publie tel quel par Netlify. Si le mode watch y
  * ecrivait, un `git add` distrait publierait un bundle de developpement —
  * sourcemap et client de live reload compris, ce dernier ouvrant chez chaque
  * visiteur une connexion vers un localhost qui n'existe pas.
@@ -63,9 +63,8 @@ if (PRODUCTION) {
 } else {
   await context.watch();
 
-  // servedir a la racine, et non sur le repertoire de sortie : les pages de
-  // demonstration, les medias et le bundle doivent cohabiter sous une seule
-  // origine. Port 0 = esbuild choisit, il n'est pas expose directement.
+  // servedir a la racine, et non sur le repertoire de sortie : les medias
+  // (public/) et le bundle (dev/) doivent cohabiter sous une seule origine. Port 0 = esbuild choisit, il n'est pas expose directement.
   const upstream = await context.serve({ servedir: '.', port: 0 });
 
   // Tout passe par ce serveur, qui ne retient que les medias — esbuild ne les
@@ -122,9 +121,7 @@ function logServedFiles() {
   console.log('');
   console.log(`scroll-video   ${SERVE_ORIGIN}   (watch + live reload)`);
   console.log('');
-  console.log(line('Demo', `${SERVE_ORIGIN}/`));
-  console.log(line('Demo MP4', `${SERVE_ORIGIN}/?real`));
-  console.log(line('Bundle', `${SERVE_ORIGIN}/demo/bundle.html`));
+  console.log(line('Site', 'https://virtual-browser.webflow.io/?dev'));
   console.log('');
   console.log('  Webflow — Page settings > Inside <head>');
   if (css) console.log(`  <link href="${css}" rel="stylesheet" />`);

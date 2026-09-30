@@ -5,10 +5,11 @@ Deux hebergeurs, separes par nature de fichier :
 | Quoi | Ou | Pourquoi la |
 | --- | --- | --- |
 | MP4 et posters | Bunny (Storage + Pull Zone) | Volumineux, binaires, n'ont rien a faire dans un depot git |
-| `scroll-video.js` / `.css` | GitHub, servi par jsDelivr | Versionnes avec le code qui les produit, diffables, tagues |
+| `scroll-video.js` / `.css` | Netlify (`virtual-browser.netlify.app`), deploye depuis `dist/` | Deploiement automatique a chaque push, URL fixe |
 
-Le bundle est donc **commite** dans `dist/` : c'est ce que jsDelivr lit. C'est
-la seule raison pour laquelle un artefact de build est versionne ici.
+Le bundle est **commite** dans `dist/` : c'est ce dossier, et lui seul, que
+Netlify publie. C'est la seule raison pour laquelle un artefact de build est
+versionne ici.
 
 ## La regle qui prime sur tout le reste
 
@@ -73,30 +74,36 @@ access > Custom domain) et ajouter une Transform Rule pour les en-tetes CORS.
 Le point d'attention est le meme : ne pas router les fichiers vers Cloudflare
 Stream.
 
-## Le code sur GitHub, via jsDelivr
+## Le code sur Netlify
 
-jsDelivr sert n'importe quel fichier d'un depot **public** a l'URL :
+Le site Netlify est branche sur le depot GitHub : chaque push sur `main`
+redeploie. [`netlify.toml`](../netlify.toml) limite la publication a `dist/`
+(ni demo, ni sources, ni docs en ligne) et ne lance aucune commande de build :
+`dist/` doit donc etre reconstruit et commite avant de pousser.
 
 ```
-https://cdn.jsdelivr.net/gh/<compte>/<depot>@<tag>/dist/scroll-video.js
+https://virtual-browser.netlify.app/scroll-video.js
+https://virtual-browser.netlify.app/scroll-video.css
 ```
 
-Le depot doit etre public : jsDelivr n'a aucun moyen de lire un depot prive.
-
-Le tag est immuable, donc cache indefiniment. Publier une mise a jour du code :
+Publier une mise a jour du code :
 
 ```bash
 pnpm build
-git add dist && git commit -m "build: v1.1.0"
-git tag v1.1.0 && git push --tags
+git add dist && git commit -m "build: ..."
+git push
 ```
 
-Puis remplacer `@v1.0.0` par `@v1.1.0` dans les deux snippets Webflow. Tant
-que ce numero ne bouge pas, aucun visiteur ne peut recevoir un bundle a moitie
-deploye.
+Rien a changer dans Webflow : l'URL ne porte pas de version. Netlify sert le
+bundle avec `Cache-Control: max-age=0, must-revalidate`, donc chaque visite
+revalide (304 si rien n'a change) et un deploiement est visible tout de suite.
+Contrepartie : plus de version figee a laquelle revenir depuis Webflow ; un
+retour arriere se fait dans Netlify (Deploys > publier un deploiement
+precedent) ou par `git revert`.
 
-Ne jamais pointer sur `@main` : jsDelivr y applique un cache de 7 jours, une
-correction peut donc mettre une semaine a apparaitre.
+Historique : le bundle etait auparavant servi par jsDelivr sur un tag git
+(voir [ADR 0001](decisions/0001-hebergement-bunny-jsdelivr.md), remplace par
+l'[ADR 0008](decisions/0008-bundle-sur-netlify.md)).
 
 ## Versionner le prefixe des medias plutot que purger le cache
 
@@ -106,8 +113,7 @@ version des **videos**, incrementer ce prefixe (`v2`, `v3`...) et mettre a jour
 cache du CDN. Le deploiement devient atomique et l'ancienne version reste
 servie tant que la nouvelle n'est pas referencee.
 
-Ce prefixe et le tag git sont deux compteurs independants : les videos bougent
-rarement, le code plus souvent.
+Changer `base` recompile le bundle : rebuild, commit de `dist/` et push.
 
 ## Budget de poids
 

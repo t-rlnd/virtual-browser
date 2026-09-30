@@ -24,22 +24,29 @@ Un seul fichier : `node --test test/stage.test.mjs`.
 
 ## 2. Parcours e2e — un vrai navigateur
 
-Playwright ouvre la page de démo, scrolle, clique et vérifie chaque étape
-(une trentaine), avec des captures dans `.artifacts/`.
+Playwright ouvre **le site Webflow publié** (`virtual-browser.webflow.io`),
+scrolle, clique et vérifie chaque étape (une trentaine), avec des captures
+dans `.artifacts/`. Vrai DOM du Designer, vrais MP4.
 
-Ils ont besoin du serveur local : **lancer `pnpm dev` dans un autre
-terminal** d'abord.
+Le site charge le bundle depuis Netlify ; le test intercepte ces requêtes et
+sert à la place le bundle local (`BUNDLE=dev`, par défaut : `dev/`, tenu à
+jour par **`pnpm dev` lancé dans un autre terminal**). Pas de `?dev` : un
+navigateur refuse qu'une page publique charge localhost.
 
 ```bash
-pnpm test:e2e                  # sur la démo canvas (sans vidéo)
-REAL=1 pnpm test:e2e           # sur les vrais MP4
+pnpm test:e2e                  # site Webflow + bundle dev/
 BROWSER=webkit pnpm test:e2e   # moteur de Safari (aussi : firefox)
+BUNDLE=prod pnpm test:e2e      # le bundle réellement en ligne
+SITE_URL=https://... pnpm test:e2e   # une autre page publiée
 ```
+
+Le test dépend du site publié : une structure modifiée dans le Designer mais
+pas encore publiée ne sera pas vue.
 
 `BROWSER=webkit` est le plus important : le scrub dépend du décodeur vidéo, et
 Safari peut se figer sur des seeks rapides là où Chrome ne bronche pas.
 
-En `REAL=1`, une étape de plus mesure le temps d'un seek : au-delà de 33 ms
+Une étape mesure le temps d'un seek : au-delà de 33 ms
 (médiane), le scrub ne tient pas 30 images/seconde. Relevé actuel :
 
 | Moteur | Seek médian | Pire cas |
@@ -47,7 +54,7 @@ En `REAL=1`, une étape de plus mesure le temps d'un seek : au-delà de 33 ms
 | WebKit | 2 ms | 5 ms |
 | Chromium | 5 ms | 9 ms |
 
-## 3. Avant de publier un tag
+## 3. Avant de pousser un nouveau dist/
 
 Rejouer le parcours sur le **bundle construit** (`dist/`), c'est-à-dire ce qui
 sera réellement en ligne :
@@ -57,8 +64,7 @@ pnpm build
 pnpm test:bundle
 ```
 
-(toujours avec `pnpm dev` lancé à côté). La seule différence restante avec
-Webflow est l'URL du bundle.
+(`BUNDLE=dist`). C'est exactement le fichier que Netlify servira après le push.
 
 ## Ce qui n'est pas testable ici
 
