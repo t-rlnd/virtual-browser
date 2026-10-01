@@ -48,8 +48,9 @@ La section Héros (`hero.js`) est **à part** : elle ne passe pas par le Stage
 - GSAP 3 + ScrollTrigger (+ SplitText pour le Heros) charges depuis jsDelivr, lus sur `window` — jamais
   bundle (voir `bin/build.js` et `webflow/footer.html`).
 - Lenis (smooth scroll), bundle depuis npm, cale sur le ticker GSAP.
-- esbuild : bundle unique `dist/index.js` + `.css`, charge sur tout le site ; serveur local avec
-  requetes Range (`bin/serve-media.js`).
+- esbuild : bundle unique `dist/index.js` + `.css`, charge sur tout le site ; en
+  watch, serveur local du bundle seulement (les medias sont toujours lus sur
+  le CDN, voir `base` dans `src/config.js`).
 - Playwright pour les parcours e2e (Chromium / WebKit / Firefox).
 - ffmpeg via `scripts/` pour l'encodage all-intra.
 

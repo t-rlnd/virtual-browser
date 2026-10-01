@@ -99,6 +99,7 @@ publié le site au moins une fois.
 | Lancer les tests | [`docs/tests.md`](docs/tests.md) |
 | Savoir pourquoi un choix a été fait | [`docs/decisions/`](docs/decisions/) (une fiche par décision) |
 | Voir ce qui reste à faire | [`docs/todo.md`](docs/todo.md) |
+| Reprendre le projet ou le transmettre (comptes, hôtes, masters) | [`docs/passation.md`](docs/passation.md) |
 
 ---
 

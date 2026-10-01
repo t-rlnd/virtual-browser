@@ -6,15 +6,11 @@
  *
  * Le serveur de developpement sert les fichiers **tels qu'ils seront en
  * ligne**, sans transformation. C'est ce qui permet de pointer le code
- * personnalise d'une page Webflow sur localhost et de developper contre le
- * vrai site.
+ * personnalise d'une page Webflow sur localhost (`?dev`, voir webflow/) et de
+ * developper contre le vrai site. Les medias, eux, ne passent jamais par ici :
+ * ils sont toujours lus sur le CDN (`base` dans src/config.js).
  */
 import * as esbuild from 'esbuild';
-import { readdirSync } from 'node:fs';
-import { createServer, request as httpRequest } from 'node:http';
-import { join, sep } from 'node:path';
-
-import { serveMedia } from './serve-media.js';
 
 const PRODUCTION = process.env.NODE_ENV === 'production';
 
@@ -41,8 +37,8 @@ const LIVE_RELOAD = !PRODUCTION;
 const SERVE_PORT = Number(process.env.PORT ?? 3000);
 const SERVE_ORIGIN = `http://localhost:${SERVE_PORT}`;
 
-/** Repertoire servi avec support des Range, hors du perimetre d'esbuild. */
-const MEDIA_ROUTE = 'public';
+/** Site Webflow publie, qui charge ce serveur quand on lui ajoute `?dev`. */
+const SITE_URL = process.env.SITE_URL ?? 'https://virtual-browser.webflow.io/';
 
 const context = await esbuild.context({
   bundle: true,
@@ -64,71 +60,18 @@ if (PRODUCTION) {
 } else {
   await context.watch();
 
-  // servedir a la racine, et non sur le repertoire de sortie : les medias
-  // (public/) et le bundle (dev/) doivent cohabiter sous une seule origine. Port 0 = esbuild choisit, il n'est pas expose directement.
-  const upstream = await context.serve({ servedir: '.', port: 0 });
-
-  // Tout passe par ce serveur, qui ne retient que les medias — esbuild ne les
-  // annonce pas comme seekable, ce qui suffit a casser le scrub.
-  createServer((clientRequest, clientResponse) => {
-    const { pathname } = new URL(clientRequest.url, SERVE_ORIGIN);
-
-    if (pathname.startsWith(`/${MEDIA_ROUTE}/`)) {
-      const served = serveMedia(MEDIA_ROUTE, pathname.slice(MEDIA_ROUTE.length + 1), clientRequest, clientResponse);
-      if (served) return;
-    }
-
-    const proxied = httpRequest(
-      {
-        hostname: upstream.hosts[0],
-        port: upstream.port,
-        path: clientRequest.url,
-        method: clientRequest.method,
-        headers: clientRequest.headers,
-      },
-      (upstreamResponse) => {
-        clientResponse.writeHead(upstreamResponse.statusCode ?? 502, upstreamResponse.headers);
-        upstreamResponse.pipe(clientResponse, { end: true });
-      }
-    );
-
-    proxied.on('error', () => {
-      clientResponse.writeHead(502);
-      clientResponse.end('serveur de build injoignable');
-    });
-
-    clientRequest.pipe(proxied, { end: true });
-  }).listen(SERVE_PORT, logServedFiles);
-}
-
-/** Affiche les URLs locales et les extraits a coller dans Webflow. */
-function logServedFiles() {
-  const walk = (directory) =>
-    readdirSync(directory, { withFileTypes: true })
-      .flatMap((entry) => {
-        const path = join(directory, entry.name);
-        return entry.isDirectory() ? walk(path) : path;
-      });
-
-  const files = walk(BUILD_DIRECTORY)
-    .filter((file) => !file.endsWith('.map'))
-    .map((file) => [SERVE_ORIGIN, ...file.split(sep)].join('/'));
-
-  const css = files.find((file) => file.endsWith('.css'));
-  const js = files.find((file) => file.endsWith('.js'));
-
-  const line = (label, value) => `  ${label.padEnd(14)}${value}`;
+  // servedir a la racine : les snippets Webflow attendent le bundle sous
+  // /dev/index.* (voir webflow/head.html et footer.html).
+  await context.serve({ servedir: '.', port: SERVE_PORT });
 
   console.log('');
-  console.log(`scroll-video   ${SERVE_ORIGIN}   (watch + live reload)`);
+  console.log(`virtual-browser   ${SERVE_ORIGIN}   (watch + live reload)`);
   console.log('');
-  console.log(line('Site', 'https://virtual-browser.webflow.io/?dev'));
+  console.log(`  Bundle   ${SERVE_ORIGIN}/${BUILD_DIRECTORY}/index.js`);
+  console.log(`           ${SERVE_ORIGIN}/${BUILD_DIRECTORY}/index.css`);
+  console.log(`  Site     ${new URL('?dev', SITE_URL)}`);
   console.log('');
-  console.log('  Webflow — Site settings > Custom code > Head');
-  if (css) console.log(`  <link href="${css}" rel="stylesheet" />`);
-  console.log('');
-  console.log('  Webflow — Site settings > Custom code > Footer');
-  console.log('  (gsap et ScrollTrigger restent charges avant)');
-  if (js) console.log(`  <script defer src="${js}"></script>`);
+  console.log("  Les snippets Webflow (webflow/head.html, footer.html) basculent d'eux-memes");
+  console.log("  sur ce serveur quand l'URL du site porte ?dev.");
   console.log('');
 }
