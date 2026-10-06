@@ -16,3 +16,29 @@
   /* Empeche l'overlay de lecture natif d'iOS d'apparaitre. */
   pointer-events: none;
 }
+
+/*
+ * Voiles par scene : trois `[data-vb-hero-overlay="0|1|2"]` empiles dans
+ * `[data-vb-hero-inner]`, chacun avec sa couleur ou son degrade regle dans
+ * le Designer. Le script ne les connait pas : il publie
+ * `data-vb-hero-active` sur `[data-vb-hero]`, le fondu en decoule ici.
+ *
+ * Dans le Designer ils sont en `display: none` (pour ne pas se gener a
+ * l'edition) : on les reaffiche tous, et seule l'opacite fait la bascule.
+ * Le selecteur est prefixe par `[data-vb-hero]` pour l'emporter sur la
+ * classe Webflow quel que soit l'ordre de chargement des feuilles.
+ */
+[data-vb-hero] [data-vb-hero-overlay] {
+  display: flex;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+
+/* Sans attribut (avant le script, reduced, error) : le voile 0 sert de base. */
+[data-vb-hero]:not([data-vb-hero-active]) [data-vb-hero-overlay='0'],
+[data-vb-hero][data-vb-hero-active='0'] [data-vb-hero-overlay='0'],
+[data-vb-hero][data-vb-hero-active='1'] [data-vb-hero-overlay='1'],
+[data-vb-hero][data-vb-hero-active='2'] [data-vb-hero-overlay='2'] {
+  opacity: 1;
+}
