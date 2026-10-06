@@ -43,8 +43,9 @@ Deux points qui ne tiennent pas dans un tableau :
   substituent l'un à l'autre à chaud : même définition, même cadence, même
   cadrage. Sinon la bascule saute.
 
-Les masters ne sont **pas dans git** (`masters/` est ignoré). Les garder
-précieusement : seuls eux permettent de ré-encoder.
+Les masters ne sont **ni dans git ni conservés par l'agence** (`masters/` est
+ignoré) : ils restent chez le client, seuls eux permettent de ré-encoder. Sur
+Bunny ne vivent que les exports.
 
 ---
 

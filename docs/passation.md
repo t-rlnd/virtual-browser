@@ -12,13 +12,12 @@ avec le README, cette page et `docs/architecture.md`.
 | Bundle en ligne (`index.js` / `.css`) | Worker Cloudflare `dev-vb.initweb.ai`, branché sur `main` | Worker à recréer dans le compte Cloudflare du client (assets `dist/`, voir `wrangler.jsonc`), branché sur le dépôt transféré, domaine définitif à choisir |
 | Vidéos et posters | Bunny, zone `virtual-browser` du client (préfixe `home/v1/`) | fait : zone créée et fichiers copiés le 2026-10-06 |
 | Site | Webflow `virtual-browser.webflow.io` | transfert du site Webflow vers le workspace du client |
-| Masters vidéo | hors dépôt (`masters/`, non versionné) | remettre les masters au client : seuls eux permettent de ré-encoder |
+| Masters vidéo | chez le client uniquement (aucune copie à l'agence) | rien : seuls les exports sont en ligne sur Bunny ; ré-encoder une vidéo demande le master au client |
 
-Les masters ne sont **pas** dans git. Avant la passation, vérifier que le
-client possède bien le master de chaque vidéo en ligne (`hero`, `video1`,
-`video2`…). Sans master, une vidéo ne peut plus être ré-encodée. État au
-2026-10-06 : seul `hero.mp4` est présent dans `masters/` sur le poste de
-l'agence ; `video1` et `video2` sont à retrouver.
+Les masters ne sont **ni dans git ni sur le poste de l'agence** : les seules
+vidéos existantes sont les exports en ligne sur Bunny. Ré-encoder une vidéo
+(`hero`, `video1`, `video2`…) demande son master au client. Sans master, un
+export ne peut pas être refait.
 
 ## 2. Où changent les adresses
 
@@ -80,7 +79,7 @@ qui est réellement en ligne.
 - [ ] `dist/_headers` présent dans le dépôt (revalidation + CORS côté
       Cloudflare).
 - [ ] `pnpm test`, `pnpm build`, `pnpm test:bundle` au vert sur `main`.
-- [ ] Masters remis au client.
+- [ ] Le client sait que les masters sont de son côté (aucune copie à l'agence).
 - [ ] Secrets Bunny (`BUNNY_STORAGE_KEY`) régénérés côté client, jamais
       transmis en clair.
 - [ ] Ce fichier et le README relus avec le nom des nouveaux hôtes.
