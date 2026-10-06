@@ -13,7 +13,7 @@ Les mots du projet, du plus courant au plus technique.
 | **Use-case** | Une des vidéos entre lesquelles on bascule (`uc1`, `uc2`…). Chacune a son onglet, ses cards, sa légende. |
 | **Auto-avance** | Après `loopRepeats` tours (4), la boucle passe seule au use-case suivant. |
 | **Progression** | Le nombre de 0 à 1 qui dit où en est le scroll dans la piste. Tout en découle. |
-| **Latch / verrou** | Une fois la boucle atteinte, on ne revient plus au scrub en remontant (`latchLoop`). |
+| **Latch / verrou** | Une fois la boucle atteinte, on ne revient plus au scrub en remontant. Définitif depuis l'ADR 0011. |
 | **Collapse** | Après le verrou, la piste passe de 300vh à une hauteur d'écran (`100dvh`) pour ne pas laisser de scroll vide. |
 | **Dock / cadre** | Le moment où la vidéo quitte le plein écran pour se loger dans `[data-vb-frame]`. |
 | **Mode compact** | Sous 991 px : plus de scrub pour Protocol, la vidéo boucle directement. |

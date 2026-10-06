@@ -294,8 +294,8 @@ d'ecran, tout le supplement va au scrub.
 ### Le passage en boucle est definitif
 
 Remonter ne relance pas le scrub : la video reste a tourner dans son cadre, et
-se met en pause quand la piste quitte l'ecran. C'est `latchLoop: true` dans
-[`src/config.js`](../src/config.js).
+se met en pause quand la piste quitte l'ecran. Ce verrou n'est pas un
+reglage (voir [ADR 0011](decisions/0011-verrou-de-boucle-definitif.md)).
 
 Dans la foulee, la piste passe de 300vh a `100dvh` : le scrub deja consomme
 (et la reserve) ne servent plus, et laisseraient un long scroll mort.
@@ -320,11 +320,6 @@ n'y ramene pas le titre — la mise en scene reste ou elle en etait, section 2
 affichee par-dessus une video calee dans son cadre. Un cran vers le haut
 quitte la section (s'il y a du contenu au-dessus) ; un cran vers le bas
 montre la suite du site.
-
-`latchLoop: false` restaure l'aller-retour : remonter rembobine la video,
-ramene le titre et rend le fond au plein ecran. La piste reste a 300vh. C'est
-le comportement le plus proche d'une maquette entierement pilotee par le
-scroll.
 
 ## 3. La section des use-cases
 

@@ -106,8 +106,7 @@ Tout le comportement tient dans ces quatre variables :
 | `paused` | la boucle est figee par le visiteur | `pause.js` (bouton) ; `usecases.js` (un clic de use-case la leve) |
 
 Elles sont **independantes**. Changer `activeId` ne touche ni au mode ni a la
-progression : c'est ce qui rend la bascule de use-case gratuite a implementer,
-et retroactive quand `latchLoop` est a `false`.
+progression : c'est ce qui rend la bascule de use-case gratuite a implementer.
 
 `paused` ne vaut qu'en `loop` (le scrub reste pilote par le scroll) mais
 survit aux changements de mode : sortir de la section puis revenir laisse la

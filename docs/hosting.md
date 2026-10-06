@@ -1,138 +1,72 @@
-# Hebergement des fichiers
+# Hébergement
 
-Deux hebergeurs, separes par nature de fichier :
+Deux hébergeurs, séparés par nature de fichier :
 
-| Quoi | Ou | Pourquoi la |
+| Quoi | Où | Pourquoi là |
 | --- | --- | --- |
-| MP4 et posters | Bunny (Storage + Pull Zone) | Volumineux, binaires, n'ont rien a faire dans un depot git |
-| `index.js` / `.css` | Cloudflare (`dev-vb.initweb.ai`), deploye depuis `dist/` | Deploiement automatique a chaque push, URL fixe |
+| MP4 et posters | Bunny (Storage + Pull Zone), `virtual-browser.b-cdn.net/home/v1/` | Volumineux, binaires, n'ont rien à faire dans git |
+| `index.js` / `index.css` | Cloudflare (`dev-vb.initweb.ai`), déployé depuis `dist/` | Déploiement automatique à chaque push, URL fixe |
 
-Le bundle est **commite** dans `dist/` : c'est ce dossier, et lui seul, que
-Cloudflare publie. C'est la seule raison pour laquelle un artefact de build est
-versionne ici.
+Tout ce qui concerne les vidéos (encodage, zone Bunny, téléversement,
+vérification, versionnage du préfixe) est dans [`videos.md`](videos.md).
+Cette page ne traite que du code.
 
-## La regle qui prime sur tout le reste
+## La règle qui prime sur tout le reste
 
-Les MP4 doivent etre servis **bruts**. Il ne faut passer ni par Bunny Stream ni
-par Cloudflare Stream : ces services transcodent en HLS, et le streaming
-adaptatif rend `currentTime` imprecis. Les seeks se calent alors sur les
-frontieres de segment, ce qui detruit exactement la propriete dont depend tout
-le scrub.
-
-Ce qu'il faut est donc un simple stockage objet derriere un CDN.
-
-## Pourquoi pas les assets Webflow
-
-Le gestionnaire d'assets de Webflow conviendrait au cas present (quatre MP4 et
-quatre posters par largeur, soit une douzaine de fichiers), mais c'est une
-bibliotheque a plat, sans dossiers ni versionnement, et l'upload est manuel.
-Le jour ou l'on migre vers le rendu canvas, il faudra televerser plusieurs
-centaines d'images : autant mettre le stockage externe en place tout de suite.
-
-## Option retenue : Bunny
-
-1. Creer une **Storage Zone** (region proche de l'audience principale).
-2. Creer une **Pull Zone** branchee sur cette Storage Zone, avec un domaine
-   personnalise ou le `*.b-cdn.net` fourni.
-3. Dans la Pull Zone, onglet **Headers**, ajouter
-   `Access-Control-Allow-Origin: *`. Ce n'est pas necessaire pour la balise
-   `<video>`, mais indispensable si l'on bascule un jour sur le rendu canvas.
-4. Recuperer le mot de passe de la Storage Zone (onglet **FTP & API Access**).
-
-Televersement :
-
-```bash
-export BUNNY_STORAGE_ZONE=ma-zone
-export BUNNY_STORAGE_KEY=xxxxxxxx
-pnpm encode -- masters/video1.mp4 masters/video2.mp4
-./scripts/upload-bunny.sh
-```
-
-Le script ne televerse que `public/assets` : le bundle ne passe pas par Bunny.
-
-Verification :
-
-```bash
-./scripts/check-cdn.sh https://virtual-browser.b-cdn.net/home/v1/video1-1280.mp4
-```
-
-Le script controle les trois points qui comptent : requetes `Range` servies,
-CORS ouverts, et absence de flux adaptatif.
-
-## Option equivalente : Cloudflare R2
-
-Meme principe, avec `wrangler` a la place de `curl` :
-
-```bash
-wrangler r2 bucket create scroll-video
-wrangler r2 object put scroll-video/scroll-video/v1/video1-1280.mp4 \
-  --file public/assets/video1-1280.mp4 --content-type video/mp4
-```
-
-Brancher ensuite un domaine personnalise sur le bucket (R2 > Settings > Public
-access > Custom domain) et ajouter une Transform Rule pour les en-tetes CORS.
-Le point d'attention est le meme : ne pas router les fichiers vers Cloudflare
-Stream.
+Les MP4 sont servis **bruts**. Ni Bunny Stream ni Cloudflare Stream : ces
+services transcodent en HLS, et le streaming adaptatif rend `currentTime`
+imprécis. Les seeks se calent alors sur les frontières de segment, ce qui
+détruit exactement la propriété dont dépend le scrub.
 
 ## Le code sur Cloudflare
 
 Un Worker Cloudflare, sans code serveur, sert `dist/` en fichiers statiques.
-Il est branche sur le depot GitHub (Workers & Pages > le Worker > Settings >
+Il est branché sur le dépôt GitHub (Workers & Pages › le Worker › Settings ›
 Build) : chaque push sur `main` lance `wrangler deploy`, qui lit
-[`wrangler.jsonc`](../wrangler.jsonc) a la racine. C'est ce fichier qui dit
-a Cloudflare de ne publier que `dist/` : ni demo, ni sources, ni docs en
-ligne. Le domaine `dev-vb.initweb.ai` est rattache au Worker dans le
-dashboard (Settings > Domains & Routes).
+[`wrangler.jsonc`](../wrangler.jsonc) à la racine. C'est ce fichier qui dit à
+Cloudflare de ne publier que `dist/` : ni sources, ni docs en ligne. Le
+domaine `dev-vb.initweb.ai` est rattaché au Worker dans le dashboard
+(Settings › Domains & Routes).
 
 ```
 https://dev-vb.initweb.ai/index.js
 https://dev-vb.initweb.ai/index.css
 ```
 
-Publier une mise a jour du code :
+Le bundle est **commité** dans `dist/` : c'est ce dossier, et lui seul, que
+Cloudflare publie. C'est la seule raison pour laquelle un artefact de build
+est versionné ici. La commande de build du projet Cloudflare peut rester
+vide.
+
+Publier une mise à jour du code :
 
 ```bash
+pnpm test
 pnpm build
+pnpm test:bundle                   # rejoue le parcours sur dist/
 git add dist && git commit -m "build: ..."
 git push
 ```
 
-Rien a changer dans Webflow : l'URL ne porte pas de version.
+Rien à changer dans Webflow : l'URL ne porte pas de version.
 [`dist/_headers`](../dist/_headers) fait servir le bundle avec
 `Cache-Control: max-age=0, must-revalidate`, donc chaque visite revalide
-(304 si rien n'a change) et un deploiement est visible tout de suite.
-Contrepartie : plus de version figee a laquelle revenir depuis Webflow ; un
-retour arriere se fait dans Cloudflare (Deployments > rollback) ou par
+(304 si rien n'a changé) et un déploiement est visible tout de suite.
+Contrepartie : pas de version figée à laquelle revenir depuis Webflow ; un
+retour arrière se fait dans Cloudflare (Deployments › rollback) ou par
 `git revert`.
 
-La commande de build du projet Cloudflare peut rester vide : `dist/` est
-deja construit et versionne. La laisser sur `pnpm run build` ne nuit pas,
-elle reconstruit simplement le meme bundle.
+## Ce qui est écrit en dur, et où
 
-Historique : le bundle etait servi par jsDelivr sur un tag git
+| Hôte | Fichiers | Effet d'un changement |
+| --- | --- | --- |
+| Bunny (`virtual-browser.b-cdn.net`) | `src/config.js` (`base`), `webflow/head.html` (preconnect) | rebuild + commit de `dist/` + push, puis recoller `head.html` dans Webflow |
+| Cloudflare (`dev-vb.initweb.ai`) | `webflow/head.html`, `webflow/footer.html`, `test/e2e.mjs` | recoller les deux snippets dans Webflow |
+
+Le piège : changer le CDN vidéo impose de republier le code, `base` étant
+compilé dans le bundle.
+
+Historique : le bundle a été servi par jsDelivr sur un tag git
 ([ADR 0001](decisions/0001-hebergement-bunny-jsdelivr.md)), puis par Netlify
-([ADR 0008](decisions/0008-bundle-sur-netlify.md)), remplace par
+([ADR 0008](decisions/0008-bundle-sur-netlify.md)), remplacé par
 l'[ADR 0010](decisions/0010-bundle-sur-cloudflare.md).
-
-## Versionner le prefixe des medias plutot que purger le cache
-
-Les videos sont rangees sous `home/v1/`. Pour publier une nouvelle
-version des **videos**, incrementer ce prefixe (`v2`, `v3`...) et mettre a jour
-`base` dans [`src/config.js`](../src/config.js) plutot que de purger le
-cache du CDN. Le deploiement devient atomique et l'ancienne version reste
-servie tant que la nouvelle n'est pas referencee.
-
-Changer `base` recompile le bundle : rebuild, commit de `dist/` et push.
-
-## Budget de poids
-
-Ordres de grandeur pour un master de 6 secondes, avec les 3 premieres secondes
-en all-intra :
-
-- 750 px : environ 1,5 Mo par video
-- 1280 px : environ 5 Mo par video
-- 1920 px : environ 10 Mo par video
-
-Le client ne telecharge qu'une seule largeur. La seconde video n'est chargee
-qu'apres l'interactivite de la page, et le mode economiseur de donnees force la
-plus petite largeur.

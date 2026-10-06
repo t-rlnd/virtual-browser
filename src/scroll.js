@@ -55,10 +55,8 @@ export function initScroll({ stage, config, track }) {
    * Le verrou de boucle. Une fois arme, le scrub ne reprend plus la main : la
    * video reste calee dans son cadre, et seule la visibilite de la piste decide
    * encore entre boucle et pause. Rien n'est tue pour autant, le declencheur de
-   * scrub cesse simplement d'agir — ce qui permet de relacher le verrou par
-   * configuration sans rien recabler.
+   * scrub cesse simplement d'agir.
    */
-  const latching = config.latchLoop !== false;
   let latched = false;
   let collapsed = false;
 
@@ -86,7 +84,7 @@ export function initScroll({ stage, config, track }) {
    * ferait sauter toute la page.
    */
   const collapseTrack = ({ keepTrackInView, deferRefresh = false }) => {
-    if (collapsed || !latching) return;
+    if (collapsed) return;
 
     const heightBefore = track.offsetHeight;
     const scrollBefore = window.scrollY;
@@ -118,7 +116,7 @@ export function initScroll({ stage, config, track }) {
 
   const enterLoop = () => {
     reached = true;
-    latched = latching;
+    latched = true;
     // Le lissage laisse la progression en retard sur le scroll : au moment ou
     // la boucle prend la main, elle peut n'etre qu'a 0.75. La figer la
     // arreterait la mise en scene avant son terme. La boucle commence a 1.
@@ -161,8 +159,8 @@ export function initScroll({ stage, config, track }) {
     onEnter: resumeLoop,
     onEnterBack: resumeLoop,
     onLeave: () => stage.setMode(MODES.IDLE),
-    // Sortie par le haut : sans verrou, le trigger de scrub reprend la main et
-    // rembobine ; avec, il n'y a plus rien a afficher, donc rien a decoder.
+    // Sortie par le haut : avant le verrou, le trigger de scrub reprend la
+    // main ; apres, il n'y a plus rien a afficher, donc rien a decoder.
     onLeaveBack: () => {
       if (latched) stage.setMode(MODES.IDLE);
     },
@@ -183,7 +181,7 @@ export function initScroll({ stage, config, track }) {
     // Rechargement passe la section 2 : le verrou doit deja etre arme, sinon
     // remonter rembobinerait une video que le visiteur a deja vue boucler.
     reached = true;
-    latched = latching;
+    latched = true;
     collapseTrack({ keepTrackInView: false });
     stage.setMode(MODES.IDLE);
   }

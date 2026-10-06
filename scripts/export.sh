@@ -39,7 +39,12 @@ CONFIG_FILE="${ROOT}/src/config.js"
 
 OUT_ROOT="${OUT_ROOT:-${ROOT}/exports}"
 CRF="${CRF:-24}"
-REMOTE_PREFIX="${REMOTE_PREFIX:-home/v1}"
+
+# Hote et prefixe de la zone Bunny, lus dans `base` de src/config.js : la
+# commande de verification imprimee en fin de course est la vraie.
+BASE=$(sed -n "s/^[[:space:]]*base:[[:space:]]*'\([^']*\)'.*/\1/p" "$CONFIG_FILE" | head -1)
+BASE="${BASE%/}"
+REMOTE_PREFIX="${REMOTE_PREFIX:-${BASE#*://*/}}"
 
 if ! command -v ffprobe >/dev/null 2>&1; then
   echo "ffmpeg est introuvable. Installation : brew install ffmpeg" >&2
@@ -124,7 +129,10 @@ for argument in "$@"; do
   end="${cut##*:}"
   id="$name"
   case "$name" in video*) id="uc${name#video}" ;; esac
-  if [ "$transition" = "$end" ]; then
+  if [ "$name" = "hero" ]; then
+    # Le Heros ne boucle pas : sa balise ne porte ni id ni decoupage.
+    snippets="${snippets}<video data-vb-hero-video data-vb-asset=\"hero\"></video>\n"
+  elif [ "$transition" = "$end" ]; then
     snippets="${snippets}<video data-vb-id=\"${id}\" data-vb-asset=\"${name}\" data-vb-loop-at=\"A_CHOISIR\"></video>\n"
   else
     snippets="${snippets}<video data-vb-id=\"${id}\" data-vb-asset=\"${name}\" data-vb-loop-at=\"${transition}\" data-vb-loop-end=\"${end}\"></video>\n"
@@ -135,23 +143,23 @@ done
 
 echo "════ a faire ensuite"
 echo
-echo "1. Deposer le contenu des dossiers ci-dessous dans la Storage Zone Bunny,"
-echo "   sous ${REMOTE_PREFIX}/ — a plat, les fichiers cote a cote :"
+echo "1. Deposer les dossiers ci-dessous dans la Storage Zone Bunny, sous"
+echo "   ${REMOTE_PREFIX}/ — a plat, les fichiers cote a cote (ou via le script) :"
 echo
+dirs=""
 for argument in "$@"; do
   input="${argument%%:*}"
   name=$(basename "$input")
-  echo "     ${OUT_ROOT}/${name%.*}"
+  dirs="${dirs} ${OUT_ROOT#"${ROOT}/"}/${name%.*}"
 done
-echo
-command -v open >/dev/null 2>&1 && echo "   open \"${OUT_ROOT}\""
+echo "     ./scripts/upload-bunny.sh${dirs}"
 echo
 echo "2. Verifier que le CDN sert bien du MP4 brut :"
 first=$(basename "${1%%:*}")
 first="${first%.*}"
 largest=0
 for width in $WIDTHS; do [ "$width" -gt "$largest" ] && largest="$width"; done
-echo "     ./scripts/check-cdn.sh https://VOTRE-ZONE.b-cdn.net/${REMOTE_PREFIX}/${first}-${largest}.mp4"
+echo "     ./scripts/check-cdn.sh ${BASE}/${first}-${largest}.mp4"
 echo
 echo "3. Poser ces attributs sur les balises, dans le Designer Webflow :"
 echo

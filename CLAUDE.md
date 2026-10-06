@@ -42,17 +42,16 @@ artefact de build versionne.
 ### Scripts video (hors watch/build)
 
 ```bash
-./scripts/probe.sh masters/*.mp4                          # inspecte les masters
-./scripts/check-video.sh masters/video1.mp4:166:398        # standards avant/apres encodage
-./scripts/encode.sh masters/video1.mp4:166:398              # encodage ffmpeg all-intra
-./scripts/export.sh masters/video3.mp4:166:398               # probe + encode + check, sort exports/
-./scripts/upload-bunny.sh                                    # televerse public/assets sur Bunny
-./scripts/check-cdn.sh https://virtual-browser.b-cdn.net/home/v1/video1-1280.mp4
+./scripts/export.sh masters/video3.mp4:166:398               # check + encode + check, sort exports/video3/
+./scripts/upload-bunny.sh exports/video3                     # televerse un export sur Bunny (home/v1/)
+./scripts/check-cdn.sh https://virtual-browser.b-cdn.net/home/v1/video3-1280.mp4
+./scripts/check-video.sh masters/video3.mp4:166:398          # controle seul d'un master ou d'un export
 ```
 
-`check-video.sh` lit ses standards (fps, largeurs) dans `src/config.js` : ne
-recopie rien, verifie contre la config reelle. Le decoupage decoupe/end est en
-numeros d'image (`fichier.mp4:start:end`), pas en secondes.
+`encode.sh` est la brique ffmpeg appelee par `export.sh`. Les scripts lisent
+leurs standards (fps, largeurs, `base`) dans `src/config.js` : rien n'est
+recopie. Le decoupage est en numeros d'image (`fichier.mp4:start:end`), pas
+en secondes. Tout le pipeline est dans [`docs/videos.md`](docs/videos.md).
 
 ## Architecture
 
@@ -120,11 +119,10 @@ Le collapse a `100dvh` une fois le verrou arme vit aussi dans `scroll.js`
 
 ## Points d'attention specifiques au projet
 
-- **`latchLoop: true`** (dans `src/config.js`) : une fois la boucle
-  atteinte, remonter ne rembobine plus rien, et la piste passe a `100dvh`
-  (`data-vb-locked`). `false` restaure l'aller-retour d'origine, ou le
-  choix de use-case redevenait retroactif. Les deux comportements sont
-  couverts par les tests.
+- **Le verrou de boucle est definitif** : une fois la boucle atteinte,
+  remonter ne rembobine plus rien, et la piste passe a `100dvh`
+  (`data-vb-locked`). L'ancienne option `latchLoop: false` (aller-retour,
+  clignement `jumpFadeMs`) a ete retiree, voir ADR 0011.
 - **MP4 servis bruts, jamais via Bunny Stream / Cloudflare Stream** : le
   streaming adaptatif (HLS) rend `currentTime` imprecis et casse le scrub.
   Voir [`docs/hosting.md`](docs/hosting.md) et
@@ -151,11 +149,10 @@ Le collapse a `100dvh` une fois le verrou arme vit aussi dans `scroll.js`
 
 - `docs/architecture.md` — organisation du code (a lire avant `src/`)
 - `docs/glossaire.md` — vocabulaire du projet (scrub, all-intra, sticky…)
-- `docs/videos.md` — pipeline d'encodage et standards verifies par `check-video.sh`
+- `docs/videos.md` — pipeline video complet : comprimer, stocker sur Bunny, servir dans Webflow
 - `docs/tests.md` — tests unitaires, e2e, bundle
 - `docs/webflow-setup.md` — structure a construire dans le Designer Webflow
-- `docs/hosting.md` — Bunny (medias) + Cloudflare (code)
-- `docs/nouvelle-video.md` — a transmettre tel quel au client fournissant un master
+- `docs/hosting.md` — le code sur Cloudflare, hotes ecrits en dur
 - `docs/passation.md` — checklist de transfert au client (comptes, hotes en dur, masters)
 - `docs/todo.md` — todo interne du projet (ouvrir via le skill `/todo`)
 - `docs/decisions/` — ADR ; `docs/history/` — journal — geres via le skill `/doc-code`

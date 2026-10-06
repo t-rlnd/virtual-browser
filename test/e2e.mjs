@@ -580,12 +580,10 @@ const main = async () => {
   );
 
   /**
-   * Verrou relache — l'autre moitie du contrat. Le rechargement est le seul
-   * moyen d'exercer `latchLoop: false`, la valeur etant lue au cablage.
+   * Le verrou est arme et ne se relache pas : les etapes qui suivent ont
+   * besoin du scrub, d'ou un rechargement en haut de page.
    */
-  await page.addInitScript(() => {
-    window.SCROLL_VIDEO_CONFIG = { ...(window.SCROLL_VIDEO_CONFIG ?? {}), latchLoop: false };
-  });
+  await scrollTo(0);
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForFunction(
     () => document.documentElement.dataset.vbState === 'ready',
@@ -593,43 +591,31 @@ const main = async () => {
     { timeout: 60_000 }
   );
 
-  // 15 — sans verrou, remonter rend la main au scrub et defait le recadrage
-  //      a la position exacte du scroll, pas en un temps fixe
-  const unlockedTrack = await readTrack();
-  await scrollTo(geometry.scrubEnd, 1600);
-  // Clic programmatique : sans verrou, l'intro (opacite 0 mais toujours en
-  // place dans le layout Webflow) recouvre encore les boutons a cet endroit.
-  await page.$eval('[data-vb-switch="uc2"]', (button) => button.click());
-  await page.waitForTimeout(700);
-  await scrollTo(scrubAt(0.5), 1600);
-  const undocked = await read();
-  const expected = dockFor(undocked.progress);
-  await shot('15-verrou-relache');
-  record(
-    15,
-    'latchLoop:false rend la main au scrub, et le recadrage suit le scroll',
-    !unlockedTrack.latched &&
-      unlockedTrack.height > unlockedTrack.viewport * 2 &&
-      undocked.mode === 'scrub' &&
-      Math.abs(undocked.dock - expected) < 0.05,
-    `latched=${unlockedTrack.latched} height=${unlockedTrack.height} ${show(undocked)} dock=${undocked.dock} attendu=${expected.toFixed(3)}`
-  );
-
-  // 16 — avant le debut de la plage de recadrage, le fond est rendu plein ecran
+  // 15 — avant le debut de la plage de recadrage, le fond est rendu plein ecran
   await scrollTo(0);
   const rewound = await read();
-  await shot('16-retroactivite');
+  await shot('15-plein-ecran');
   record(
-    16,
-    'Sans verrou, le fond redevient plein ecran et le use-case reste retroactif',
+    15,
+    'En haut de page, le fond est plein ecran et le scrub est au debut',
     rewound.mode === 'scrub' &&
-      shows(rewound, 'uc2') &&
       rewound.time < 0.1 &&
       rewound.dock === 0 &&
       near(rewound.videoBox, rewound.stageBox),
     `${show(rewound)} ${boxes(rewound)} dock=${rewound.dock}`
   );
 
+  // 16 — le recadrage suit la position exacte du scroll, pas un temps fixe
+  await scrollTo(scrubAt(0.5), 1600);
+  const undocked = await read();
+  const expected = dockFor(undocked.progress);
+  await shot('16-recadrage-mi-course');
+  record(
+    16,
+    'Le recadrage suit le scroll a mi-course',
+    undocked.mode === 'scrub' && Math.abs(undocked.dock - expected) < 0.05,
+    `${show(undocked)} dock=${undocked.dock} attendu=${expected.toFixed(3)}`
+  );
   /**
    * 17 — la mise en scene accrochee a `--vb-scrub`. C'est la contrepartie CSS
    * du montage superpose : le JS ne fait plus qu'ecrire un nombre, et c'est la
@@ -724,7 +710,7 @@ const main = async () => {
 
   /**
    * Mode compact — tablette et mobile. Un second viewport, independant du
-   * parcours desktop (y compris du rechargement `latchLoop: false`).
+   * parcours desktop (y compris de son rechargement).
    */
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await routeBundle(mobile);

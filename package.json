@@ -12,7 +12,6 @@
     "test:bundle": "BUNDLE=dist PLAYWRIGHT_BROWSERS_PATH=$PWD/.playwright node test/e2e.mjs",
     "export": "./scripts/export.sh",
     "check": "./scripts/check-video.sh",
-    "encode": "./scripts/encode.sh",
     "upload": "./scripts/upload-bunny.sh"
   },
   "devDependencies": {

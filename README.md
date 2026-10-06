@@ -30,7 +30,7 @@ ligne.
 | 3. On sort de la section | Tout se met en pause, rien ne tourne pour rien | `idle` |
 
 Une fois la boucle atteinte, **remonter ne rembobine plus** : la vidéo reste
-dans son cadre (réglage `latchLoop`).
+dans son cadre.
 
 **Sous 991 px** (tablette, mobile), Protocol n'a plus de scrub : les sections
 s'empilent normalement et la vidéo boucle directement dans son cadre. Le Héros,
@@ -93,7 +93,7 @@ publié le site au moins une fois.
 | --- | --- |
 | Comprendre comment le code est organisé | [`docs/architecture.md`](docs/architecture.md) — à lire avant de toucher à `src/` |
 | Construire ou modifier la page dans Webflow | [`docs/webflow-setup.md`](docs/webflow-setup.md) |
-| Ajouter ou remplacer une vidéo | [`docs/nouvelle-video.md`](docs/nouvelle-video.md) (version client) · [`docs/videos.md`](docs/videos.md) (détail technique) |
+| Ajouter ou remplacer une vidéo (comprimer, Bunny, Webflow) | [`docs/videos.md`](docs/videos.md) |
 | Publier une nouvelle version du code | [Publier](#publier-une-nouvelle-version) ci-dessous · [`docs/hosting.md`](docs/hosting.md) |
 | Changer un réglage (fondu, nombre de tours…) | [Réglages](#réglages) ci-dessous · [`src/config.js`](src/config.js) |
 | Lancer les tests | [`docs/tests.md`](docs/tests.md) |
@@ -180,7 +180,6 @@ commenté. Les plus utiles :
 | Réglage | Défaut | Effet |
 | --- | --- | --- |
 | `loopRepeats` | `4` | Tours de boucle avant de passer au use-case suivant |
-| `latchLoop` | `true` | Une fois la boucle atteinte, remonter ne rembobine plus |
 | `fadeMs` | `250` | Durée du fondu entre deux use-cases (ms) |
 | `dockRange` | `0.05 → 0.65` | Moment du scroll où la vidéo se cale dans son cadre |
 | `scrubSmoothing` | `0.1` | Inertie du scrub (0 = collé au scroll) ; faible car Lenis lisse déjà |
@@ -229,9 +228,6 @@ docs/           toute la documentation
 
 - **iOS ne se teste que sur un vrai iPhone.** Les tests WebKit reproduisent le
   décodeur de Safari, pas ses règles d'autoplay ni d'économie d'énergie.
-- **Passage boucle → scrub** (quand `latchLoop: false`) : la vidéo recule d'un
-  coup ; un clignement de 150 ms le masque (`jumpFadeMs`). À réévaluer avec les
-  vraies vidéos.
 - Si un jour le scrub vidéo ne tient pas sur un appareil, le code est prêt pour
   un rendu par séquence d'images : voir
   [`docs/architecture.md`](docs/architecture.md#pourquoi-une-classe-videolayer-abstraite).

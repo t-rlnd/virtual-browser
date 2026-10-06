@@ -7,7 +7,6 @@ import { wait } from '../src/utils.js';
 
 const CONFIG = {
   fadeMs: 10,
-  jumpFadeMs: 10,
   defaultActive: 'uc1',
   loopRepeats: 2,
 };
@@ -199,28 +198,17 @@ test('le choix de use-case est retroactif sur la section scrubee', async () => {
   assert.equal(uc2.visible, true);
 });
 
-test('le retour boucle vers scrub cligne pour absorber le recul', async () => {
+test('le retour boucle vers scrub repose la couche sur l image du scroll, sans fondu', async () => {
   const { stage, uc1 } = makeStage();
   stage.mount();
   await stage.setMode(MODES.LOOP);
 
   stage.progress = 1;
-  const transition = stage.setMode(MODES.SCRUB);
-  assert.equal(uc1.visible, false, 'la couche doit etre masquee pendant le saut');
-
-  await transition;
-  assert.equal(uc1.visible, true, 'et reaffichee une fois la bonne image prete');
-  assert.deepEqual(uc1.named('hardSeek').at(-1), ['hardSeek', 3]);
-});
-
-test('jumpFadeMs a zero produit un cut sec', async () => {
-  const { stage, uc1 } = makeStage({ jumpFadeMs: 0 });
-  stage.mount();
-  await stage.setMode(MODES.LOOP);
-
   await stage.setMode(MODES.SCRUB);
 
   assert.equal(uc1.visible, true);
+  assert.equal(uc1.looping, null);
+  assert.deepEqual(uc1.named('hardSeek').at(-1), ['hardSeek', 3]);
 });
 
 test('une bascule vers un use-case inconnu est sans effet', async () => {

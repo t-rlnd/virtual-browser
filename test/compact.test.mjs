@@ -6,7 +6,7 @@ import { VideoLayer } from '../src/layers/VideoLayer.js';
 import { initCompact } from '../src/compact.js';
 import { isCompactViewport } from '../src/env.js';
 
-const CONFIG = { fadeMs: 10, jumpFadeMs: 10, defaultActive: 'uc1' };
+const CONFIG = { fadeMs: 10, defaultActive: 'uc1' };
 const SEGMENTS = {
   uc1: { scrub: { start: 0, end: 3 }, loop: { start: 3, end: 6 } },
 };

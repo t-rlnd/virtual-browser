@@ -5,7 +5,7 @@
 # Deux usages, l'outil devine lequel :
 #
 #   ./scripts/check-video.sh masters/video3.mp4:166:398   avant encodage
-#   ./scripts/check-video.sh public/assets                apres encodage
+#   ./scripts/check-video.sh exports/video3               apres encodage
 #
 # Avant encodage, il verifie ce qu'un master doit apporter (cadence constante,
 # definition suffisante, plage scrubee assez dense) et imprime la ligne
@@ -23,8 +23,8 @@
 #   MB_PER_1000PX=4           budget de poids, proportionnel a la largeur
 #   MIN_LOOP_FRAMES=30        boucle plus courte = battement visible
 #
-# Sort en erreur des qu'un ECHEC est releve : utilisable en garde-fou avant
-# `pnpm upload`.
+# Sort en erreur des qu'un ECHEC est releve : export.sh s'en sert comme
+# garde-fou avant et apres l'encodage.
 
 set -euo pipefail
 
@@ -446,7 +446,7 @@ if [ "$#" -eq 0 ]; then
   cat >&2 <<USAGE
 Usage :
   $0 masters/video3.mp4:166:398    controle un master avant encodage
-  $0 public/assets                 controle des fichiers encodes
+  $0 exports/video3                controle des fichiers encodes
   $0 --master|--encoded <fichier>  force le mode
 USAGE
   exit 1

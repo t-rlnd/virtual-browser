@@ -9,14 +9,16 @@ avec le README, cette page et `docs/architecture.md`.
 | Quoi | Où aujourd'hui | À transférer |
 | --- | --- | --- |
 | Code source, docs, `dist/` | GitHub `t-rlnd/virtual-browser` | transfert du dépôt vers l'organisation du client (Settings › Danger zone › Transfer) ou fork + archivage |
-| Bundle en ligne (`index.js` / `.css`) | Cloudflare `dev-vb.initweb.ai`, branché sur `main` | projet Pages à recréer dans le compte Cloudflare du client, branché sur le dépôt transféré, domaine définitif à choisir |
+| Bundle en ligne (`index.js` / `.css`) | Worker Cloudflare `dev-vb.initweb.ai`, branché sur `main` | Worker à recréer dans le compte Cloudflare du client (assets `dist/`, voir `wrangler.jsonc`), branché sur le dépôt transféré, domaine définitif à choisir |
 | Vidéos et posters | Bunny, zone `virtual-browser` du client (préfixe `home/v1/`) | fait : zone créée et fichiers copiés le 2026-10-06 |
 | Site | Webflow `virtual-browser.webflow.io` | transfert du site Webflow vers le workspace du client |
 | Masters vidéo | hors dépôt (`masters/`, non versionné) | remettre les masters au client : seuls eux permettent de ré-encoder |
 
 Les masters ne sont **pas** dans git. Avant la passation, vérifier que le
 client possède bien le master de chaque vidéo en ligne (`hero`, `video1`,
-`video2`…). Sans master, une vidéo ne peut plus être ré-encodée.
+`video2`…). Sans master, une vidéo ne peut plus être ré-encodée. État au
+2026-10-06 : seul `hero.mp4` est présent dans `masters/` sur le poste de
+l'agence ; `video1` et `video2` sont à retrouver.
 
 ## 2. Où changent les adresses
 
@@ -61,7 +63,7 @@ qui est réellement en ligne.
 - **MP4 bruts uniquement**, jamais Bunny Stream ni Cloudflare Stream : le
   streaming adaptatif casse le scrub ([`hosting.md`](hosting.md)).
 - **Ajouter une vidéo** ne demande aucun code : une `<video>` et un bouton dans
-  le Designer, les fichiers sur Bunny ([`nouvelle-video.md`](nouvelle-video.md)).
+  le Designer, les fichiers sur Bunny ([`videos.md`](videos.md)).
 - **Tests** : `pnpm test` (sans navigateur) et `pnpm test:e2e` (site Webflow
   publié + bundle local), détaillés dans [`tests.md`](tests.md).
 - **Noms hérités** : `scroll-video` (préfixe CDN, `window.SCROLL_VIDEO_CONFIG`,

@@ -112,7 +112,7 @@ export class Stage extends Emitter {
     this.mode = mode;
     this.emit('modechange', { mode, previous });
 
-    if (mode === MODES.SCRUB) return this._enterScrub(previous);
+    if (mode === MODES.SCRUB) return this._enterScrub();
     if (mode === MODES.LOOP) return this._enterLoop();
     return this._enterIdle();
   }
@@ -202,31 +202,13 @@ export class Stage extends Emitter {
     }
   }
 
-  async _enterScrub(previous) {
-    const token = ++this._transition;
+  _enterScrub() {
+    this._transition += 1;
     this._loopCount = 0;
     const layer = this.active;
     layer.pause();
-
-    const fadeMs = this.config.jumpFadeMs;
-
-    if (previous !== MODES.LOOP || fadeMs <= 0) {
-      layer.hardSeek(this.timeForProgress(this.progress));
-      layer.show(0);
-      return;
-    }
-
-    // La boucle peut etre a 4.5 s au moment ou le scroll impose 3.0 s. Plutot
-    // que de montrer ce recul d'une seconde et demie, on cligne.
-    layer.hide(fadeMs / 2);
-    await wait(fadeMs / 2);
-    if (token !== this._transition) return;
-
     layer.hardSeek(this.timeForProgress(this.progress));
-    await layer.waitForFrame();
-    if (token !== this._transition) return;
-
-    layer.show(fadeMs / 2);
+    layer.show(0);
   }
 
   _enterLoop() {

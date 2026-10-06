@@ -20,12 +20,6 @@ export const CONFIG = {
   loopReserve: 1,
 
   /**
-   * Verrouille la boucle une fois atteinte : remonter ne relance plus le scrub.
-   * `false` restaure l'aller-retour (remonter rembobine la video).
-   */
-  latchLoop: true,
-
-  /**
    * Tours du segment boucle avant d'enchainer le use-case suivant.
    * `Infinity` restaure la boucle infinie (ancien comportement).
    */
@@ -36,12 +30,6 @@ export const CONFIG = {
 
   /** Duree du fondu croise lors d'un changement de use-case, en ms. */
   fadeMs: 250,
-
-  /**
-   * Clignement absorbant le recul du passage boucle -> scrub (la boucle peut
-   * etre a 4.5 s quand le scroll impose 3.0 s). 0 = cut sec.
-   */
-  jumpFadeMs: 150,
 
   /**
    * Plage de progression sur laquelle le fond quitte le plein ecran pour se

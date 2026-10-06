@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
-# Encode les masters pour le scrub au scroll.
+# Encode les masters pour le scrub au scroll. Brique de export.sh, qui
+# l'entoure des controles : passer par lui sauf besoin precis.
 #
 # Le point cle est le `-force_key_frames` : chaque image de la plage scrubee
 # devient une image cle, ce qui permet au navigateur de sauter a n'importe
@@ -20,7 +21,7 @@
 #   WIDTHS="750 1280 1920" largeurs generees
 #   CRF=24                 qualite (plus bas = meilleur et plus lourd)
 #   SCRUB_DIVISOR=1        decime la plage scrubee (2 = une image sur deux)
-#   OUT_DIR=public/assets  dossier de sortie
+#   OUT_DIR=exports        dossier de sortie
 #
 # SCRUB_DIVISOR merite une explication. La plage all-intra represente pres de
 # 90 % du poids du fichier : n'y garder qu'une image sur deux le reduit d'environ
@@ -38,7 +39,7 @@ export LC_ALL=C
 WIDTHS="${WIDTHS:-750 1280 1920}"
 CRF="${CRF:-24}"
 SCRUB_DIVISOR="${SCRUB_DIVISOR:-1}"
-OUT_DIR="${OUT_DIR:-public/assets}"
+OUT_DIR="${OUT_DIR:-exports}"
 
 # Hauteur de scroll utile, pour estimer la densite d'images. Le scrub court sur
 # toute la hauteur de la section 1 (250vh par defaut).
