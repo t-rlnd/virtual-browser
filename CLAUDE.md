@@ -4,16 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Ce que c'est
 
-Fond video pilote au scroll pour Webflow (pas de framework, JS vanilla + GSAP
-ScrollTrigger). Un unique fond video traverse deux sections superposees dans
-un meme conteneur colle : scrub par le scroll sur la premiere, boucle en
-autonomie (4 tours puis le use-case suivant) sur la seconde, avec bascule
-manuelle et pause/lecture a tout moment. Le scroll n'ecrit qu'une progression 0→1
-(`--vb-scrub`) et tout — timecode video, position du cadre, apparition des
-calques — en decoule.
+Code personnalise du site Webflow Virtual Browser : un bundle JS/CSS unique
+(JS vanilla + GSAP ScrollTrigger, pas de framework) charge sur toutes les
+pages, qui porte trois modules independants : le smooth scroll Lenis
+(partout), le Heros (video scrubbee + trois textes) et Protocol. Protocol :
+un unique fond video traverse deux sections superposees dans un meme
+conteneur colle, scrub par le scroll sur la premiere, boucle en autonomie
+(4 tours puis le use-case suivant) sur la seconde, avec bascule manuelle et
+pause/lecture. Le scroll n'ecrit qu'une progression 0→1 (`--vb-scrub`) et
+tout — timecode video, position du cadre, apparition des calques — en decoule.
 
 Lire [`docs/architecture.md`](docs/architecture.md) avant de toucher a `src/` :
-il explique *qui fait quoi*. Le README explique *ce que fait* l'animation.
+il explique *qui fait quoi*. [`docs/fonctionnement.md`](docs/fonctionnement.md)
+explique *ce que fait* le site ; le README reste court et standard.
 
 ## Commandes
 
@@ -148,7 +151,10 @@ Le collapse a `100dvh` une fois le verrou arme vit aussi dans `scroll.js`
 
 ## Documentation interne
 
+- `docs/README.md` — sommaire de la documentation
+- `docs/fonctionnement.md` — ce que fait le site, section par section, limites connues
 - `docs/architecture.md` — organisation du code (a lire avant `src/`)
+- `docs/configuration.md` — reglages de `src/config.js` et surcharge sans rebuild
 - `docs/glossaire.md` — vocabulaire du projet (scrub, all-intra, sticky…)
 - `docs/videos.md` — pipeline video complet : comprimer, stocker sur Bunny, servir dans Webflow
 - `docs/tests.md` — tests unitaires, e2e, bundle

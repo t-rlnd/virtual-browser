@@ -1,7 +1,7 @@
 # Comment le code est organise
 
-Une page a lire avant de toucher a `src/`. Le README explique *ce que fait*
-l'animation ; celle-ci explique *qui fait quoi* dans le code.
+Une page a lire avant de toucher a `src/`. [`fonctionnement.md`](fonctionnement.md)
+explique *ce que fait* le site ; celle-ci explique *qui fait quoi* dans le code.
 
 ## L'idee en une phrase
 

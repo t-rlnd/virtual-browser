@@ -2,7 +2,8 @@
 
 Checklist pour transmettre le projet à une équipe technique côté client. Le
 dépôt est conçu pour qu'un développeur qui ne l'a jamais vu puisse le reprendre
-avec le README, cette page et `docs/architecture.md`.
+avec le README, cette page, [`fonctionnement.md`](fonctionnement.md) et
+[`architecture.md`](architecture.md).
 
 ## 1. Ce qui est transmis
 
