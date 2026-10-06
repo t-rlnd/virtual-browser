@@ -19,6 +19,7 @@ il explique *qui fait quoi*. Le README explique *ce que fait* l'animation.
 
 ```bash
 pnpm install
+pnpm test:setup           # une fois : navigateurs Playwright dans .playwright/
 pnpm dev                  # esbuild en watch + serveur local sur http://localhost:3000
 pnpm build                # build de production -> dist/ (verse dans git, publie par Cloudflare)
 
@@ -154,5 +155,4 @@ Le collapse a `100dvh` une fois le verrou arme vit aussi dans `scroll.js`
 - `docs/webflow-setup.md` — structure a construire dans le Designer Webflow
 - `docs/hosting.md` — le code sur Cloudflare, hotes ecrits en dur
 - `docs/passation.md` — checklist de transfert au client (comptes, hotes en dur, masters)
-- `docs/todo.md` — todo interne du projet (ouvrir via le skill `/todo`)
 - `docs/decisions/` — ADR ; `docs/history/` — journal — geres via le skill `/doc-code`

@@ -74,8 +74,9 @@ qui est réellement en ligne.
 
 ## 5. Avant de remettre les clés
 
-- [ ] Todo P1 de [`todo.md`](todo.md) fermées (snippets en Site settings,
-      bouton pause, layout < 991 px) — sinon les lister explicitement au client.
+- [ ] Snippets `webflow/head.html` et `footer.html` collés dans les **Site
+      settings** (toutes les pages) et retirés des Page settings de la home,
+      sinon le bundle est chargé deux fois.
 - [ ] `dist/_headers` présent dans le dépôt (revalidation + CORS côté
       Cloudflare).
 - [ ] `pnpm test`, `pnpm build`, `pnpm test:bundle` au vert sur `main`.

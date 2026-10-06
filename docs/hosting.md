@@ -18,25 +18,49 @@ services transcodent en HLS, et le streaming adaptatif rend `currentTime`
 imprécis. Les seeks se calent alors sur les frontières de segment, ce qui
 détruit exactement la propriété dont dépend le scrub.
 
-## Le code sur Cloudflare
+## Le code : ce dont il a besoin
 
-Un Worker Cloudflare, sans code serveur, sert `dist/` en fichiers statiques.
-Il est branché sur le dépôt GitHub (Workers & Pages › le Worker › Settings ›
-Build) : chaque push sur `main` lance `wrangler deploy`, qui lit
-[`wrangler.jsonc`](../wrangler.jsonc) à la racine. C'est ce fichier qui dit à
-Cloudflare de ne publier que `dist/` : ni sources, ni docs en ligne. Le
-domaine `dev-vb.initweb.ai` est rattaché au Worker dans le dashboard
-(Settings › Domains & Routes).
+Le bundle est **commité** dans `dist/` (`index.js`, `index.css`,
+`_headers`). C'est la seule raison pour laquelle un artefact de build est
+versionné ici : l'hébergeur n'a rien à construire, il sert ce dossier tel
+quel. N'importe quel hébergement statique convient, à trois conditions :
+
+1. servir `dist/` à une **URL fixe**, sans numéro de version, pour que les
+   snippets Webflow n'aient jamais à changer ;
+2. répondre avec `Cache-Control: public, max-age=0, must-revalidate`, pour
+   qu'un déploiement soit visible à la visite suivante ;
+3. répondre avec `Access-Control-Allow-Origin: *`.
+
+Les deux en-têtes sont dans [`dist/_headers`](../dist/_headers), au format
+que lisent Cloudflare et Netlify. Un autre hébergeur (Vercel, S3 + CDN,
+serveur maison…) les pose à sa façon. Si l'URL change, recoller
+[`webflow/head.html`](../webflow/head.html) et
+[`webflow/footer.html`](../webflow/footer.html) dans Webflow.
+
+## Option recommandée : un Worker Cloudflare branché sur GitHub
+
+C'est l'hébergement en place (`dev-vb.initweb.ai`) et le plus simple à
+reproduire : pas de code serveur, déploiement automatique à chaque push,
+[`wrangler.jsonc`](../wrangler.jsonc) à la racine dit déjà tout ce qu'il
+faut (dossier d'assets `./dist`, rien d'autre en ligne).
+
+Pour le recréer dans un autre compte Cloudflare :
+
+1. **Workers & Pages › Create › Import a repository**, choisir le dépôt et
+   la branche `main`.
+2. Commande de build : **vide** (`dist/` est déjà construit). Commande de
+   déploiement : `npx wrangler deploy`. Cloudflare lit `wrangler.jsonc`.
+3. Une fois le premier déploiement passé, **Settings › Domains & Routes ›
+   Add › Custom domain** et choisir le domaine définitif (le DNS doit être
+   chez Cloudflare, ou un CNAME vers le `*.workers.dev` fourni).
+4. Vérifier : `curl -I https://LE-DOMAINE/index.js` doit montrer les deux
+   en-têtes ci-dessus, puis `BUNDLE=prod pnpm test:e2e` une fois les
+   snippets Webflow recollés avec la nouvelle URL.
 
 ```
 https://dev-vb.initweb.ai/index.js
 https://dev-vb.initweb.ai/index.css
 ```
-
-Le bundle est **commité** dans `dist/` : c'est ce dossier, et lui seul, que
-Cloudflare publie. C'est la seule raison pour laquelle un artefact de build
-est versionné ici. La commande de build du projet Cloudflare peut rester
-vide.
 
 Publier une mise à jour du code :
 
@@ -48,13 +72,10 @@ git add dist && git commit -m "build: ..."
 git push
 ```
 
-Rien à changer dans Webflow : l'URL ne porte pas de version.
-[`dist/_headers`](../dist/_headers) fait servir le bundle avec
-`Cache-Control: max-age=0, must-revalidate`, donc chaque visite revalide
-(304 si rien n'a changé) et un déploiement est visible tout de suite.
-Contrepartie : pas de version figée à laquelle revenir depuis Webflow ; un
-retour arrière se fait dans Cloudflare (Deployments › rollback) ou par
-`git revert`.
+Rien à changer dans Webflow : l'URL ne porte pas de version, et chaque
+visite revalide (304 si rien n'a changé). Contrepartie : pas de version
+figée à laquelle revenir depuis Webflow ; un retour arrière se fait chez
+l'hébergeur (Cloudflare : Deployments › rollback) ou par `git revert`.
 
 ## Ce qui est écrit en dur, et où
 

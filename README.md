@@ -57,11 +57,19 @@ apparitions/disparitions sont donc écrites **en CSS**, pas en JS.
 
 ## Démarrer en local
 
-Prérequis : [Node.js](https://nodejs.org) et [pnpm](https://pnpm.io)
-(`npm i -g pnpm`). Pour encoder des vidéos : `brew install ffmpeg`.
+Prérequis : [Node.js](https://nodejs.org) **18 ou plus** et
+[pnpm](https://pnpm.io) 10 ou plus (`npm i -g pnpm`). Pour encoder des
+vidéos : `brew install ffmpeg`.
 
 ```bash
 pnpm install
+```
+
+Une fois, pour les tests navigateur (télécharge Chromium et WebKit dans
+`.playwright/`, hors git) :
+
+```bash
+pnpm test:setup
 ```
 
 ```bash
@@ -98,7 +106,6 @@ publié le site au moins une fois.
 | Changer un réglage (fondu, nombre de tours…) | [Réglages](#réglages) ci-dessous · [`src/config.js`](src/config.js) |
 | Lancer les tests | [`docs/tests.md`](docs/tests.md) |
 | Savoir pourquoi un choix a été fait | [`docs/decisions/`](docs/decisions/) (une fiche par décision) |
-| Voir ce qui reste à faire | [`docs/todo.md`](docs/todo.md) |
 | Reprendre le projet ou le transmettre (comptes, hôtes, masters) | [`docs/passation.md`](docs/passation.md) |
 
 ---

@@ -8,6 +8,7 @@
     "dev": "node ./bin/build.js",
     "build": "NODE_ENV=production node ./bin/build.js",
     "test": "node --test 'test/*.test.mjs'",
+    "test:setup": "PLAYWRIGHT_BROWSERS_PATH=$PWD/.playwright playwright install chromium webkit",
     "test:e2e": "PLAYWRIGHT_BROWSERS_PATH=$PWD/.playwright node test/e2e.mjs",
     "test:bundle": "BUNDLE=dist PLAYWRIGHT_BROWSERS_PATH=$PWD/.playwright node test/e2e.mjs",
     "export": "./scripts/export.sh",
@@ -19,6 +20,7 @@
     "playwright": "^1.62.1"
   },
   "engines": {
+    "node": ">=18",
     "pnpm": ">=10"
   },
   "packageManager": "pnpm@12.3.4+sha512.961aa41fb077da3a04a441d9f8e15ebc0c96da8ef710b2eb67bf9ee7cb0610eabd48f1fd85f51cffe73846785fa0f87c56a3a872a1d893f8446741b5cce45457",

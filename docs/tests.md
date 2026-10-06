@@ -28,6 +28,10 @@ Playwright ouvre **le site Webflow publié** (`virtual-browser.webflow.io`),
 scrolle, clique et vérifie chaque étape (une trentaine), avec des captures
 dans `.artifacts/`. Vrai DOM du Designer, vrais MP4.
 
+Une fois, après `pnpm install` : `pnpm test:setup` télécharge Chromium et
+WebKit dans `.playwright/` (hors git). Sans cette étape, `pnpm test:e2e`
+échoue en cherchant un navigateur.
+
 Le site charge le bundle depuis Cloudflare ; le test intercepte ces requêtes et
 sert à la place le bundle local (`BUNDLE=dev`, par défaut : `dev/`, tenu à
 jour par **`pnpm dev` lancé dans un autre terminal**). Pas de `?dev` : un
