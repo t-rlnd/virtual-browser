@@ -41,7 +41,7 @@ Les mots du projet, du plus courant au plus technique.
 | **Découpage** | Les numéros d'image qui séparent scrub et boucle : `data-vb-loop-at` (fin du scrub) et `data-vb-loop-end` (fin de boucle). |
 | **Poster** | Image fixe affichée à la place de la vidéo (chargement, `prefers-reduced-motion`). |
 | **Faststart** (`moov` avant `mdat`) | L'index du MP4 est placé en tête de fichier, pour pouvoir sauter dans la vidéo sans l'avoir entièrement téléchargée. |
-| **Requêtes Range** | Le navigateur demande un morceau précis du fichier (« octets 1 000 000 à 2 000 000 »). Nécessaire pour les seeks ; le serveur local et le CDN doivent le supporter. |
+| **Requêtes Range** | Le navigateur demande un morceau précis du fichier (« octets 1 000 000 à 2 000 000 »). Nécessaire pour les seeks ; le CDN doit le supporter (`check-cdn.sh` le vérifie). |
 | **HLS / streaming adaptatif** | Vidéo découpée en segments de qualité variable (Bunny Stream, YouTube…). Incompatible avec le scrub : les seeks tombent au segment près. |
 
 ## Le code et la mise en ligne

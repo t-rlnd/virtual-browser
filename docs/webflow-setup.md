@@ -68,7 +68,8 @@ body
 │       ├── HTML Embed : <video data-vb-hero-video data-vb-asset="hero"
 │       │                       muted playsinline preload="auto"></video>
 │       │                                               absolute · inset 0 · 100 % × 100 % · z-index 0
-│       ├── div  "Voile"        (optionnel, degrade pour la lisibilite)  z-index 1
+│       ├── div  "Voile"        data-vb-hero-overlay="0" (puis 1, 2) · absolute · inset 0 · z-index 1
+│       │                       un par etape, couleur/degrade regle dans le Designer
 │       └── div                 data-vb-hero-copy       z-index 2
 │           ├── div             data-vb-hero-step="0"
 │           │   ├── H1          classe "hero-title"
@@ -143,6 +144,11 @@ Sur `[data-vb-hero]` :
 
 - `data-vb-hero-active="0|1|2"` : l'etape affichee, pour styler autre chose
   que les textes (un indicateur de progression, par exemple).
+  C'est aussi ce qui pilote les voiles : la feuille du bundle affiche le
+  `[data-vb-hero-overlay]` du meme numero et fond les autres (opacite,
+  0,6 s). Les voiles peuvent rester en `display: none` dans le Designer,
+  la feuille les repasse en `display: flex`. Sans attribut (avant le
+  script, `reduced`, `error`), le voile 0 est visible.
 - `data-vb-hero-state` : `loading`, `ready`, `reduced` ou `error`.
 
 Les etapes masquees recoivent `aria-hidden="true"`. Avant le chargement du

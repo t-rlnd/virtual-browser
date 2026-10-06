@@ -156,5 +156,6 @@ Le collapse a `100dvh` une fois le verrou arme vit aussi dans `scroll.js`
 - `docs/webflow-setup.md` — structure a construire dans le Designer Webflow
 - `docs/hosting.md` — Bunny (medias) + Netlify (code)
 - `docs/nouvelle-video.md` — a transmettre tel quel au client fournissant un master
+- `docs/passation.md` — checklist de transfert au client (comptes, hotes en dur, masters)
 - `docs/todo.md` — todo interne du projet (ouvrir via le skill `/todo`)
 - `docs/decisions/` — ADR ; `docs/history/` — journal — geres via le skill `/doc-code`
