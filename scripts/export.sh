@@ -39,7 +39,7 @@ CONFIG_FILE="${ROOT}/src/config.js"
 
 OUT_ROOT="${OUT_ROOT:-${ROOT}/exports}"
 CRF="${CRF:-24}"
-REMOTE_PREFIX="${REMOTE_PREFIX:-scroll-video/v1}"
+REMOTE_PREFIX="${REMOTE_PREFIX:-home/v1}"
 
 if ! command -v ffprobe >/dev/null 2>&1; then
   echo "ffmpeg est introuvable. Installation : brew install ffmpeg" >&2

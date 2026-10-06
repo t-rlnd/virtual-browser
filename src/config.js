@@ -11,7 +11,7 @@
  */
 export const CONFIG = {
   /** Racine CDN servant les MP4. Doit servir des fichiers bruts, jamais du HLS. */
-  base: 'https://temp-virtual-browser.b-cdn.net/scroll-video/v1',
+  base: 'https://virtual-browser.b-cdn.net/home/v1',
 
   /**
    * Hauteur d'ecran laissee libre en fin de piste, ou la video boucle dans son

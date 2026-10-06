@@ -5,7 +5,7 @@
 
   Deux origines, deux roles :
     virtual-browser.netlify.app     le bundle JS/CSS, deploye depuis dist/ a chaque push
-    temp-virtual-browser.b-cdn.net  les MP4 et les posters, servis depuis Bunny
+    virtual-browser.b-cdn.net       les MP4 et les posters, servis depuis Bunny
 
   Pas de numero de version : l'URL est fixe, un push sur main suffit a
   publier (Netlify force la revalidation, voir netlify.toml).
@@ -16,7 +16,7 @@
 -->
 
 <link rel="preconnect" href="https://virtual-browser.netlify.app" crossorigin />
-<link rel="preconnect" href="https://temp-virtual-browser.b-cdn.net" crossorigin />
+<link rel="preconnect" href="https://virtual-browser.b-cdn.net" crossorigin />
 
 <script>
   /* Insere la feuille dans le <head> pendant le parsing : elle bloque le

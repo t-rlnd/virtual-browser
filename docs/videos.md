@@ -38,7 +38,7 @@ Il sort `exports/video3/` :
 | `video3-1280.mp4` + `-poster.jpg` | 1280×720 | portables, tablettes |
 | `video3-750.mp4` + `-poster.jpg` | 750×422 | mobiles |
 
-Ces fichiers se déposent **à plat** sur Bunny, sous `scroll-video/v1/`. Le
+Ces fichiers se déposent **à plat** sur Bunny, sous `home/v1/`. Le
 script imprime en fin de course le chemin exact, la commande de vérification
 du CDN et les attributs à coller dans le Designer.
 
@@ -106,13 +106,13 @@ Utiles pour aller plus loin que `export.sh` :
 export BUNNY_STORAGE_ZONE=ma-zone BUNNY_STORAGE_KEY=xxxxxxxx
 ./scripts/upload-bunny.sh                                  # téléverser public/assets sur Bunny
 
-./scripts/check-cdn.sh https://ma-zone.b-cdn.net/scroll-video/v1/video1-1280.mp4
+./scripts/check-cdn.sh https://virtual-browser.b-cdn.net/home/v1/video1-1280.mp4
                                                            # le CDN sert-il du MP4 brut, avec Range et CORS ?
 ```
 
 ## Publier de nouvelles versions des vidéos
 
 Ne pas écraser des fichiers déjà en ligne puis purger le cache : incrémenter
-le préfixe (`scroll-video/v1/` → `v2/`), mettre à jour `base` dans
+le préfixe (`home/v1/` → `v2/`), mettre à jour `base` dans
 [`src/config.js`](../src/config.js), puis publier une nouvelle version du code.
 Voir [`hosting.md`](hosting.md#versionner-le-prefixe-des-medias-plutot-que-purger-le-cache).
