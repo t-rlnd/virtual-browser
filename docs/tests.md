@@ -28,7 +28,7 @@ Playwright ouvre **le site Webflow publié** (`virtual-browser.webflow.io`),
 scrolle, clique et vérifie chaque étape (une trentaine), avec des captures
 dans `.artifacts/`. Vrai DOM du Designer, vrais MP4.
 
-Le site charge le bundle depuis Netlify ; le test intercepte ces requêtes et
+Le site charge le bundle depuis Cloudflare ; le test intercepte ces requêtes et
 sert à la place le bundle local (`BUNDLE=dev`, par défaut : `dev/`, tenu à
 jour par **`pnpm dev` lancé dans un autre terminal**). Pas de `?dev` : un
 navigateur refuse qu'une page publique charge localhost.
@@ -64,7 +64,7 @@ pnpm build
 pnpm test:bundle
 ```
 
-(`BUNDLE=dist`). C'est exactement le fichier que Netlify servira après le push.
+(`BUNDLE=dist`). C'est exactement le fichier que Cloudflare servira après le push.
 
 ## Ce qui n'est pas testable ici
 

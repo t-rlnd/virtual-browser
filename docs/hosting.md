@@ -5,10 +5,10 @@ Deux hebergeurs, separes par nature de fichier :
 | Quoi | Ou | Pourquoi la |
 | --- | --- | --- |
 | MP4 et posters | Bunny (Storage + Pull Zone) | Volumineux, binaires, n'ont rien a faire dans un depot git |
-| `index.js` / `.css` | Netlify (`virtual-browser.netlify.app`), deploye depuis `dist/` | Deploiement automatique a chaque push, URL fixe |
+| `index.js` / `.css` | Cloudflare (`dev-vb.initweb.ai`), deploye depuis `dist/` | Deploiement automatique a chaque push, URL fixe |
 
 Le bundle est **commite** dans `dist/` : c'est ce dossier, et lui seul, que
-Netlify publie. C'est la seule raison pour laquelle un artefact de build est
+Cloudflare publie. C'est la seule raison pour laquelle un artefact de build est
 versionne ici.
 
 ## La regle qui prime sur tout le reste
@@ -74,22 +74,19 @@ access > Custom domain) et ajouter une Transform Rule pour les en-tetes CORS.
 Le point d'attention est le meme : ne pas router les fichiers vers Cloudflare
 Stream.
 
-## Le code sur Netlify
+## Le code sur Cloudflare
 
-Le site Netlify est branche sur le depot GitHub : chaque push sur `main`
-redeploie. [`netlify.toml`](../netlify.toml) limite la publication a `dist/`
-(ni demo, ni sources, ni docs en ligne) et ne lance aucune commande de build :
-`dist/` doit donc etre reconstruit et commite avant de pousser.
-
-```
-https://virtual-browser.netlify.app/index.js
-https://virtual-browser.netlify.app/index.css
-```
-
-Les anciennes URL (`/scroll-video.*`, `/dist/...`) restent servies par des
-reecritures dans `netlify.toml`, le temps que Webflow soit a jour.
+Un Worker Cloudflare, sans code serveur, sert `dist/` en fichiers statiques.
+Il est branche sur le depot GitHub (Workers & Pages > le Worker > Settings >
+Build) : chaque push sur `main` lance `wrangler deploy`, qui lit
+[`wrangler.jsonc`](../wrangler.jsonc) a la racine. C'est ce fichier qui dit
+a Cloudflare de ne publier que `dist/` : ni demo, ni sources, ni docs en
+ligne. Le domaine `dev-vb.initweb.ai` est rattache au Worker dans le
+dashboard (Settings > Domains & Routes).
 
 ```
+https://dev-vb.initweb.ai/index.js
+https://dev-vb.initweb.ai/index.css
 ```
 
 Publier une mise a jour du code :
@@ -100,16 +97,22 @@ git add dist && git commit -m "build: ..."
 git push
 ```
 
-Rien a changer dans Webflow : l'URL ne porte pas de version. Netlify sert le
-bundle avec `Cache-Control: max-age=0, must-revalidate`, donc chaque visite
-revalide (304 si rien n'a change) et un deploiement est visible tout de suite.
+Rien a changer dans Webflow : l'URL ne porte pas de version.
+[`dist/_headers`](../dist/_headers) fait servir le bundle avec
+`Cache-Control: max-age=0, must-revalidate`, donc chaque visite revalide
+(304 si rien n'a change) et un deploiement est visible tout de suite.
 Contrepartie : plus de version figee a laquelle revenir depuis Webflow ; un
-retour arriere se fait dans Netlify (Deploys > publier un deploiement
-precedent) ou par `git revert`.
+retour arriere se fait dans Cloudflare (Deployments > rollback) ou par
+`git revert`.
 
-Historique : le bundle etait auparavant servi par jsDelivr sur un tag git
-(voir [ADR 0001](decisions/0001-hebergement-bunny-jsdelivr.md), remplace par
-l'[ADR 0008](decisions/0008-bundle-sur-netlify.md)).
+La commande de build du projet Cloudflare peut rester vide : `dist/` est
+deja construit et versionne. La laisser sur `pnpm run build` ne nuit pas,
+elle reconstruit simplement le meme bundle.
+
+Historique : le bundle etait servi par jsDelivr sur un tag git
+([ADR 0001](decisions/0001-hebergement-bunny-jsdelivr.md)), puis par Netlify
+([ADR 0008](decisions/0008-bundle-sur-netlify.md)), remplace par
+l'[ADR 0010](decisions/0010-bundle-sur-cloudflare.md).
 
 ## Versionner le prefixe des medias plutot que purger le cache
 

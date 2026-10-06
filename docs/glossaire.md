@@ -56,8 +56,8 @@ Les mots du projet, du plus courant au plus technique.
 | **Lenis** | Bibliothèque de smooth scroll : la molette ne fait plus sauter la page, elle glisse jusqu'à sa cible. |
 | **esbuild** | L'outil qui fabrique le bundle. |
 | **GSAP / ScrollTrigger / SplitText** | Bibliothèque d'animation. ScrollTrigger mesure le scroll, SplitText découpe un texte en lignes. Chargées séparément dans Webflow, pas incluses dans le bundle. |
-| **CDN** | Réseau de serveurs qui distribue des fichiers vite, partout. Ici : Bunny pour les vidéos, Netlify pour le code. |
-| **Netlify** | Hébergeur branché sur le dépôt GitHub : publie `dist/` à chaque push. |
-| **jsDelivr** | CDN qui sert les paquets npm (GSAP) ; servait aussi le bundle avant Netlify. |
+| **CDN** | Réseau de serveurs qui distribue des fichiers vite, partout. Ici : Bunny pour les vidéos, Cloudflare pour le code. |
+| **Cloudflare** | Hébergeur branché sur le dépôt GitHub : publie `dist/` à chaque push sur `dev-vb.initweb.ai`. |
+| **jsDelivr** | CDN qui sert les paquets npm (GSAP) ; servait aussi le bundle avant Cloudflare. |
 | **e2e** | Test « de bout en bout » : un vrai navigateur (Playwright) ouvre la page, scrolle, clique et vérifie. |
 | **ADR** | « Architecture Decision Record » : une fiche qui explique une décision et pourquoi (`docs/decisions/`). |

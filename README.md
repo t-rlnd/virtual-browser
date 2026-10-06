@@ -78,7 +78,7 @@ Les snippets Webflow savent charger ton code local : avec `pnpm dev` lancé,
 ouvre le site publié en ajoutant **`?dev`** à l'URL.
 
 ```
-https://virtual-browser.webflow.io/        ce que voit le visiteur (Netlify)
+https://virtual-browser.webflow.io/        ce que voit le visiteur (Cloudflare)
 https://virtual-browser.webflow.io/?dev    ton code local (localhost:3000)
 ```
 
@@ -141,14 +141,14 @@ Deux hébergeurs, un par type de fichier :
 | Quoi | Où | Pourquoi |
 | --- | --- | --- |
 | Vidéos MP4 et posters | **Bunny** (CDN) | Lourds, n'ont rien à faire dans git |
-| Code (`dist/index.js` + `.css`) | **Netlify**, déployé depuis `dist/` à chaque push | URL fixe, rien à changer dans Webflow |
+| Code (`dist/index.js` + `.css`) | **Cloudflare** (`dev-vb.initweb.ai`), déployé depuis `dist/` à chaque push | URL fixe, rien à changer dans Webflow |
 
 Deux règles à ne jamais enfreindre :
 
 - **MP4 bruts uniquement**, jamais Bunny Stream ni Cloudflare Stream : le
   streaming adaptatif rend la position dans la vidéo imprécise et casse le
   scrub.
-- **`dist/` reconstruit avant chaque push** : Netlify publie ce dossier tel
+- **`dist/` reconstruit avant chaque push** : Cloudflare publie ce dossier tel
   quel, sans build.
 
 Détails : [`docs/hosting.md`](docs/hosting.md).
@@ -162,13 +162,13 @@ pnpm test                          # tests rapides
 pnpm build                         # produit dist/
 pnpm test:bundle                   # rejoue le parcours sur dist/ (pnpm dev lancé à côté)
 git add dist && git commit -m "build: ..."
-git push                           # Netlify redéploie dist/
+git push                           # Cloudflare redéploie dist/
 ```
 
 Rien à changer dans Webflow : l'URL du bundle ne porte pas de version.
 
 Pourquoi `dist/` est versionné alors que c'est un fichier généré : c'est
-précisément ce dossier que Netlify publie, sans rien construire.
+précisément ce dossier que Cloudflare publie, sans rien construire.
 
 ---
 
@@ -219,7 +219,7 @@ test/           tests unitaires (*.test.mjs) et parcours navigateur (e2e.mjs)
 scripts/        encodage et mise en ligne des vidéos (ffmpeg, Bunny)
 bin/            outillage : build, serveur local, rechargement auto
 webflow/        les deux snippets à coller dans Webflow
-dist/           le bundle de production (versionné, publié par Netlify)
+dist/           le bundle de production (versionné, publié par Cloudflare)
 docs/           toute la documentation
 ```
 

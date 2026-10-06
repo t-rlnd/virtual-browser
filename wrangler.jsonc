@@ -1,0 +1,10 @@
+// Lu par `wrangler deploy` (lance par Cloudflare a chaque push sur main).
+// Pas de code cote serveur : le Worker ne sert que des fichiers statiques,
+// le bundle construit dans dist/. Les en-tetes (revalidation, CORS) sont
+// dans dist/_headers.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "virtual-browser",
+  "compatibility_date": "2026-10-06",
+  "assets": { "directory": "./dist" }
+}

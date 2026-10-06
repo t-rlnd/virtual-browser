@@ -635,12 +635,12 @@ la home, sinon le bundle serait charge deux fois.
 Un bloc qui doit garder son propre scroll interne (modale, liste deroulante)
 prend l'attribut `data-lenis-prevent`, sinon Lenis capture la molette.
 
-Ils pointent sur deux origines distinctes : le bundle vient de Netlify, les
+Ils pointent sur deux origines distinctes : le bundle vient de Cloudflare, les
 videos de Bunny. A retenir pour la maintenance :
 
 | Ce qui change | Ou le modifier | Effet de bord |
 | --- | --- | --- |
-| Le code | rien dans Webflow | rebuild + commit de `dist/` + push (Netlify redeploie) |
+| Le code | rien dans Webflow | rebuild + commit de `dist/` + push (Cloudflare redeploie) |
 | Le domaine Bunny | `base` dans [`src/config.js`](../src/config.js) | l URL est compilee dans le bundle : rebuild et push obligatoires |
 
 Le second cas est le piege : changer le CDN video impose de republier le code.
@@ -654,10 +654,10 @@ L'ordre du footer compte : `gsap`, puis `ScrollTrigger` et `SplitText`, puis `in
 ## 8. Developper contre le site, sans republier
 
 Les deux snippets choisissent leur origine a l'execution : `?dev` a la fin de
-l'URL charge `pnpm dev` (localhost:3000), toute autre URL charge Netlify.
+l'URL charge `pnpm dev` (localhost:3000), toute autre URL charge Cloudflare.
 
 ```
-https://virtual-browser.webflow.io/            Netlify, ce que voit le visiteur
+https://virtual-browser.webflow.io/            Cloudflare, ce que voit le visiteur
 https://virtual-browser.webflow.io/?dev        le bundle en cours d'ecriture
 ```
 

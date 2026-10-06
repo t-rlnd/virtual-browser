@@ -6,7 +6,7 @@
  * construit dans le Designer et les vrais MP4, que seul un vrai moteur de
  * rendu peut exercer.
  *
- * Le site charge le bundle depuis Netlify ; le test intercepte ces requetes
+ * Le site charge le bundle depuis Cloudflare ; le test intercepte ces requetes
  * et sert a la place le bundle local choisi par BUNDLE :
  *   dev  (defaut)  dev/   ecrit par `pnpm dev` (a lancer a cote)
  *   dist           dist/  ecrit par `pnpm build` (ce qui partira en ligne)
@@ -29,13 +29,13 @@ if (!(BUNDLE in BUNDLE_DIRECTORIES)) {
 }
 
 /**
- * Remplace le bundle Netlify par le fichier local. Par extension et non par
+ * Remplace le bundle Cloudflare par le fichier local. Par extension et non par
  * nom : le site publie peut encore pointer sur un ancien nom (scroll-video.*).
  */
 async function routeBundle(page) {
   const directory = BUNDLE_DIRECTORIES[BUNDLE];
   if (!directory) return;
-  await page.route('https://virtual-browser.netlify.app/**', async (route) => {
+  await page.route('https://dev-vb.initweb.ai/**', async (route) => {
     const isCss = new globalThis.URL(route.request().url()).pathname.endsWith('.css');
     const name = isCss ? 'index.css' : 'index.js';
     const contentType = isCss ? 'text/css' : 'application/javascript';

@@ -35,7 +35,7 @@ Heros et Protocol sur la home).
 
 - Webflow : retirer les snippets des Page settings de la home, les coller
   dans les Site settings.
-- Les anciennes URL `scroll-video.*` restent servies par reecriture Netlify.
+- Les anciennes URL `scroll-video.*` restaient servies par reecriture cote hebergeur (abandonnee avec l'ADR 0010).
 - Un bloc a scroll interne (modale...) doit porter `data-lenis-prevent`.
 - `scrubSmoothing` et `lenis.lerp` sont a ajuster au ressenti, surchargeables
   sans rebuild via `window.SCROLL_VIDEO_CONFIG`.

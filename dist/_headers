@@ -1,0 +1,7 @@
+# Lu par Cloudflare (pas par esbuild). Le bundle garde un nom fixe :
+# le navigateur doit revalider a chaque visite (304 via ETag si rien n'a
+# change) pour qu'un deploiement soit visible immediatement, sans numero de
+# version a changer dans Webflow.
+/*
+  Cache-Control: public, max-age=0, must-revalidate
+  Access-Control-Allow-Origin: *

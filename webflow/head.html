@@ -4,18 +4,18 @@
   et Protocol que la ou leur structure existe)
 
   Deux origines, deux roles :
-    virtual-browser.netlify.app     le bundle JS/CSS, deploye depuis dist/ a chaque push
+    dev-vb.initweb.ai               le bundle JS/CSS (Cloudflare), deploye depuis dist/ a chaque push
     virtual-browser.b-cdn.net       les MP4 et les posters, servis depuis Bunny
 
   Pas de numero de version : l'URL est fixe, un push sur main suffit a
-  publier (Netlify force la revalidation, voir netlify.toml).
+  publier (Cloudflare revalide a chaque visite, voir dist/_headers).
 
   Ajouter `?dev` a l'URL bascule sur `pnpm dev` (localhost:3000) : le site
   publie sert alors le bundle en cours d'ecriture, sans republier la page.
-  Sans `?dev`, c'est toujours Netlify — un visiteur ne voit jamais localhost.
+  Sans `?dev`, c'est toujours Cloudflare — un visiteur ne voit jamais localhost.
 -->
 
-<link rel="preconnect" href="https://virtual-browser.netlify.app" crossorigin />
+<link rel="preconnect" href="https://dev-vb.initweb.ai" crossorigin />
 <link rel="preconnect" href="https://virtual-browser.b-cdn.net" crossorigin />
 
 <script>
@@ -29,7 +29,7 @@
     link.rel = 'stylesheet';
     link.href = window.VB_DEV
       ? 'http://localhost:3000/dev/index.css'
-      : 'https://virtual-browser.netlify.app/index.css';
+      : 'https://dev-vb.initweb.ai/index.css';
     document.head.appendChild(link);
   })();
 </script>

@@ -20,7 +20,7 @@ il explique *qui fait quoi*. Le README explique *ce que fait* l'animation.
 ```bash
 pnpm install
 pnpm dev                  # esbuild en watch + serveur local sur http://localhost:3000
-pnpm build                # build de production -> dist/ (verse dans git, publie par Netlify)
+pnpm build                # build de production -> dist/ (verse dans git, publie par Cloudflare)
 
 pnpm test                 # attributs data-vb-* et machine a etats, sans navigateur
 pnpm test:e2e             # parcours complet sur virtual-browser.webflow.io, bundle dev/ injecte
@@ -32,7 +32,7 @@ BUNDLE=prod pnpm test:e2e       # le bundle reellement en ligne, sans intercepti
 
 Pas de page HTML dans ce depot : le HTML vit dans Webflow, le depot ne
 livre que la surcouche JS/CSS. Le e2e tourne donc sur le site Webflow publie
-et remplace les requetes vers Netlify par le bundle local (`page.route`).
+et remplace les requetes vers Cloudflare par le bundle local (`page.route`).
 `pnpm test:e2e` exige `pnpm dev` lance (pour tenir `dev/` a jour). Un test
 unique : `node --test test/stage.test.mjs`.
 
@@ -128,12 +128,12 @@ Le collapse a `100dvh` une fois le verrou arme vit aussi dans `scroll.js`
 - **MP4 servis bruts, jamais via Bunny Stream / Cloudflare Stream** : le
   streaming adaptatif (HLS) rend `currentTime` imprecis et casse le scrub.
   Voir [`docs/hosting.md`](docs/hosting.md) et
-  [`docs/decisions/0001-hebergement-bunny-jsdelivr.md`](docs/decisions/0001-hebergement-bunny-jsdelivr.md) (partie code remplacee par 0008).
+  [`docs/decisions/0001-hebergement-bunny-jsdelivr.md`](docs/decisions/0001-hebergement-bunny-jsdelivr.md) (partie code remplacee par 0008 puis 0010).
 - **Deux hebergeurs separes** : MP4/posters sur Bunny (hors depot), bundle
-  `dist/` sur Netlify (`virtual-browser.netlify.app`, verse dans le depot,
-  redeploye a chaque push, sans build ni tag). `netlify.toml` ne publie que
+  `dist/` sur Cloudflare (`dev-vb.initweb.ai`, verse dans le depot,
+  redeploye a chaque push, sans build ni tag). `wrangler.jsonc` ne publie que
   `dist/` : demo, sources et docs ne sont jamais en ligne. Toujours
-  `pnpm build` + commit de `dist/` avant de pousser. Voir ADR 0008.
+  `pnpm build` + commit de `dist/` avant de pousser. Voir ADR 0010.
 - **Versionner le prefixe des medias** (`home/v1/` -> `v2/`) plutot
   que purger le cache CDN, pour un deploiement atomique.
 - **`crossOrigin`** sur les balises `<video>` est deliberement pose : sans
@@ -154,7 +154,7 @@ Le collapse a `100dvh` une fois le verrou arme vit aussi dans `scroll.js`
 - `docs/videos.md` — pipeline d'encodage et standards verifies par `check-video.sh`
 - `docs/tests.md` — tests unitaires, e2e, bundle
 - `docs/webflow-setup.md` — structure a construire dans le Designer Webflow
-- `docs/hosting.md` — Bunny (medias) + Netlify (code)
+- `docs/hosting.md` — Bunny (medias) + Cloudflare (code)
 - `docs/nouvelle-video.md` — a transmettre tel quel au client fournissant un master
 - `docs/passation.md` — checklist de transfert au client (comptes, hotes en dur, masters)
 - `docs/todo.md` — todo interne du projet (ouvrir via le skill `/todo`)

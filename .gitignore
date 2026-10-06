@@ -5,7 +5,7 @@ node_modules/
 .claude/
 
 # Sortie du mode watch. La sortie de production, elle, vit dans dist/
-# et est versionnee : Netlify la publie telle quelle.
+# et est versionnee : Cloudflare la publie telle quelle.
 dev/
 masters/
 public/assets/
@@ -16,7 +16,7 @@ exports/
 .env
 .env.local
 
-# dist/ est volontairement versionne : Netlify le publie sans build. Les medias, eux, restent hors depot (Bunny les porte).
+# dist/ est volontairement versionne : Cloudflare le publie sans build. Les medias, eux, restent hors depot (Bunny les porte).
 
 # Masters egares a la racine
 /*.mp4

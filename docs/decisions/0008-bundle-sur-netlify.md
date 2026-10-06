@@ -1,7 +1,7 @@
 # Servir le bundle depuis Netlify plutot que jsDelivr
 
 - Date : 2026-09-30
-- Statut : Adopte (remplace la partie code de [0001](0001-hebergement-bunny-jsdelivr.md))
+- Statut : Remplace par [0010](0010-bundle-sur-cloudflare.md) (remplacait la partie code de [0001](0001-hebergement-bunny-jsdelivr.md))
 
 ## Contexte
 

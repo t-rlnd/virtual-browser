@@ -9,7 +9,7 @@ avec le README, cette page et `docs/architecture.md`.
 | Quoi | Où aujourd'hui | À transférer |
 | --- | --- | --- |
 | Code source, docs, `dist/` | GitHub `t-rlnd/virtual-browser` | transfert du dépôt vers l'organisation du client (Settings › Danger zone › Transfer) ou fork + archivage |
-| Bundle en ligne (`index.js` / `.css`) | Netlify `virtual-browser.netlify.app`, branché sur `main` | transfert du site vers le compte Netlify du client, rebrancher sur le dépôt transféré |
+| Bundle en ligne (`index.js` / `.css`) | Cloudflare `dev-vb.initweb.ai`, branché sur `main` | projet Pages à recréer dans le compte Cloudflare du client, branché sur le dépôt transféré, domaine définitif à choisir |
 | Vidéos et posters | Bunny, zone `virtual-browser` du client (préfixe `home/v1/`) | fait : zone créée et fichiers copiés le 2026-10-06 |
 | Site | Webflow `virtual-browser.webflow.io` | transfert du site Webflow vers le workspace du client |
 | Masters vidéo | hors dépôt (`masters/`, non versionné) | remettre les masters au client : seuls eux permettent de ré-encoder |
@@ -23,17 +23,17 @@ client possède bien le master de chaque vidéo en ligne (`hero`, `video1`,
 Trois hôtes sont écrits en dur. Les retrouver tous :
 
 ```bash
-grep -rnE "netlify\.app|b-cdn\.net|webflow\.io" src webflow test bin netlify.toml docs README.md CLAUDE.md
+grep -rnE "initweb\.ai|b-cdn\.net|webflow\.io" src webflow test bin docs README.md CLAUDE.md
 ```
 
 | Hôte | Fichiers | Effet d'un changement |
 | --- | --- | --- |
 | Bunny (`virtual-browser.b-cdn.net`) | `src/config.js` (`base`), `webflow/head.html` (preconnect) | rebuild + commit de `dist/` + push, puis recoller `head.html` dans Webflow |
-| Netlify (`virtual-browser.netlify.app`) | `webflow/head.html`, `webflow/footer.html`, `test/e2e.mjs` (interception) | recoller les deux snippets dans Webflow ; sinon le site charge l'ancien bundle |
+| Cloudflare (`dev-vb.initweb.ai`) | `webflow/head.html`, `webflow/footer.html`, `test/e2e.mjs` (interception) | recoller les deux snippets dans Webflow ; sinon le site charge l'ancien bundle |
 | Webflow (`virtual-browser.webflow.io`) | `bin/build.js`, `test/e2e.mjs` (surchargeable par `SITE_URL=`), docs | les tests e2e tournent sur ce site publié |
 
 Ordre conseillé : d'abord Bunny (le code pointe sur la nouvelle zone), puis
-Netlify (nouvelle URL du bundle), puis les snippets Webflow. Entre chaque
+Cloudflare (nouvelle URL du bundle), puis les snippets Webflow. Entre chaque
 étape, `pnpm test:bundle` puis `BUNDLE=prod pnpm test:e2e` pour vérifier ce
 qui est réellement en ligne.
 
@@ -54,7 +54,7 @@ qui est réellement en ligne.
 
 ## 4. Ce que l'équipe du client doit savoir
 
-- **Pas de build côté Netlify** : `dist/` est versionné et doit être
+- **Pas de build côté Cloudflare** : `dist/` est versionné et doit être
   reconstruit (`pnpm build`) avant chaque push. Oublier publie l'ancien bundle.
 - **Pas de page HTML dans le dépôt** : le HTML vit dans Webflow, le script ne
   s'appuie que sur les attributs `data-vb-*` ([`webflow-setup.md`](webflow-setup.md)).
@@ -75,8 +75,8 @@ qui est réellement en ligne.
 
 - [ ] Todo P1 de [`todo.md`](todo.md) fermées (snippets en Site settings,
       bouton pause, layout < 991 px) — sinon les lister explicitement au client.
-- [ ] Redirections héritées de [`netlify.toml`](../netlify.toml)
-      (`/scroll-video.*`, `/dist/*`) supprimées une fois Webflow à jour.
+- [ ] `dist/_headers` présent dans le dépôt (revalidation + CORS côté
+      Cloudflare).
 - [ ] `pnpm test`, `pnpm build`, `pnpm test:bundle` au vert sur `main`.
 - [ ] Masters remis au client.
 - [ ] Secrets Bunny (`BUNNY_STORAGE_KEY`) régénérés côté client, jamais
