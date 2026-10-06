@@ -47,7 +47,7 @@ artefact de build versionne.
 ./scripts/encode.sh masters/video1.mp4:166:398              # encodage ffmpeg all-intra
 ./scripts/export.sh masters/video3.mp4:166:398               # probe + encode + check, sort exports/
 ./scripts/upload-bunny.sh                                    # televerse public/assets sur Bunny
-./scripts/check-cdn.sh https://zone.b-cdn.net/scroll-video/v1/video1-1280.mp4
+./scripts/check-cdn.sh https://virtual-browser.b-cdn.net/home/v1/video1-1280.mp4
 ```
 
 `check-video.sh` lit ses standards (fps, largeurs) dans `src/config.js` : ne
@@ -134,7 +134,7 @@ Le collapse a `100dvh` une fois le verrou arme vit aussi dans `scroll.js`
   redeploye a chaque push, sans build ni tag). `netlify.toml` ne publie que
   `dist/` : demo, sources et docs ne sont jamais en ligne. Toujours
   `pnpm build` + commit de `dist/` avant de pousser. Voir ADR 0008.
-- **Versionner le prefixe des medias** (`scroll-video/v1/` -> `v2/`) plutot
+- **Versionner le prefixe des medias** (`home/v1/` -> `v2/`) plutot
   que purger le cache CDN, pour un deploiement atomique.
 - **`crossOrigin`** sur les balises `<video>` est deliberement pose : sans
   lui, une future migration vers un rendu `<canvas>` lisant les pixels

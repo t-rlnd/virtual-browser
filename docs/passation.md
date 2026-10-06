@@ -10,7 +10,7 @@ avec le README, cette page et `docs/architecture.md`.
 | --- | --- | --- |
 | Code source, docs, `dist/` | GitHub `t-rlnd/virtual-browser` | transfert du dépôt vers l'organisation du client (Settings › Danger zone › Transfer) ou fork + archivage |
 | Bundle en ligne (`index.js` / `.css`) | Netlify `virtual-browser.netlify.app`, branché sur `main` | transfert du site vers le compte Netlify du client, rebrancher sur le dépôt transféré |
-| Vidéos et posters | Bunny, zone `temp-virtual-browser` (préfixe `scroll-video/v1/`) | zone définitive côté client : recopier les fichiers, voir §3 |
+| Vidéos et posters | Bunny, zone `virtual-browser` du client (préfixe `home/v1/`) | fait : zone créée et fichiers copiés le 2026-10-06 |
 | Site | Webflow `virtual-browser.webflow.io` | transfert du site Webflow vers le workspace du client |
 | Masters vidéo | hors dépôt (`masters/`, non versionné) | remettre les masters au client : seuls eux permettent de ré-encoder |
 
@@ -28,7 +28,7 @@ grep -rnE "netlify\.app|b-cdn\.net|webflow\.io" src webflow test bin netlify.tom
 
 | Hôte | Fichiers | Effet d'un changement |
 | --- | --- | --- |
-| Bunny (`temp-virtual-browser.b-cdn.net`) | `src/config.js` (`base`), `webflow/head.html` (preconnect) | rebuild + commit de `dist/` + push, puis recoller `head.html` dans Webflow |
+| Bunny (`virtual-browser.b-cdn.net`) | `src/config.js` (`base`), `webflow/head.html` (preconnect) | rebuild + commit de `dist/` + push, puis recoller `head.html` dans Webflow |
 | Netlify (`virtual-browser.netlify.app`) | `webflow/head.html`, `webflow/footer.html`, `test/e2e.mjs` (interception) | recoller les deux snippets dans Webflow ; sinon le site charge l'ancien bundle |
 | Webflow (`virtual-browser.webflow.io`) | `bin/build.js`, `test/e2e.mjs` (surchargeable par `SITE_URL=`), docs | les tests e2e tournent sur ce site publié |
 
@@ -43,10 +43,10 @@ qui est réellement en ligne.
    ([`hosting.md`](hosting.md#option-retenue--bunny)), avec
    `Access-Control-Allow-Origin: *`.
 2. Copier les fichiers de l'ancienne zone vers la nouvelle, **à plat**, sous
-   le même préfixe `scroll-video/v1/` (ou `v2/` si l'on en profite pour
+   le même préfixe `home/v1/` (ou `v2/` si l'on en profite pour
    ré-encoder). Ils ne doivent être ni renommés ni recompressés.
 3. Vérifier chaque largeur :
-   `./scripts/check-cdn.sh https://NOUVELLE-ZONE.b-cdn.net/scroll-video/v1/hero-1920.mp4`
+   `./scripts/check-cdn.sh https://NOUVELLE-ZONE.b-cdn.net/home/v1/hero-1920.mp4`
 4. Changer `base` dans [`src/config.js`](../src/config.js) et le preconnect
    dans [`webflow/head.html`](../webflow/head.html), `pnpm build`, commit,
    push, recoller `head.html`.

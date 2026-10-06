@@ -53,7 +53,7 @@ Le script ne televerse que `public/assets` : le bundle ne passe pas par Bunny.
 Verification :
 
 ```bash
-./scripts/check-cdn.sh https://ma-zone.b-cdn.net/scroll-video/v1/video1-1280.mp4
+./scripts/check-cdn.sh https://virtual-browser.b-cdn.net/home/v1/video1-1280.mp4
 ```
 
 Le script controle les trois points qui comptent : requetes `Range` servies,
@@ -113,7 +113,7 @@ l'[ADR 0008](decisions/0008-bundle-sur-netlify.md)).
 
 ## Versionner le prefixe des medias plutot que purger le cache
 
-Les videos sont rangees sous `scroll-video/v1/`. Pour publier une nouvelle
+Les videos sont rangees sous `home/v1/`. Pour publier une nouvelle
 version des **videos**, incrementer ce prefixe (`v2`, `v3`...) et mettre a jour
 `base` dans [`src/config.js`](../src/config.js) plutot que de purger le
 cache du CDN. Le deploiement devient atomique et l'ancienne version reste

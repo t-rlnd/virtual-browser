@@ -5,7 +5,7 @@
 #   2. en-tetes CORS ouverts, sinon la migration vers le rendu canvas sera bloquee
 #   3. fichier brut et non un manifeste HLS, qui rendrait le currentTime imprecis
 #
-# Usage : ./scripts/check-cdn.sh https://ma-zone.b-cdn.net/scroll-video/v1/video1-1280.mp4
+# Usage : ./scripts/check-cdn.sh https://virtual-browser.b-cdn.net/home/v1/video1-1280.mp4
 
 set -euo pipefail
 

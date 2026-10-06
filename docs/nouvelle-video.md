@@ -82,7 +82,7 @@ images fixes.
 | `video3-1280.mp4` | 1280x720 | portables, tablettes |
 | `video3-750.mp4` | 750x422 | telephones |
 
-Ils se deposent **a plat** dans la Storage Zone, sous `scroll-video/v1/`, a
+Ils se deposent **a plat** dans la Storage Zone, sous `home/v1/`, a
 cote des fichiers deja presents. Pas de sous-dossier.
 
 ## Poser les attributs dans Webflow

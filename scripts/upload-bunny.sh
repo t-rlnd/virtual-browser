@@ -12,7 +12,7 @@
 #
 # Reglages optionnels :
 #   BUNNY_HOST=storage.bunnycdn.com   ny. / la. / sg. / uk. / se. selon la region
-#   REMOTE_PREFIX=scroll-video/v1     versionner ce prefixe evite tout purge de cache
+#   REMOTE_PREFIX=home/v1            versionner ce prefixe evite tout purge de cache
 #   SRC_DIR=public/assets             dossier des MP4 et posters
 
 set -euo pipefail
@@ -21,7 +21,7 @@ set -euo pipefail
 : "${BUNNY_STORAGE_KEY:?BUNNY_STORAGE_KEY doit etre defini}"
 
 BUNNY_HOST="${BUNNY_HOST:-storage.bunnycdn.com}"
-REMOTE_PREFIX="${REMOTE_PREFIX:-scroll-video/v1}"
+REMOTE_PREFIX="${REMOTE_PREFIX:-home/v1}"
 SRC_DIR="${SRC_DIR:-public/assets}"
 
 content_type() {
